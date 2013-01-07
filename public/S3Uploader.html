@@ -24,7 +24,7 @@
 			  $.ajax({url:"publishingConfig?pageName=S3Uploader.html",dataType:"json",success:function(result){
 				for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
 				$('#s3form').submit();
-        $('#link').attr('href','https://mindmup.s3.amazonaws.com'+result.key);
+        $('#link').attr('href','https://mindmup.s3.amazonaws.com/'+result.key);
 
 			  }});
 			});
