@@ -14,7 +14,8 @@
 		  <!-- Include any additional input fields here -->
 		  File to upload to S3: 
 		  <input name="file" type="text"/> 
-		</form>
+    </form>
+    <span><a target="_blank" href="" id="link" > click me</a></span>
 		<button id="publishButton">Publish</button>
 		<!-- Placed at the end of the document so the pages load faster -->
 	    <script src="/jquery/jquery-1.7.2.min.js"></script>
@@ -23,7 +24,8 @@
 			  $.ajax({url:"publishingConfig?pageName=S3Uploader.html",dataType:"json",success:function(result){
 				for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
 				$('#s3form').submit();
-				
+        $('#link').attr('href','https://mindmup.s3.amazonaws.com'+result.key);
+
 			  }});
 			});
 		</script>
