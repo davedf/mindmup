@@ -1,6 +1,7 @@
 require 'pp'
 require 'sinatra'
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
+require 'uuid'
 
 configure do
     set :base_url, ENV['SITE_URL'] || "/"
@@ -10,6 +11,7 @@ configure do
 		set :s3_secret_key, ENV['S3_SECRET_KEY']
 		set :s3_upload_folder, ENV['S3_UPLOAD_FOLDER']		
 		set :s3_max_upload_size, 100
+		set :key_id_generator, UUID.new
 end
 get '/' do
   "Hello world! And again..."
@@ -29,13 +31,14 @@ get "/s3upload" do
 end
 
 get "/publishingConfig" do
-  s3_upload_identifier = SecureRandom.uuid;
+  s3_upload_identifier = settings.key_id_generator.generate:compact
   s3_key=settings.s3_upload_folder+"/" + s3_upload_identifier + ".txt"
   s3_result_url= params[:pageName] + "?id=" + s3_upload_identifier
   s3_content_type="text/plain"
 	signer=S3PolicySigner.new
 	policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name, s3_key, s3_result_url, settings.s3_max_upload_size*1024, s3_content_type, settings.s3_form_expiry
-	erb :s3UploadConfig,locals:{s3_upload_identifier:s3_upload_identifier,s3_key:s3_key,s3_result_url:s3_result_url,signer:signer,policy:policy,s3_content_type:s3_content_type}
+	
+	erb :s3UploadConfig, :layout => false,locals:{s3_upload_identifier:s3_upload_identifier,s3_key:s3_key,s3_result_url:s3_result_url,signer:signer,policy:policy,s3_content_type:s3_content_type}
 end
 
 helpers do   
