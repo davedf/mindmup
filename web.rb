@@ -6,7 +6,4 @@ get '/' do
 end
 
 
-get '/ATest' do
-  "Hello world 2!"
-end
 
