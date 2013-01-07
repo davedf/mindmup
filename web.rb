@@ -25,10 +25,20 @@ post "/s3upload" do
 end
 
 get "/s3upload" do
-  erb :test
+  erb :test 
 end
 
-helpers do 
+get "/publishingConfig" do
+  s3_upload_identifier = SecureRandom.uuid;
+  s3_key=settings.s3_upload_folder+"/" + s3_upload_identifier + ".txt"
+  s3_result_url= params[:pageName] + "?id=" + s3_upload_identifier
+  s3_content_type="text/plain"
+	signer=S3PolicySigner.new
+	policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name, s3_key, s3_result_url, settings.s3_max_upload_size*1024, s3_content_type, settings.s3_form_expiry
+	erb :s3UploadConfig,locals:{s3_upload_identifier:s3_upload_identifier,s3_key:s3_key,s3_result_url:s3_result_url,signer:signer,policy:policy,s3_content_type:s3_content_type}
+end
+
+helpers do   
   def s3_javascript_config
 		 valid_upload_extensions= ['txt']
 		 upload_path=settings.s3_upload_folder+"/"
