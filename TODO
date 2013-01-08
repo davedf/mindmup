@@ -11,6 +11,8 @@ adjust menu on load document
 find a way of loading json reliably from CDN without having to save as javascript
 integrate damjan's canvas
 create google funnel for publishing workflow
+mobile device friendly menus/toobar
+Edit project name in menu bar
 
 help page
 example map
@@ -21,3 +23,7 @@ visitor tracking - on all pages, decide which events to track
 connect domain fully - email addresses, subdomains etc
 revisit website design
 //minify javascript files, load javascript from google cdn
+
+
+Later:
+context sensitive menus
