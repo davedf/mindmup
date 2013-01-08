@@ -34,8 +34,16 @@ $(function(){
       $('#menuClear').click(function(){
         _.each(active_content.ideas, function(idea){ active_content.removeSubIdea(idea.id);})
       });
-    }
-
+ 	var publishMap = function(result) {
+		$("#s3form [name='file']").val(JSON.stringify(active_content));
+        for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
+        $('#s3form').submit();
+		console.log("result key ",result.key)	
+	}
+    $("#menuPublish").click(function(){
+		$.getJSON("/publishingConfig", publishMap);
+    });
+  }
   $.getJSON($("#map2").attr("map-content"), function(result) {
     load_content(result);
   });

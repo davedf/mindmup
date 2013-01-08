@@ -3,18 +3,18 @@
 		
 	</head>
 	<body>
-		  <form id='s3form' action="https://mindmup.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-		  	<input type="hidden" name="key" >
-			<input type="hidden" name="AWSAccessKeyId" > 
-		  	<input type="hidden" name="acl" value="public-read"> 
-			<input type="hidden" name="success_action_redirect" >
-			<input type="hidden" name="policy" >
-			<input type="hidden" name="signature" >
-		  	<input type="hidden" name="Content-Type">
-		  <!-- Include any additional input fields here -->
-		  File to upload to S3: 
-		  <input name="file" type="text"/> 
-    </form>
+	<form id='s3form' action="https://mindmup.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+		<input type="hidden" name="key" >
+		<input type="hidden" name="AWSAccessKeyId" > 
+		<input type="hidden" name="acl" value="public-read"> 
+		<input type="hidden" name="success_action_redirect" >
+		<input type="hidden" name="policy" >
+		<input type="hidden" name="signature" >
+		<input type="hidden" name="Content-Type">
+		<!-- Include any additional input fields here -->
+		File to upload to S3: 
+		<input name="file" type="text"/> 
+	</form>
     <span><a target="_blank" href="" id="link" > click me</a></span>
 		<button id="publishButton">Publish</button>
 		<!-- Placed at the end of the document so the pages load faster -->

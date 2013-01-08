@@ -1,6 +1,17 @@
 <link rel="stylesheet" type="text/css" href="/css/mindmap.css" /> 
 <div id="map1"></div>
 <div id="map2" class="container" map-content="<%=map_url(@mapId) %>"></div>
+<form id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="key" >
+	<input type="hidden" name="AWSAccessKeyId" > 
+	<input type="hidden" name="acl" value="public-read"> 
+	<input type="hidden" name="success_action_redirect" >
+	<input type="hidden" name="policy" >
+	<input type="hidden" name="signature" >
+	<input type="hidden" name="Content-Type">
+	<input type="hidden" name="file"/> 
+</form>
+
 <script src="/mapjs/observable.js"></script>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
