@@ -1,5 +1,6 @@
 $(function(){
     var customClasses={ selectedClass:'btn-success', hoverClass:'btn-warning' }
+	var startTime=Date.now();
     function jquery_repaint_map(active_content, active_jq_map,onComplete){
       var background_jq_map=$('#map1');
       dom_repaint_entire_map(active_content,background_jq_map);
@@ -35,10 +36,13 @@ $(function(){
         _.each(active_content.ideas, function(idea){ active_content.removeSubIdea(idea.id);})
       });
  	var publishMap = function(result) {
+		var publishTime=Date.now();
+	
+		_gaq.push(['_trackEvent','Map','Publish',result.key,(publishTime-startTime)/1000]);
+	
 		$("#s3form [name='file']").val("window.map="+JSON.stringify(active_content));
         for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
         $('#s3form').submit();
-		console.log("result key ",result.key)	
 	}
     $("#menuPublish").click(function(){
 		$.getJSON("/publishingConfig", publishMap);

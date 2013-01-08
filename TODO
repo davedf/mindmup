@@ -7,6 +7,8 @@ Before release 1:
 //move analytics code to editor or layout
 //saving map
 //redirecting after publish
+adjust menu on load document
+find a way of loading json reliably from CDN without having to save as javascript
 integrate damjan's canvas
 
 help page
