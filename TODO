@@ -1,6 +1,6 @@
 Before release 1:
 
-loading document from s3
+//loading document from s3
 //bootstrap editor
 saving map
 redirecting after publish
@@ -14,3 +14,5 @@ visitor tracking - on all pages, decide which events to track
 
 connect domain fully - email addresses, subdomains etc
 revisit website design
+minify javascript files
+load javascript from google cdn

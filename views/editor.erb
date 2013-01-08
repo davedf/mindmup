@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+	
     <meta charset="utf-8">
-    <title>MindMup Editor</title>
+    <title>MindMup Editor <%=@mapId%></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/external/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
@@ -100,8 +101,7 @@
         });
       }
       $(function(){
-        var path= "http://mindmup.s3-website-us-east-1.amazonaws.com/map/default.json";
-        $.getJSON( path, function(result) {
+        $.getJSON("<%=map_url(@mapId) %>", function(result) {
           load_content(result);
         });
       });
