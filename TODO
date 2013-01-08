@@ -1,7 +1,7 @@
 Before release 1:
 
 loading document from s3
-bootstrap editor
+//bootstrap editor
 saving map
 redirecting after publish
 integrate damjan's canvas

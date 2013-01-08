@@ -22,6 +22,10 @@ get '/GetTinyUrl' do
 end
 
 
+get "/map" do 
+  erb :editor
+end
+
 post "/s3upload" do 
   "you sent "+params[:text]
 end
