@@ -2,6 +2,9 @@ Before release 1:
 
 //loading document from s3
 //bootstrap editor
+
+tidy editor.erb - move js to script files 
+move analytics code to editor or layout
 saving map
 redirecting after publish
 integrate damjan's canvas
