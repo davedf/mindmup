@@ -10,6 +10,7 @@ Before release 1:
 adjust menu on load document
 find a way of loading json reliably from CDN without having to save as javascript
 integrate damjan's canvas
+create google funnel for publishing workflow
 
 help page
 example map
