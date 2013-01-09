@@ -60,7 +60,7 @@ $(function(){
             logMapActivity('Edit');
             changed = true;
           }
-          logUserActivity(arguments);
+          logUserActivity(_.toArray(arguments));
         });
         $('#menuAdd').click(function(){
           active_content.addSubIdea(selectedId(),'A cunning plan');  
