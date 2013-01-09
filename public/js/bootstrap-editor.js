@@ -18,12 +18,13 @@ $(function(){
       var attachPopoverClick = function(currentLabel) {
 			currentLabel.click(function(){
 				$("#map2 .MAP_label").popover('destroy');
-	            currentLabel.popover({placement:'top',html:true,trigger:'manual',title:'Options',
+				var placementVal = $(window).height()/2 > currentLabel.offset().top ? 'bottom' : 'top';
+	            currentLabel.popover({placement:placementVal,html:true,trigger:'manual',title:'Options',
 	                        content:'<ul class="nav nav-tabs nav-stacked">' +
 	                                '<li><a href="#" class="menuAdd">Add</a></li>' +
 	                                '<li><a href="#" class="menuEdit">Edit</a></li>' + 
 	                                '<li><a href="#" class="menuRemove">Remove</a></li>' +
-	                                '</ul>'})
+	                                '</ul>'});
 	            currentLabel.popover('show');
 	            $('.menuAdd').click(function(){currentLabel.popover('hide');active_content.addSubIdea(currentLabel.attr("idea"),'A cunning plan');  });
 	            $('.menuRemove').click(function(){currentLabel.popover('hide');active_content.removeSubIdea(currentLabel.attr("idea"));});
