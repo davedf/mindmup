@@ -11,16 +11,13 @@ configure do
 		set :s3_bucket_name, ENV['S3_BUCKET_NAME'] 
 		set :s3_secret_key, ENV['S3_SECRET_KEY']
 		set :s3_upload_folder, ENV['S3_UPLOAD_FOLDER']		
+		set :default_map, ENV['DEFAULT_MAP']|| "map/default"
 		set :s3_max_upload_size, 100
 		set :key_id_generator, UUID.new
 end
 get '/' do
-  @mapId = "map/default"
+  @mapId = settings.default_map
   erb :editor
-end
-
-get '/GetTinyUrl' do
-  "asksjkks"
 end
 
 get "/s3/:mapId" do
@@ -30,14 +27,6 @@ end
 get "/map/:mapId" do
   @mapId = params[:mapId]
   erb :editor
-end
-
-post "/s3upload" do 
-  "you sent "+params[:text]
-end
-
-get "/s3upload" do
-  erb :test 
 end
 
 get "/publishingConfig" do
