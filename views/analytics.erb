@@ -24,5 +24,8 @@ var logActivity=function(category, eventType, label){
 var logMapActivity=function(eventType, label){
 	logActivity("Map",eventType, label);
 }
-
+var _userActivityLog=[];
+var logUserActivity=function(eventInfo){
+  _userActivityLog.push({ts:(new Date()).toGMTString(),event:eventInfo});
+}
 </script>

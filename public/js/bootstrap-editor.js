@@ -54,12 +54,13 @@ $(function(){
         $('#s3form').submit();
       }
       var attach_menu_listeners=function(){
-        active_content.addEventListener("changed",function() {
+        active_content.addEventSink(function() {
           if (!changed) {
             $("#menuPublish").show();
             logMapActivity('Edit');
+            changed = true;
           }
-          changed = true;
+          logUserActivity(arguments);
         });
         $('#menuAdd').click(function(){
           active_content.addSubIdea(selectedId(),'A cunning plan');  
