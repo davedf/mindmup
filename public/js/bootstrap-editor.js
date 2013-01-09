@@ -1,9 +1,6 @@
 $(function(){
     var customClasses={ selectedClass:'btn-success', hoverClass:'btn-warning' }
 	var changed=false;
-	$("#menuFeedback").click(function() {
-	logActivity("Feedback","Open");
-	});
 	
     function jquery_repaint_map(active_content, active_jq_map,onComplete){
       var background_jq_map=$('#map1');

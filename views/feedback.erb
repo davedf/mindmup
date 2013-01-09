@@ -1,1 +1,52 @@
-<script type="text/javascript" src="http://form.jotformpro.com/jsform/<%=ENV["JOTFORM_CONTACT"]%>"></script>
+<div id="modalFeedback" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>Ask a question or send feedback</h3>
+  </div>
+  <div class="modal-body">
+	<form class="form-horizontal" action="http://submit.jotformpro.com/submit/<%=ENV['JOTFORM_CONTACT']%>/" method="post" name="form_<%=ENV['JOTFORM_CONTACT']%>" id="<%=ENV['JOTFORM_CONTACT']%>" accept-charset="utf-8" novalidate="true" target="jotForm">
+	  <input type="hidden" name="formID" value="<%=ENV['JOTFORM_CONTACT']%>">
+	
+	  <div class="control-group">
+	    <label class="control-label" for="inputEmail" >Email</label>
+	    <div class="controls">
+	      <input type="text" id="inputEmail" name="q3_email" placeholder="Email">
+	    </div>
+	  </div>
+	  <div class="control-group">
+	    <label class="control-label" for="inputName" >Name</label>
+	    <div class="controls">
+	      <input type="text" id="inputName" name="q1_name" placeholder="Name">
+	    </div>
+	  </div>
+	  <div class="control-group">
+	    <label class="control-label" for="inputFeedback">Feedback</label>
+	    <div class="controls">
+	      <textarea id="inputFeedback" rows="5" name="q4_askUs"></textarea>
+	    </div>
+	  </div>
+	</form>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+    <a id="sendFeedBackBtn" href="#" class="btn btn-primary">Send Feedback</a>
+  </div>
+</div>
+		
+<iframe id="jotForm" name="jotForm" style="display:none;visibility:hidden" ></iframe>
+			
+<script>
+	$(function() {
+		$("#menuFeedback").click(function() {
+			logActivity("Feedback","Open");
+			$('#modalFeedback textarea').val('');
+		});
+		
+		$("#sendFeedBackBtn").click(function() {				
+			logActivity("Feedback","Send");
+			$("#modalFeedback form").submit();			
+			$('#modalFeedback').modal('hide')
+			showAlert("Thank you for your feedback","Your opinions really matter")
+		});
+	});
+</script>
