@@ -9,16 +9,16 @@ Before release 1:
 //redirecting after publish
 adjust menu on load document
 find a way of loading json reliably from CDN without having to save as javascript
-integrate damjan's canvas
+--integrate damjan's canvas
 create google funnel for publishing workflow
-mobile device friendly menus/toobar
-Edit project name in menu bar
+--mobile device friendly menus/toobar
+//Edit project name in menu bar
 
 help page
 example map
 footer info
 //feedback form
-visitor tracking - on all pages, decide which events to track
+//visitor tracking - on all pages, decide which events to track
 
 //connect domain fully - email addresses, subdomains etc
 revisit website design

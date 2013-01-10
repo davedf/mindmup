@@ -1,6 +1,6 @@
 <link rel="stylesheet" type="text/css" href="/css/mindmap.css" /> 
 <div id="map1"></div>
-<div id="map2" class="container">
+<div id="map2" map-url="<%=map_url(@mapId) %>" class="container">
 <div class="row">
   <span class="well span4 offset8">
     <div id="toolbarShare">
@@ -47,7 +47,6 @@
 	<input type="hidden" name="file"/> 
 </form>
 
-<script src='<%=map_url(@mapId) %>'></script>
 
 <script src="/mapjs/observable.js"></script>
 <script src="/mapjs/content.js"></script>

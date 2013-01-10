@@ -49,7 +49,7 @@ $(function(){
         var publishTime=Date.now();
         logMapActivity('Publish',result.key);
 
-        $("#s3form [name='file']").val("window.map="+JSON.stringify(active_content));
+        $("#s3form [name='file']").val(JSON.stringify(active_content));
         for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
         $('#s3form').submit();
       }
@@ -98,5 +98,5 @@ $(function(){
       $('.st_btn').attr('st_title',active_content.title);
       $('.brand').text(active_content.title);
     }
-    load_content(window.map);
+    $.getJSON($("#map2").attr("map-url"),load_content);
 });
