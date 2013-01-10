@@ -1,4 +1,4 @@
-<div id="container" map-url="<%=map_url(@mapId)%>"></div>
+<div id="container"></div>
 <form id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" >
   <input type="hidden" name="AWSAccessKeyId" > 
@@ -12,6 +12,7 @@
 
 <link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
+<script src="<%=map_url(@mapId)%>"></script>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
 <script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>

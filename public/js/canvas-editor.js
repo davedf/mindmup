@@ -32,7 +32,7 @@ $(function(){
     var publishMap = function(result) {
       var publishTime=Date.now();
       logMapActivity('Publish',result.key);
-      $("#s3form [name='file']").val(JSON.stringify(active_content));
+      $("#s3form [name='file']").val("window.map=" + JSON.stringify(active_content));
       for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
       $('#s3form').submit();
     }
@@ -79,6 +79,6 @@ $(function(){
     logMapActivity('View');
     updateTitle(idea.title);
   };
-  $.getJSON($("#container").attr("map-url"),load_content);
+  load_content(window.map);
   attachTooltips();
 });
