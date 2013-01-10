@@ -25,7 +25,7 @@ $(function(){
     mapModel.setIdea(idea);
   }
   var attachTooltips=function(){
-    _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({title:$(item).attr('title')})});
+    _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
   }
   var attach_menu_listeners=function(active_content,selectedId){
     var changed=false;
