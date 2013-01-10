@@ -94,8 +94,9 @@ $(function(){
       attach_map_listeners(active_content,$('#map2'), jquery_repaint_map,bootstrapOptions);
       attach_menu_listeners(active_content);
       processNewLabels($("#map2 .MAP_label"));
-      document.title=active_content.title
+      document.title=active_content.title;
       $('.st_btn').attr('st_title',active_content.title);
+      $('.brand').text(active_content.title);
     }
     load_content(window.map);
 });
