@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>      
-        <meta charset="utf-8">
-        <title>MindMup Editor</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
-        <style>
-          body {
-            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-          }
-        </style>
+  <head>      
+    <meta charset="utf-8">
+    <title>MindMup Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
 
         <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
@@ -21,23 +21,64 @@
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
         <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
-        
     </head>
     <body>
-            <div class="navbar navbar-fixed-top">
-              <div class="navbar-inner">
-                <div class="container">
-                  <a class="brand" href="#">MindMup</a>
-                  <ul class="nav pull-right">                 
-                      <li>
-                          <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Questions, Comments, Suggestions?</a>
-                      </li>
-                  </ul>
-                </div>
-              </div>
+      <div class="navbar navbar-fixed-top navbar">
+        <div class="navbar-inner">
+          <div class="container">
+            <a class="brand" href="#">MindMup is the fastest way to create and share mind maps</a>
+            <ul class="nav pull-right">                 
+              <li>
+              <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a>
+              </li>
+            </ul>
+          </div>
+          <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </a>
+            <div class="nav-collapse collapse">
+              <ul class="nav nav-pills pull-left">
+                <li><p class="navbar-text"><strong>Edit map:&nbsp; </strong> </p></li>
+                <li> <button id="menuAdd" rel='tooltip' title='Add idea' class="btn"><i class="icon-plus" ></i></button> </li>
+                <li> <button id="menuEdit" rel='tooltip' title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
+                <li> <button id="menuDelete" rel='tooltip' title='Delete idea' class="btn"><i class="icon-trash"></i></button> </li>
+              </ul>
+              <span id="toolbarSave" class="hide">
+                <ul class="nav nav-pills pull-right">
+                  <li><p class="navbar-text"><strong>You have unsaved changes.</strong>&nbsp; </p></li>
+                  <li><button id="menuPublish" class="btn btn-primary">Save Now</button></li>
+                </ul>
+              </span>
+              <span id="toolbarShare" >
+                <ul class="nav nav-pills pull-right">
+
+                  <li><p class="navbar-text"><strong>Share map:</strong> </p></li>
+                  <li><span class='st_email_large st_btn' displayText='Email'></span></li>
+                  <li><span class='st_twitter_large st_btn' displayText='Tweet'></span></li>
+                  <li><span class='st_facebook_large st_btn' displayText='Facebook'></span></li>
+                  <li class="dropdown"><button href="#"
+                    class="dropdown-toggle btn" style="margin-top:-1px; margin-left:2px; height:32px" data-toggle="dropdown"><i class="icon-th-list"></i> <b class="caret"></b> </button> 
+                  <div class="dropdown-menu">
+                    <span class='st_googleplus_large st_btn' displayText='Google +'></span>
+                    <span class='st_reddit_large st_btn' displayText='Reddit'></span>
+                    <span class='st_evernote_large st_btn' displayText='Evernote'></span>
+                    <span class='st_linkedin_large st_btn' displayText='LinkedIn'></span>
+                    <span class='st_pinterest_large st_btn' displayText='Pinterest'></span>
+                  </div>
+                  </li>
+
+                </ul>
+              </span>
             </div>
-			<%= erb :alert %>
-			<%= erb :feedback %>
-     	<%= yield %>
+
+          </div>
+        </div>
+      </div>
+      <%= erb :alert %>
+      <%= erb :feedback %>
+      <%= yield %>
     </body>
-</html>
+  </html>

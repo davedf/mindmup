@@ -24,6 +24,9 @@ $(function(){
     stage.add(layer);
     mapModel.setIdea(idea);
   }
+  var attachTooltips=function(){
+    _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({title:$(item).attr('title')})});
+  }
   var attach_menu_listeners=function(active_content,selectedId){
     var changed=false;
     var publishMap = function(result) {
@@ -76,9 +79,6 @@ $(function(){
     logMapActivity('View');
     updateTitle(idea.title);
   };
-  
-
-
-
   $.getJSON($("#container").attr("map-url"),load_content);
+  attachTooltips();
 });
