@@ -2,28 +2,37 @@ Before release 1:
 
 //loading document from s3
 //bootstrap editor
-
 //tidy editor.erb - move js to script files 
 //move analytics code to editor or layout
 //saving map
 //redirecting after publish
+//Edit project name in menu bar
+//minify javascript files, load javascript from google cdn
+//feedback form
+//visitor tracking - on all pages, decide which events to track
+//connect domain fully - email addresses, subdomains etc
+//tidy up editor.erb
+//integrate damjan's canvas
+//Publish on canvas map
+//Analytics events on canvas map
+
+--mobile device friendly menus/toobar
+--Popup on canvas map 
+--styling on canvas map
+--clean up old editor dependencies
+
+canvas map connectors (like mindmeister)
+clean up console log
 adjust menu on load document
 find a way of loading json reliably from CDN without having to save as javascript
---integrate damjan's canvas
 create google funnel for publishing workflow
---mobile device friendly menus/toobar
-//Edit project name in menu bar
 
 help page
 example map
 footer info
-//feedback form
-//visitor tracking - on all pages, decide which events to track
-
-//connect domain fully - email addresses, subdomains etc
 revisit website design
-//minify javascript files, load javascript from google cdn
 
+word wrapping in canvas mindmap
 
 Later:
 context sensitive menus

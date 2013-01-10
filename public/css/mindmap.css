@@ -1,42 +1,17 @@
-
-          .node{
-            display:block;vertical-align:middle; margin-left:30px; margin-top:10px; margin-bottom:10px; padding:5px;
-          }
-          .children {
-            display:inline-block;vertical-align:middle;
-          }
-          .MAP_label {
-            display:inline-block;
-            max-width:150px; cursor:pointer;
-          }
-          .map {position:relative;top:0;left:0; padding-top:60px}
-          .connect{
-            position:absolute;
-            z-index:-10;
-          }
-          .connect_down_left{
-            border-top-left-radius: 50%;
-            border-left: 2px solid #E6E6E6;
-            border-top: 2px solid #E6E6E6;
-          }
-          .connect_up_left{
-            border-bottom-left-radius: 50%;
-            border-left: 2px solid #E6E6E6;
-            border-bottom: 2px solid #E6E6E6;
-          }
-          .connect_down_right{
-            border-top-right-radius: 50%;
-            border-right: 2px solid #E6E6E6;
-            border-top: 2px solid #E6E6E6;
-          }
-          .connect_up_right{
-            border-bottom-right-radius: 50%;
-            border-right: 2px solid #E6E6E6;
-            border-bottom: 2px solid #E6E6E6;
-          }
-          .connect_horizontal{
-            border-top: 2px solid #E6E6E6;
-            padding-bottom: 2px;
-          }
-		  #map2 {position:absolute;width:1000; height:1000}
-		  #map1 {position:absolute;top:0px;left:0px;z-Index:-30;visibility:hidden; }
+#container {
+  background-color: #F4F0F8;
+}
+.ideaInput {
+  position: absolute;
+  border: none;
+  z-index: 999;
+  background-color: transparent;
+  color: #F8F8F8;
+  font-family: 'Helvetica';
+  font-weight: bold;
+  font-size: 13;
+  text-align: center;
+}
+.ideaInput:focus {
+  outline: none;
+}

@@ -1,10 +1,7 @@
-<link rel="stylesheet" type="text/css" href="/css/mindmap.css" /> 
-<div id="map1"></div>
-<div id="map2" map-url="<%=map_url(@mapId) %>" class="container">
 <div class="row">
   <span class="well span4 offset8">
     <div id="toolbarShare">
-     <label><strong>Share this map</strong></label>
+      <label><strong>Share this map</strong></label>
       <span class="help-block">
         <span class='st_twitter_large st_btn' displayText='Tweet'></span>
         <span class='st_googleplus_large st_btn' displayText='Google +'></span>
@@ -20,38 +17,46 @@
       <label><strong>You have unsaved changes.</strong> Save this map to share it</label>
       <button id="menuPublish" class="btn btn-primary btn-large">Save Now</button>
     </div>
-                  <div class="nav-collapse collapse">
-                    <ul class="nav">
-                        <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit Map<b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                          <li><a id="menuAdd" href="#">New child node</a></li>    
-                          <li><a id="menuEdit" href="#">Edit node</a></li>    
-                          <li><a id="menuDelete" href="#">Delete node</a></li>
-                          <li class="divider"></li>
-                          <li><a id="menuClear" href="#">Clear Map</a></li>         
-                        </ul> 
-                    </ul>
-                  </div><!--/.nav-collapse -->
+    <div class="nav-collapse collapse">
+      <ul class="nav">
+        <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit Map<b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a id="menuAdd" href="#">New child node</a></li>    
+          <li><a id="menuEdit" href="#">Edit node</a></li>    
+          <li><a id="menuDelete" href="#">Delete node</a></li>
+          <li class="divider"></li>
+          <li><a id="menuClear" href="#">Clear Map</a></li>         
+        </ul> 
+      </ul>
+    </div><!--/.nav-collapse -->
   </span>
 </div>
-</div>
+<div id="container" map-url="<%=map_url(@mapId)%>"></div>
 <form id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="key" >
-	<input type="hidden" name="AWSAccessKeyId" > 
-	<input type="hidden" name="acl" value="public-read"> 
-	<input type="hidden" name="success_action_redirect" >
-	<input type="hidden" name="policy" >
-	<input type="hidden" name="signature" >
-	<input type="hidden" name="Content-Type">
-	<input type="hidden" name="file"/> 
+  <input type="hidden" name="key" >
+  <input type="hidden" name="AWSAccessKeyId" > 
+  <input type="hidden" name="acl" value="public-read"> 
+  <input type="hidden" name="success_action_redirect" >
+  <input type="hidden" name="policy" >
+  <input type="hidden" name="signature" >
+  <input type="hidden" name="Content-Type">
+  <input type="hidden" name="file"/> 
 </form>
 
-
+<link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
-<script src="/js/bootstrap-editor.js"></script>
+<script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>
+<script type="text/javascript" src="/mapjs/kinetic.bezier.js"></script>
+<script type="text/javascript" src="/mapjs/kinetic.idea.js"></script>
+<script type="text/javascript" src="/mapjs/kinetic.connector.js"></script>
+<script type="text/javascript" src="/mapjs/layout.js"></script>
+<script type="text/javascript" src="/mapjs/map-model.js"></script>
+<script type="text/javascript" src="/mapjs/kinetic-mediator.js"></script>
+<script type="text/javascript" src="/js/canvas-editor.js"></script>
+
 <script type="text/javascript">var switchTo5x=true;</script>
 <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
 <script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
