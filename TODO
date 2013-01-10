@@ -15,24 +15,22 @@ Before release 1:
 //integrate damjan's canvas
 //Publish on canvas map
 //Analytics events on canvas map
+//mobile device friendly menus/toobar
 
---mobile device friendly menus/toobar
+--get selected id from canvas 
+--clean map in toolbar
+--word wrapping in nodes
+--get map working on mobile devices
 --Popup on canvas map 
---styling on canvas map
+--styling on canvas map radii of link lines , radii of node rect corners
 --clean up old editor dependencies
 
-canvas map connectors (like mindmeister)
 clean up console log
-adjust menu on load document
-find a way of loading json reliably from CDN without having to save as javascript
 create google funnel for publishing workflow
-
-help page
-example map
 footer info
-revisit website design
-
-word wrapping in canvas mindmap
 
 Later:
 context sensitive menus
+find a way of loading json reliably from CDN without having to save as javascript
+help page
+revisit website design
