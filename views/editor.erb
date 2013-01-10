@@ -1,6 +1,24 @@
 <link rel="stylesheet" type="text/css" href="/css/mindmap.css" /> 
 <div id="map1"></div>
 <div id="map2" class="container">
+<div class="row">
+  <span class="well span4 offset8" style="zIndex:100">
+      <label><strong>Share this map</strong></label>
+      <span class="help-block">
+        <span class='st_twitter_large' displayText='Tweet'></span>
+        <span class='st_googleplus_large' displayText='Google +'></span>
+        <span class='st_facebook_large' displayText='Facebook'></span>
+        <span class='st_reddit_large' displayText='Reddit'></span>
+        <span class='st_evernote_large' displayText='Evernote'></span>
+        <span class='st_linkedin_large' displayText='LinkedIn'></span>
+        <span class='st_pinterest_large' displayText='Pinterest'></span>
+        <span class='st_email_large' displayText='Email'></span>
+      </span>
+    <script type="text/javascript">var switchTo5x=true;</script>
+    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+    <script type="text/javascript">stLight.options({publisher: "ur-db646fb-1437-6ee0-b2fb-901da574af00"});</script>
+  </span>
+</div>
 </div>
 <form id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="key" >
