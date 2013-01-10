@@ -2,21 +2,37 @@
 <div id="map1"></div>
 <div id="map2" class="container">
 <div class="row">
-  <span class="well span4 offset8" style="zIndex:100">
-      <label><strong>Share this map</strong></label>
+  <span class="well span4 offset8">
+    <div id="toolbarShare">
+     <label><strong>Share this map</strong></label>
       <span class="help-block">
-        <span class='st_twitter_large' displayText='Tweet'></span>
-        <span class='st_googleplus_large' displayText='Google +'></span>
-        <span class='st_facebook_large' displayText='Facebook'></span>
-        <span class='st_reddit_large' displayText='Reddit'></span>
-        <span class='st_evernote_large' displayText='Evernote'></span>
-        <span class='st_linkedin_large' displayText='LinkedIn'></span>
-        <span class='st_pinterest_large' displayText='Pinterest'></span>
-        <span class='st_email_large' displayText='Email'></span>
+        <span class='st_twitter_large st_btn' displayText='Tweet'></span>
+        <span class='st_googleplus_large st_btn' displayText='Google +'></span>
+        <span class='st_facebook_large st_btn' displayText='Facebook'></span>
+        <span class='st_reddit_large st_btn' displayText='Reddit'></span>
+        <span class='st_evernote_large st_btn' displayText='Evernote'></span>
+        <span class='st_linkedin_large st_btn' displayText='LinkedIn'></span>
+        <span class='st_pinterest_large st_btn' displayText='Pinterest'></span>
+        <span class='st_email_large st_btn' displayText='Email'></span>
       </span>
-    <script type="text/javascript">var switchTo5x=true;</script>
-    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
-    <script type="text/javascript">stLight.options({publisher: "ur-db646fb-1437-6ee0-b2fb-901da574af00"});</script>
+    </div>
+    <div id="toolbarSave" class="hide">
+      <label><strong>You have unsaved changes.</strong> Save this map to share it</label>
+      <button id="menuPublish" class="btn btn-primary btn-large">Save Now</button>
+    </div>
+                  <div class="nav-collapse collapse">
+                    <ul class="nav">
+                        <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit Map<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                          <li><a id="menuAdd" href="#">New child node</a></li>    
+                          <li><a id="menuEdit" href="#">Edit node</a></li>    
+                          <li><a id="menuDelete" href="#">Delete node</a></li>
+                          <li class="divider"></li>
+                          <li><a id="menuClear" href="#">Clear Map</a></li>         
+                        </ul> 
+                    </ul>
+                  </div><!--/.nav-collapse -->
   </span>
 </div>
 </div>
@@ -37,3 +53,6 @@
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
 <script src="/js/bootstrap-editor.js"></script>
+<script type="text/javascript">var switchTo5x=true;</script>
+<script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+<script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>

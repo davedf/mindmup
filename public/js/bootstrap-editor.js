@@ -56,7 +56,8 @@ $(function(){
       var attach_menu_listeners=function(){
         active_content.addEventSink(function() {
           if (!changed) {
-            $("#menuPublish").show();
+            $("#toolbarShare").hide();
+            $("#toolbarSave").show();
             logMapActivity('Edit');
             changed = true;
           }
@@ -86,12 +87,15 @@ $(function(){
       }
 
       logMapActivity('View');
-      $("#menuPublish").hide();
+      $("#toolbarSave").hide();
+      $("#toolbarShare").show();
       jquery_repaint_map(active_content,$('#map2'));
       attach_label_listeners($('#map2').find('.MAP_label'), $('#map2'),active_content, bootstrapOptions );
       attach_map_listeners(active_content,$('#map2'), jquery_repaint_map,bootstrapOptions);
       attach_menu_listeners(active_content);
       processNewLabels($("#map2 .MAP_label"));
+      document.title=active_content.title
+      $('.st_btn').attr('st_title',active_content.title);
     }
     load_content(window.map);
 });
