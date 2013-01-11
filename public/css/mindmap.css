@@ -1,7 +1,11 @@
 #container {
   margin-top:120px;
 }
+.alertContainer {
+  margin-top:80px;
+}  
 .ideaInput {
+
   position: absolute;
   border: none;
   z-index: 999;

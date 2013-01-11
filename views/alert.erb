@@ -1,6 +1,6 @@
-<div id="forAlerts"></div>
+<div id="forAlerts" class="alertContainer"></div>
 <script>
 	function showAlert(message,detail) {
-		$('<div class="alert fade in"><button type="button" class="close" data-dismiss="alert">×</button><strong>' + message + '</strong>&nbsp;' + detail + '</div>').prependTo('body');
+		$('<div class="alert fade in"><button type="button" class="close" data-dismiss="alert">×</button><strong>' + message + '</strong>&nbsp;' + detail + '</div>').prependTo('#forAlerts');
 	}
 </script>
