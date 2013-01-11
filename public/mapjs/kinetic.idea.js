@@ -1,26 +1,28 @@
 /*global console, jQuery, Kinetic*/
 Kinetic.Idea = function (config) {
 	'use strict';
-  var _COLUMN_WORD_WRAP_LIMIT=25;
-  var _ENTER_KEY_CODE=13;
-  var _ESC_KEY_CODE=27;
-  /*shamelessly copied from http://james.padolsey.com/javascript/wordwrap-for-javascript */
-  function wordwrap( str, width, brk, cut ) {
-    brk = brk || '\n';
-    width = width || 75;
-    cut = cut || false;
-    if (!str) { return str; }
-    var regex = '.{1,' +width+ '}(\\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)');
-    return str.match( RegExp(regex, 'g') ).join( brk );
-  }
-  function join_lines(string){
-    return string.replace(/\n/g," ");
-  }
-  function break_words(string){
-    return wordwrap(join_lines(string), _COLUMN_WORD_WRAP_LIMIT,"\n",false)
-  }
-  config.text=break_words(config.text); 
-  var self = this;
+	var COLUMN_WORD_WRAP_LIMIT = 25,
+		ENTER_KEY_CODE = 13,
+		ESC_KEY_CODE = 27,
+		self = this;
+	/*shamelessly copied from http://james.padolsey.com/javascript/wordwrap-for-javascript */
+	function wordwrap(str, width, brk, cut) {
+		brk = brk || '\n';
+		width = width || 75;
+		cut = cut || false;
+		if (!str) {
+			return str;
+		}
+		var regex = '.{1,' + width + '}(\\s|$)' + (cut ? '|.{' + width + '}|.+$' : '|\\S+?(\\s|$)');
+		return str.match(new RegExp(regex, 'g')).join(brk);
+	}
+	function join_lines(string) {
+		return string.replace(/\n/g, ' ');
+	}
+	function break_words(string) {
+		return wordwrap(join_lines(string), COLUMN_WORD_WRAP_LIMIT, '\n', false);
+	}
+	config.text = break_words(config.text);
 	this.level = config.level;
 	this.isSelected = false;
 	this.setStyle(config);
@@ -36,23 +38,25 @@ Kinetic.Idea = function (config) {
 	config.name = 'Idea';
 	Kinetic.Text.apply(this, [config]);
 	this.classType = 'Idea';
-	this.on('dblclick', function () {
+	this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
+	this.editNode = function () {
 		//this only works for solid color nodes
 		self.attrs.textFill = self.attrs.fill;
+		self.getLayer().draw();
 		var canvasPosition = jQuery('canvas').offset(),
 			currentText = self.getText(),
 			ideaInput,
-      updateText = function (newText) {
+			updateText = function (newText) {
 				self.setStyle(self.attrs);
 				self.getStage().draw();
 				self.fire(':textChanged', {
-					text: break_words(newText||currentText)
+					text: break_words(newText || currentText)
 				});
 				ideaInput.remove();
 			},
-      onCommit=function(){
-        updateText(ideaInput.val());
-      };
+			onCommit = function () {
+				updateText(ideaInput.val());
+			};
 		ideaInput = jQuery('<input type="text" class="ideaInput" />')
 			.css({
 				top: canvasPosition.top + self.attrs.y,
@@ -63,17 +67,16 @@ Kinetic.Idea = function (config) {
 			.val(join_lines(currentText))
 			.appendTo('body')
 			.keydown(function (e) {
-				if (e.which === _ENTER_KEY_CODE) {
+				if (e.which === ENTER_KEY_CODE) {
 					onCommit();
+				} else if (e.which === ESC_KEY_CODE) {
+					updateText(currentText);
 				}
-        else if (e.which === _ESC_KEY_CODE){
-          updateText(currentText);
-        }
 				e.stopPropagation();
 			})
 			.blur(onCommit)
 			.focus();
-	});
+	};
 };
 Kinetic.Idea.prototype.setStyle = function (config) {
 	'use strict';
@@ -115,5 +118,15 @@ Kinetic.Idea.prototype.setIsDroppable = function (isDroppable) {
 	'use strict';
 	this.isDroppable = isDroppable;
 	this.setStyle(this.attrs);
+};
+Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (config) {
+	'use strict';
+	var transition = new Kinetic.Transition(this, config),
+		animation = new Kinetic.Animation();
+	animation.func = transition._onEnterFrame.bind(transition);
+	animation.node = this.getLayer();
+	transition.onFinished = animation.stop.bind(animation);
+	transition.start();
+	animation.start();
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
