@@ -17,12 +17,13 @@ Before release 1:
 //Analytics events on canvas map
 //mobile device friendly menus/toobar
 //word wrapping in nodes
+//clean map in toolbar
+//get selected id from canvas 
+//alert when map is changed to suggest saving
+//automatic canvas resizing
 
---get selected id from canvas 
---clean map in toolbar
---automatic canvas resizing
+--fix connectors when dragging stage
 --center map (try a single node map and see if it's in the center)
---alert when map is changed to suggest saving
 --multi-line edit in text area, instead of an input
 --keyboard shortcuts: navigate using arrows, add sibling
 --externalise canvas style configuration (radius, backgrounds, wordwrap limits...)
@@ -30,6 +31,7 @@ Before release 1:
 --Popup on canvas map 
 --styling on canvas map radii of link lines , radii of node rect corners
 --clean up old editor dependencies
+
 
 replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
 clean up console log
