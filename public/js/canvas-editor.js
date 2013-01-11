@@ -3,8 +3,9 @@ $(function(){
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
-        width: $(window).width(),
-        height: $(window).height(),
+        width: $(window).width() * 2,
+        height: $(window).height() * 2,
+        draggable:true
     }),
 dimensionProvider = function (title) {
   var text = new Kinetic.Idea({
