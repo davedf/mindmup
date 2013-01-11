@@ -12,7 +12,12 @@
 
 <link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
+
+<% if production? then %>
 <script src="<%=map_url(@mapId)%>"></script>
+<% else %>
+<script src="/default.json"></script>
+<% end %>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
 <script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>

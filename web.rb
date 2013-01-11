@@ -15,7 +15,8 @@ configure do
   set :s3_max_upload_size, 100
   set :key_id_generator, UUID.new
   set :current_map_data_version, ENV['CURRENT_MAP_DATA_VERSION'] || "a1"
-
+  offline =  ENV['OFFLINE'] || "online"
+  set :online, offline == "offline" ? false : true
 end
 get '/' do
   @mapId = settings.default_map
