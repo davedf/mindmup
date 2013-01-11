@@ -13,7 +13,7 @@
 <link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
 
-<% if production? then %>
+<% if settings.online? then %>
 <script src="<%=map_url(@mapId)%>"></script>
 <% else %>
 <script src="/default.json"></script>

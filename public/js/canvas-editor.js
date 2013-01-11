@@ -3,8 +3,8 @@ $(function(){
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
-        width: $(window).width() * 2,
-        height: $(window).height() * 2,
+        width: $(window).width(),
+        height: $(window).height(),
         draggable:true
     }),
 dimensionProvider = function (title) {
@@ -26,7 +26,7 @@ mapModel.setIdea(idea);
 var attachTooltips=function(){
   _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
 }
-var attach_menu_listeners=function(active_content,selectedId){
+var attach_menu_listeners=function(active_content){
   var changed=false;
   var publishMap = function(result) {
     var publishTime=Date.now();
@@ -60,7 +60,7 @@ function updateTitle(newTitle){
 var load_content = function (jsonDocument) {
   var idea = content(jsonDocument);
   initCanvas(idea);
-  attach_menu_listeners(idea,function(){/* somehow get selected id*/ return idea.id});
+  attach_menu_listeners(idea);
   logMapActivity('View');
   updateTitle(idea.title);
 };
