@@ -21,8 +21,9 @@ Before release 1:
 //get selected id from canvas 
 //alert when map is changed to suggest saving
 //automatic canvas resizing
---fix connectors when dragging stage
---get map working on mobile devices
+//fix connectors when dragging stage
+//clean up console log
+//get map working on mobile devices
 
 
 --center map (try a single node map and see if it's in the center)
@@ -32,7 +33,7 @@ Before release 1:
 --clean up old editor dependencies
 
 replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
-clean up console log
+
 create google funnel for publishing workflow
 footer info
 

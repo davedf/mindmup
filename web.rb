@@ -45,7 +45,11 @@ end
 
 helpers do   
   def map_url mapId
-    "http://%s/%s.json" %  [settings.s3_website, (mapId.include?("/") ?  mapId : settings.s3_upload_folder + "/" + mapId)]
+    if settings.online?
+      "http://%s/%s.json" %  [settings.s3_website, (mapId.include?("/") ?  mapId : settings.s3_upload_folder + "/" + mapId)]
+    else
+      "/default.json"
+    end
   end
 end
 
