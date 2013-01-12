@@ -1,15 +1,14 @@
 $(function(){
   var mapModel; 
- 
-   showAlert("creating canvas of " , $('#container').width() +"x"+ $('#container').height());
+  var canvasSize= { width:  $('#container').width()/2, height: $('#container').height()/2};
+
+  showAlert("creating canvas of ",JSON.stringify(canvasSize)) ;
   
   var initCanvas=function(idea){
-    var stage = new Kinetic.Stage({
+    var stage = new Kinetic.Stage($.extend(canvasSize,{
       container: 'container',
-        width: $('#container').width(),
-        height: $('#container').height(),
-        draggable:true
-    }),
+      draggable:true
+    })),
     dimensionProvider = function (title) {
       var text = new Kinetic.Idea({
         text: title
