@@ -1,8 +1,7 @@
 $(function(){
   var mapModel; 
-  //var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
-  var canvasSize= { width:  100, height: 100};
-
+  var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
+  //var canvasSize= { width:  100, height: 100};
   showAlert("creating canvas of ",JSON.stringify(canvasSize)) ;
   
   var initCanvas=function(idea){
