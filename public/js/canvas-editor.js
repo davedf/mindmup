@@ -1,5 +1,8 @@
 $(function(){
   var mapModel; 
+ 
+   showAlert("creating canvas of " , $('#container').width() +"x"+ $('#container').height());
+  
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
