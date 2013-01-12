@@ -1,6 +1,7 @@
 $(function(){
   var mapModel; 
-  var canvasSize= { width:  $('#container').width()/2, height: $('#container').height()/2};
+  //var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
+  var canvasSize= { width:  100, height: 100};
 
   showAlert("creating canvas of ",JSON.stringify(canvasSize)) ;
   
