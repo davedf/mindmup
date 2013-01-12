@@ -1,11 +1,10 @@
 $(function(){
   var mapModel; 
   var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
-  //var canvasSize= { width:  100, height: 100};
-  showAlert("creating canvas of ",JSON.stringify(canvasSize)) ;
+  logUserActivity('Creating canvas Size ' + JSON.stringify(canvasSize));
   
   var initCanvas=function(idea){
-    var stage = new Kinetic.Stage($.extend(canvasSize,{
+    var stage = new Kinetic.Stage($.extend({},canvasSize,{
       container: 'container',
       draggable:true
     })),
@@ -35,7 +34,7 @@ var attach_menu_listeners=function(active_content){
   var publishMap = function(result) {
     var publishTime=Date.now();
     logMapActivity('Publish',result.key);
-    $("#s3form [name='file']").val("window.map=" + JSON.stringify(active_content));
+    $("#s3form [name='file']").val(JSON.stringify(active_content));
     for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
     $('#s3form').submit();
   }
@@ -68,6 +67,23 @@ var load_content = function (jsonDocument) {
   logMapActivity('View');
   updateTitle(idea.title);
 };
-load_content(window.map);
+var map_url=$('#container').attr('mindmap');
+var loadAlert=showAlert('Please wait, loading the map...');
+logUserActivity("loading map [" + map_url +"]");
+$.ajax(map_url,{
+    dataType: 'json',
+    success: function(result,status){
+        loadAlert.detach();
+        logUserActivity("loaded JSON map document");
+        load_content(result);
+    },
+    error: function(xhr,textStatus,errorMsg){
+      var msg="Error loading map document ["+map_url+"] status=" + textStatus + " error msg= " + errorMsg;
+      logUserActivity(msg);
+      loadAlert.detach();
+      showAlert('Unfortunately, there was a problem loading the map.','An automated error report was sent and we will look into this as soon as possible','error');
+      sendErrorReport(msg);
+    }
+});
 attachTooltips();
 });

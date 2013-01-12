@@ -1,6 +1,5 @@
 <link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
-<script src="<%=map_url(@mapId)%>"></script>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
 <script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>
@@ -11,10 +10,7 @@
 <script type="text/javascript" src="/mapjs/map-model.js"></script>
 <script type="text/javascript" src="/mapjs/kinetic-mediator.js"></script>
 <script type="text/javascript" src="/js/canvas-editor.js"></script>
-<script type="text/javascript">var switchTo5x=true;</script>
-<script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
-<script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
-<div id="container"></div>
+<div id="container" mindmap="<%=map_url(@mapId)%>"></div>
 <form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" >
   <input type="hidden" name="AWSAccessKeyId" > 

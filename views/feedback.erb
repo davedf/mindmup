@@ -39,19 +39,28 @@
 <iframe id="jotForm" name="jotForm" style="display:none;visibility:hidden" ></iframe>
 			
 <script>
+  sendErrorReport=function(message){
+    logActivity("Feedback","Open");
+    $('#modalFeedback textarea').val(message);
+    $('#modalFeedback [name=q1_name]').val('automated error report');
+    sendFeedbackForm();
+  }
+  sendFeedbackForm=function(){
+    $('#modalPageInfo').val(window.location.href);
+    $('#modalBrowserInfo').val(navigator.userAgent);
+    $('#modalActivityLog').val(JSON.stringify(_userActivityLog));
+    $('#modalScreenInfo').val(JSON.stringify(window.screen)+ " resolution:"+ $(window).width() +"x"+$(window).height());
+    $("#modalFeedback form").submit();			
+  }
 	$(function() {
 		$("#menuFeedback").click(function() {
 			logActivity("Feedback","Open");
       $('#modalFeedback textarea').val('');
-		});
+    });
 		$("#sendFeedBackBtn").click(function() {				
       logActivity("Feedback","Send");
-      $('#modalPageInfo').val(window.location.href);
-      $('#modalBrowserInfo').val(navigator.userAgent);
-      $('#modalActivityLog').val(JSON.stringify(_userActivityLog));
-      $('#modalScreenInfo').val(JSON.stringify(window.screen)+ " resolution:"+ $(window).width() +"x"+$(window).height());
-			$("#modalFeedback form").submit();			
-			$('#modalFeedback').modal('hide')
+      sendFeedbackForm();
+			$('#modalFeedback').modal('hide');
 			showAlert("Thank you for your feedback!","We'll get back to you as soon as possible.")
 		});
 	});

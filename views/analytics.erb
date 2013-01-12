@@ -28,6 +28,9 @@ var _userActivityLog=[];
 var _userActivityCounter=0;
 var _MAX_EVENTS_TO_LOG=10000;
 var logUserActivity=function(eventInfo){
+  <% unless production? %>
+    console.log("logUserActivity:",eventInfo);
+  <% end %>
   _userActivityCounter++;
   if (_userActivityLog.length>_MAX_EVENTS_TO_LOG) _userActivityLog.shift();
   _userActivityLog.push({id:_userActivityCounter,ts:(new Date()).toGMTString(),event:eventInfo});
