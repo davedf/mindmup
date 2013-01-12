@@ -78,27 +78,28 @@ var MAPJS = MAPJS || {};
 		}
 		return result;
 	};
-	MAPJS.calculateLayout = function (idea, dimensionProvider,margin) {
-    margin=margin||10;
+	MAPJS.calculateLayout = function (idea, dimensionProvider, margin) {
+		margin = margin || 10;
 		var result = {
 			nodes: {},
 			connectors: {}
 		},
-			calculateLayoutInner = function (positions,level) {
+			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
+			calculateLayoutInner = function (positions, level) {
 				var subIdeaRank, from, to;
-        level=level||1;
+				level = level || 1;
 				result.nodes[positions.id] = {
 					id: positions.id,
-					x: positions.x,
-					y: positions.y,
+					x: positions.x - root.x - 0.5 * root.width + margin,
+					y: positions.y - root.y - 0.5 * root.height + margin,
 					width: positions.width,
 					height: positions.height,
 					title: positions.title,
-          level:level
+					level: level
 				};
 				if (positions.ideas) {
 					for (subIdeaRank in positions.ideas) {
-						calculateLayoutInner(positions.ideas[subIdeaRank],level+1);
+						calculateLayoutInner(positions.ideas[subIdeaRank], level + 1);
 						from = positions.id;
 						to = positions.ideas[subIdeaRank].id;
 						result.connectors[to] = {
@@ -108,7 +109,7 @@ var MAPJS = MAPJS || {};
 					}
 				}
 			};
-		calculateLayoutInner(MAPJS.calculatePositions(idea, dimensionProvider, 10, 0, 0));
+		calculateLayoutInner(root);
 		return result;
 	};
 }());

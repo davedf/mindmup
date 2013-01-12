@@ -1,18 +1,5 @@
-<div id="container"></div>
-<form id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-  <input type="hidden" name="key" >
-  <input type="hidden" name="AWSAccessKeyId" > 
-  <input type="hidden" name="acl" value="public-read"> 
-  <input type="hidden" name="success_action_redirect" >
-  <input type="hidden" name="policy" >
-  <input type="hidden" name="signature" >
-  <input type="hidden" name="Content-Type">
-  <input type="hidden" name="file"/> 
-</form>
-
 <link href="/css/mindmap.css" rel="stylesheet"></link>
 <script src="/mapjs/observable.js"></script>
-
 <% if settings.online? then %>
 <script src="<%=map_url(@mapId)%>"></script>
 <% else %>
@@ -28,7 +15,17 @@
 <script type="text/javascript" src="/mapjs/map-model.js"></script>
 <script type="text/javascript" src="/mapjs/kinetic-mediator.js"></script>
 <script type="text/javascript" src="/js/canvas-editor.js"></script>
-
 <script type="text/javascript">var switchTo5x=true;</script>
 <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
 <script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
+<div id="container"></div>
+<form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="key" >
+  <input type="hidden" name="AWSAccessKeyId" > 
+  <input type="hidden" name="acl" value="public-read"> 
+  <input type="hidden" name="success_action_redirect" >
+  <input type="hidden" name="policy" >
+  <input type="hidden" name="signature" >
+  <input type="hidden" name="Content-Type">
+  <input type="hidden" name="file"/> 
+</form>

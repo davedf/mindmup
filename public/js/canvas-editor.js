@@ -3,19 +3,21 @@ $(function(){
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
-        width: $(window).width(),
-        height: $(window).height(),
+        width: $('#container').width(),
+        height: $('#container').height(),
         draggable:true
     }),
-dimensionProvider = function (title) {
-  var text = new Kinetic.Idea({
-    text: title
-  });
-  return {
-    width: text.getWidth(),
-height: text.getHeight()
-  };
-};
+    dimensionProvider = function (title) {
+      var text = new Kinetic.Idea({
+        text: title
+      });
+      return {
+        width: text.getWidth(),
+        height: text.getHeight()
+      };
+    };
+    stage.attrs.x = 0.5 * stage.getWidth();
+	  stage.attrs.y = 0.5 * stage.getHeight();
 
 mapModel = new MAPJS.MapModel(function layoutCalculator(idea) {
   return MAPJS.calculateLayout(idea, dimensionProvider);

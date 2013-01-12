@@ -1,20 +1,32 @@
-#container {
-  margin-top:80px;
+html, body {
+  height: 100%;
 }
-.alertContainer {
-  margin-top:80px;
-}  
+#container {
+  width:100%;
+  min-height: 100%;
+  background-color: #F4F0F8;
+}
+@media (min-width: 979px) {
+  #container {
+    margin-top:85px;
+  }
+}
+@media (max-width: 979px) {
+  .navbar-fixed-top {
+    margin-bottom:0px;
+  }
+}
 .ideaInput {
-
   position: absolute;
-  border: none;
   z-index: 999;
-  background-color: transparent;
-  color: #F8F8F8;
+  background-color: #5FBF5F;
+  color: #FFFFFF;
   font-family: 'Helvetica';
   font-weight: bold;
-  font-size: 13;
+  font-size: 13px;
+  line-height:13px;
   text-align: center;
+  padding:0;
 }
 .ideaInput:focus {
   outline: none;
