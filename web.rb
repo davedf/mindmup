@@ -2,6 +2,7 @@ require 'pp'
 require 'sinatra'
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require 'uuid'
+require 'aws-sdk'
 
 configure do
   set :s3_website,ENV['S3_WEBSITE']
@@ -17,6 +18,9 @@ configure do
   set :current_map_data_version, ENV['CURRENT_MAP_DATA_VERSION'] || "a1"
   offline =  ENV['OFFLINE'] || "online"
   set :online, offline == "offline" ? false : true
+  AWS.config(:access_key_id=>settings.s3_key_id, :secret_access_key=>settings.s3_secret_key)
+  s3=AWS::S3.new()
+  set :s3_bucket, s3.buckets[settings.s3_bucket_name]
 end
 get '/' do
   @mapId = settings.default_map
@@ -27,6 +31,10 @@ get "/s3/:mapId" do
   redirect "/map/#{params[:mapId]}"
 end
 
+get "/s3proxy/:mapId" do
+  response.headers['Content-Type']='application/json'
+  settings.s3_bucket.objects[map_key(params[:mapId])].read
+end
 get "/map/:mapId" do
   @mapId = params[:mapId]
   erb :editor
@@ -43,10 +51,13 @@ get "/publishingConfig" do
   erb :s3UploadConfig, :layout => false,locals:{s3_upload_identifier:s3_upload_identifier,s3_key:s3_key,s3_result_url:s3_result_url,signer:signer,policy:policy,s3_content_type:s3_content_type}
 end
 
-helpers do   
+helpers do  
+  def map_key mapId
+    (mapId.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapId + ".json"
+  end
   def map_url mapId
     if settings.online?
-      "http://%s/%s.json" %  [settings.s3_website, (mapId.include?("/") ?  mapId : settings.s3_upload_folder + "/" + mapId)]
+      "http://%s/%s" %  [settings.s3_website, map_key(mapId)]
     else
       "/default.json"
     end
