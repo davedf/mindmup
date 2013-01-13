@@ -27,7 +27,7 @@ Before release 1:
 //center map (try a single node map and see if it's in the center)
 //create google funnel for publishing workflow
 
-
+--remove scrollbar (make canvas extend to bottom of screen, not over that)
 --smaller collapsible menu (perhaps just mindmup and menu text, remove header, contact us etc)
 --labels on collapsed menu for mobile devices (hover isn't so good)
 --alert upon first change to save
