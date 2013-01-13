@@ -34,6 +34,8 @@ Before release 1:
 --alert upon load, to let people know this is in beta, perhaps link to feedback form immediately
 --clean up old editor dependencies
 
+--bugfix for reorder to last
+--resize canvas on window resize
 --line spacing
 --keyboard shortcuts: navigate using arrows, add sibling
 --styling on canvas map radii of link lines , radii of node rect corners
