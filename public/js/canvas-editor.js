@@ -60,30 +60,34 @@ function updateTitle(newTitle){
   $('.st_btn').attr('st_title',newTitle);
   $('.brand').text(newTitle);
 }
+var map_url=$('#container').attr('mindmap');
+var mapId=$('#container').attr('mapid');
+
 var load_content = function (jsonDocument) {
   var idea = content(jsonDocument);
   initCanvas(idea);
   attach_menu_listeners(idea);
-  logMapActivity('View');
+  logMapActivity('View',mapId);
   updateTitle(idea.title);
 };
-var map_url=$('#container').attr('mindmap');
-var loadAlert=showAlert('Please wait, loading the map...');
+var loadAlertDiv=showAlert('Please wait, loading the map...');
 logUserActivity("loading map [" + map_url +"]");
-$.ajax(map_url,{
-    dataType: 'json',
-    success: function(result,status){
-        loadAlert.detach();
+var jsonLoadSuccess= function(result,status){
+        loadAlertDiv.detach();
         logUserActivity("loaded JSON map document");
         load_content(result);
-    },
-    error: function(xhr,textStatus,errorMsg){
+    };
+var jsonFail= function(xhr,textStatus,errorMsg){
       var msg="Error loading map document ["+map_url+"] status=" + textStatus + " error msg= " + errorMsg;
       logUserActivity(msg);
-      loadAlert.detach();
+      loadAlertDiv.detach();
       showAlert('Unfortunately, there was a problem loading the map.','An automated error report was sent and we will look into this as soon as possible','error');
       sendErrorReport(msg);
-    }
-});
+    };
+var jsonTryProxy=function(map_url){
+  logMapActivity('ProxyLoad',mapId);
+  $.ajax('/s3proxy/'+mapId,{ dataType: 'json', success:jsonLoadSuccess, error: jsonFail });
+};
+$.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
 attachTooltips();
 });
