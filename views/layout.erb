@@ -38,27 +38,11 @@
           </a>
           <a class="brand" href="#">MindMup: Zero-friction online mind mapping</a>
           <ul class="nav pull-right nav-collapse">                 
-           
-            <li>
-            <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a>
-            </li>
-            <li class="menulink"><div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script> 
-<div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false"></div>
-</li>
-<li class="menulink">
-<a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow @mindmup</a>
-<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-</li>
-<li >
-<a href="http://blog.mindmup.com/feeds/posts/default" target="_blank">RSS News</a>
-</li>
+            <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a> </li>
+            <li> <a href="http://blog.mindmup.com">News/Blog <i class='icon-bullhorn'></i></a></li>
+            <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
+            <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
+            <li> <a href="http://blog.mindmup.com/feeds/posts/default" target="_blank">RSS</a> </li>
           </ul>
         </div>
         <div class="container">
@@ -100,8 +84,23 @@
     <%= erb :alert %>
     <%= erb :feedback %>
     <%= yield %>
+    <div class="alert bottombar"><button type="button" class="close" data-dismiss="alert">×</button>
+      <p><a href="/p/about">About this project</a> | <a href="/p/toc">Site terms & conditions</a> |  
+       <a href="#" class="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Contact us</a>  | 
+       <a href="http://blog.mindmup.com">Project News/Blog</a></li>
+      </p>
+    </div>
     <script type="text/javascript">var switchTo5x=true;</script>
     <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
     <script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script> 
   </body>
 </html>
