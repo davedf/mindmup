@@ -9,7 +9,6 @@ replace new node text with a random message from an array (eg 'A brilliant idea.
 
 Today Other
 
-better visual feedback on saving... test with network disconnect between load & save
 warn about saving if there are unsaved changes and people try to leave. (obviously, disable warning on saving)
 
 alert upon first change to save

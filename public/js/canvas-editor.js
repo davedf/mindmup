@@ -38,6 +38,12 @@ var attach_menu_listeners=function(active_content){
     for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
     $('#s3form').submit();
   }
+  var saveTimeoutOccurred = function() {
+    $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
+    $('#toolbarSave p').show();
+    showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
+    sendErrorReport('Map save failed');
+  }
   active_content.addEventSink(function() {
     if (!changed) {
       $("#toolbarShare").hide();
@@ -52,6 +58,10 @@ var attach_menu_listeners=function(active_content){
   $('#menuDelete').click(mapModel.removeSubIdea);
   $('#menuClear').click(mapModel.clear);
   $("#menuPublish").click(function(){
+    $(this).text('Saving...').removeClass('btn-primary').attr("disabled", true);
+    $('#toolbarSave p').hide();
+    setTimeout(saveTimeoutOccurred,5000);
+    logUserActivity('Fetching publishing config');
     $.getJSON("/publishingConfig", publishMap);
   });
 }

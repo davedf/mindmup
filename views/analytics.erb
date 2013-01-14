@@ -13,11 +13,13 @@
   })();	  
 var logActivity=function(category, eventType, label){
 	_gaq.push(['_trackEvent',category, eventType, label]);
+  logUserActivity(category + ',' + eventType + ',' + label);
 }
 
 <% else %>
 var logActivity=function(category, eventType, label){
 	console.log("logActivity:",category, eventType, label||'')
+  logUserActivity(category + ',' + eventType + ',' + label);
 }
 
 <% end %> 
