@@ -1,55 +1,27 @@
-Before release 1:
+Today Damjan
 
-//loading document from s3
-//bootstrap editor
-//tidy editor.erb - move js to script files 
-//move analytics code to editor or layout
-//saving map
-//redirecting after publish
-//Edit project name in menu bar
-//minify javascript files, load javascript from google cdn
-//feedback form
-//visitor tracking - on all pages, decide which events to track
-//connect domain fully - email addresses, subdomains etc
-//tidy up editor.erb
-//integrate damjan's canvas
-//Publish on canvas map
-//Analytics events on canvas map
-//mobile device friendly menus/toobar
-//word wrapping in nodes
-//clean map in toolbar
-//get selected id from canvas 
-//alert when map is changed to suggest saving
-//automatic canvas resizing
-//fix connectors when dragging stage
-//clean up console log
-//get map working on mobile devices
-//center map (try a single node map and see if it's in the center)
-//create google funnel for publishing workflow
-//remove scrollbar (make canvas extend to bottom of screen, not over that)
-//smaller collapsible menu (perhaps just mindmup and menu text, remove header, contact us etc)
-// footer: contact us, about, news
-// twitter, facebook buttons
+bugfix for reorder to last
+if nothing selected, execute menu bar commands on map center 
+resize canvas on window resize
+line spacing
+keyboard shortcuts: navigate using arrows, add sibling
+replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
 
---better visual feedback on saving... test with network disconnect between load & save
---warn about saving if there are unsaved changes and people try to leave. (obviously, disable warning on saving)
+Today Other
 
---alert upon first change to save
---alert upon load, to let people know this is in beta, perhaps link to feedback form immediately
---clean up old editor dependencies
+better visual feedback on saving... test with network disconnect between load & save
+warn about saving if there are unsaved changes and people try to leave. (obviously, disable warning on saving)
 
---bugfix for reorder to last
---if nothing selected, execute menu bar commands on map center 
---resize canvas on window resize
---line spacing
---keyboard shortcuts: navigate using arrows, add sibling
---replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
-
--- about and terms & conditions page
+alert upon first change to save
+alert upon load, to let people know this is in beta, perhaps link to feedback form immediately
+clean up old editor dependencies
+about and terms & conditions page
+get s3 to be maps.mindmup.com
+exploratory Testing
+sharing advanced segments
 
 
-- get s3 to be maps.mindmup.com
-
+========================
 - pure DOM renderer.
 alert...('Hi... we're in Beta and still sorting out accessibility on some devices. if the map does not load on your device, see the plain HTML version')
   
