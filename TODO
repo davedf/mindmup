@@ -10,8 +10,6 @@ replace new node text with a random message from an array (eg 'A brilliant idea.
 Today Other
 
 
-alert upon first change to save
-alert upon load, to let people know this is in beta, perhaps link to feedback form immediately
 clean up old editor dependencies
 about and terms & conditions page
 get s3 to be maps.mindmup.com
