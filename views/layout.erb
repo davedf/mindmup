@@ -31,8 +31,13 @@
     <div id='topbar' class="navbar navbar-fixed-top navbar">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">MindMup is the fastest way to create and share mind maps</a>
-          <ul class="nav pull-right">                 
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">MindMup: Zero-friction online mind mapping</a>
+          <ul class="nav pull-right nav-collapse">                 
            
             <li>
             <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a>
@@ -57,13 +62,8 @@
           </ul>
         </div>
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <div class="nav-collapse collapse">
-            <ul class="nav nav-pills pull-left">
+
+            <ul class="nav pull-left nav-collapse">
               <li><p class="navbar-text"><strong>Edit map:&nbsp; </strong> </p></li>
               <li> <button id="menuAdd" rel='tooltip' title='Add idea' class="btn"><i class="icon-plus" ></i></button> </li>
               <li> <button id="menuEdit" rel='tooltip' title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
@@ -77,7 +77,7 @@
               </ul>
             </span>
             <span id="toolbarShare" >
-              <ul class="nav nav-pills pull-right">
+              <ul class="nav nav-pills pull-right nav-collapse">
                 <li><p class="navbar-text"><strong>Share map:</strong> </p></li>
                 <li><span class='st_email_large st_btn' displayText='Email'></span></li>
                 <li><span class='st_twitter_large st_btn' displayText='Tweet'></span></li>
@@ -94,7 +94,6 @@
                 </li>
               </ul>
             </span>
-          </div>
         </div>
       </div>
     </div>
