@@ -5,7 +5,6 @@ require 'uuid'
 require 'aws-sdk'
 
 configure do
-  enable :sessions
   set :s3_website,ENV['S3_WEBSITE']
   set :base_url, ENV['SITE_URL'] || "/"
   set :s3_key_id, ENV['S3_KEY_ID']
@@ -55,8 +54,8 @@ end
 helpers do  
   def welcome_alert
 
-    unless session['welcome'] 
-      session['welcome'] = true;
+    if session['welcome'].nil? 
+      session['welcome'] = 'true';
       %q{<div class='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><p><strong>Welcome to MindMup</strong> We are still in Beta, so any 
          <a href='#' class='menuFeedback' data-target='#modalFeedback' data-toggle='modal'>feedback</a>
          is greatly appreciated, especially if you spot any problems.</p></div>}
