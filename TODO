@@ -28,6 +28,7 @@ Before release 1:
 //create google funnel for publishing workflow
 
 --remove scrollbar (make canvas extend to bottom of screen, not over that)
+--warn about saving if there are unsaved changes and people try to leave. (obviously, disable warning on saving)
 --smaller collapsible menu (perhaps just mindmup and menu text, remove header, contact us etc)
 --labels on collapsed menu for mobile devices (hover isn't so good)
 --alert upon first change to save
