@@ -6,11 +6,6 @@ html, body {
   min-height: 100%;
   background-color: #F4F0F8;
 }
-@media (min-width: 979px) {
-  #container {
-    margin-top:85px;
-  }
-}
 @media (max-width: 979px) {
   .navbar-fixed-top {
     margin-bottom:0px;

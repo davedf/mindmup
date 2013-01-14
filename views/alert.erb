@@ -2,6 +2,6 @@
   function showAlert(message,detail,type) {
     type=type||'info';
     detail=detail||'';
-		return $('<div class="alert fade in alert-'+type+'"><button type="button" class="close" data-dismiss="alert">×</button><strong>' + message + '</strong>&nbsp;' + detail + '</div>').prependTo('#container');
+		return $('<div class="alert fade in alert-'+type+'"><button type="button" class="close" data-dismiss="alert">×</button><strong>' + message + '</strong>&nbsp;' + detail + '</div>').appendTo('#topbar');
 	}
 </script>
