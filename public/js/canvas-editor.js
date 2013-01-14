@@ -60,7 +60,7 @@ $(function(){
     $('#menuClear').click(mapModel.clear);
     $("#menuPublish").click(function(){
       saving = true;
-      $(this).text('Saving...').removeClass('btn-primary').attr("disabled", true);
+      $(this).html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
       $('#toolbarSave p').hide();
       setTimeout(saveTimeoutOccurred,5000);
       logUserActivity('Fetching publishing config');
@@ -82,7 +82,7 @@ $(function(){
     logMapActivity('View',mapId);
     updateTitle(idea.title);
   };
-  var loadAlertDiv=showAlert('Please wait, loading the map...');
+  var loadAlertDiv=showAlert('Please wait, loading the map...','<i class="icon-spinner icon-spin"></i>');
   logUserActivity("loading map [" + map_url +"]");
   var jsonLoadSuccess= function(result,status){
     loadAlertDiv.detach();

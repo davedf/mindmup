@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <% if settings.online? then %>
       <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="http://mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css">
     <% else %>
       <link href="/css/offline/bootstrap-combined.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="/fortawesome/font-awesome.min.css">
     <% end %>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -37,12 +39,10 @@
             <span class="icon-bar"></span>
           </a>
           <a class="brand" href="#">MindMup: Zero-friction online mind mapping</a>
-          <ul class="nav pull-right nav-collapse">                 
+          <ul class="nav pull-right nav-collapse">
             <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a> </li>
             <li> <a href="http://blog.mindmup.com" target="_blank">News/Blog <i class='icon-bullhorn'></i></a></li>
-            <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
-            <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
-            <li> <a href="http://blog.mindmup.com/feeds/posts/default" target="_blank">RSS</a> </li>
+            <li> <a href="http://blog.mindmup.com/feeds/posts/default" target="_blank">RSS<i class="icon-rss"></i></a> </li>
           </ul>
         </div>
         <div class="container">
@@ -60,8 +60,7 @@
                 <li><button id="menuPublish" class="btn btn-primary">Save Now</button></li>
               </ul>
             </span>
-            <span id="toolbarShare" >
-              <ul class="nav nav-pills pull-right nav-collapse">
+              <ul  id="toolbarShare" class="nav nav-pills pull-right nav-collapse">
                 <li><p class="navbar-text"><strong>Share map:</strong> </p></li>
                 <li><span class='st_email_large st_btn' displayText='Email'></span></li>
                 <li><span class='st_twitter_large st_btn' displayText='Tweet'></span></li>
@@ -77,7 +76,11 @@
                 </div>
                 </li>
               </ul>
-            </span>
+          <ul id="toolbarSocial" class="nav nav-collapse pull-right">                 
+            <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false"
+              data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
+            <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
+          </ul>
         </div>
       </div>
       <%=welcome_alert%>
