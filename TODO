@@ -28,6 +28,8 @@ Before release 1:
 //create google funnel for publishing workflow
 //remove scrollbar (make canvas extend to bottom of screen, not over that)
 //smaller collapsible menu (perhaps just mindmup and menu text, remove header, contact us etc)
+// footer: contact us, about, news
+// twitter, facebook buttons
 
 --better visual feedback on saving... test with network disconnect between load & save
 --warn about saving if there are unsaved changes and people try to leave. (obviously, disable warning on saving)
@@ -37,19 +39,17 @@ Before release 1:
 --clean up old editor dependencies
 
 --bugfix for reorder to last
+--if nothing selected, execute menu bar commands on map center 
 --resize canvas on window resize
 --line spacing
---if nothing selected, execute menu bar commands on map center 
 --keyboard shortcuts: navigate using arrows, add sibling
---styling on canvas map radii of link lines , radii of node rect corners
 --replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
 
+-- about and terms & conditions page
 
-footer info
 
 - get s3 to be maps.mindmup.com
-- footer: contact us, about, news
-- twitter, facebook buttons
+
 - pure DOM renderer.
 alert...('Hi... we're in Beta and still sorting out accessibility on some devices. if the map does not load on your device, see the plain HTML version')
   
