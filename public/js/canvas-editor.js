@@ -1,5 +1,6 @@
 $(function(){
   var mapModel; 
+  var mediator;
   var changed=false;
   var saving=false;
   var container = jQuery('#container');
@@ -21,7 +22,7 @@ $(function(){
         'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'
         ]
         );
-    var mediator = new MAPJS.KineticMediator(mapModel, stage);
+    mediator = new MAPJS.KineticMediator(mapModel, stage);
     var	setStageDimensions = function () {
       stage.setWidth(container.width());
       stage.setHeight(container.height());
@@ -108,6 +109,14 @@ $(function(){
     logMapActivity('ProxyLoad',mapId);
     $.ajax('/s3proxy/'+mapId,{ dataType: 'json', success:jsonLoadSuccess, error: jsonFail });
   };
+  $('.modal').on('show', function () {
+    mediator.enableInput(false);
+  });
+  $('.modal').on('hidden', function () {
+    mediator.enableInput(true);
+  });
+
+
   $.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
   attachTooltips();
   $(window).bind('beforeunload', function() {
