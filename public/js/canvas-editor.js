@@ -2,30 +2,36 @@ $(function(){
   var mapModel; 
   var changed=false;
   var saving=false;
+  var container = jQuery('#container');
   var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
   logUserActivity('Creating canvas Size ' + JSON.stringify(canvasSize));
 
   var initCanvas=function(idea){
-    var stage = new Kinetic.Stage($.extend({},canvasSize,{
+    var stage = new Kinetic.Stage({
       container: 'container',
         draggable:true
-    })),
-    dimensionProvider = function (title) {
-      var text = new Kinetic.Idea({
-        text: title
-      });
-      return {
-        width: text.getWidth(), height: text.getHeight()
-      };
+    });
+    mapModel = new MAPJS.MapModel(
+        function layoutCalculator(idea) {
+          return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
+        }, [
+        'A brilliant idea...',
+        'A cunning plan...',
+        'We\'ll be famous...',
+        'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'
+        ]
+        );
+    var mediator = new MAPJS.KineticMediator(mapModel, stage);
+    var	setStageDimensions = function () {
+      stage.setWidth(container.width());
+      stage.setHeight(container.height());
+      stage.draw();
     };
+    setStageDimensions();
     stage.attrs.x = 0.5 * stage.getWidth();
     stage.attrs.y = 0.5 * stage.getHeight();
-
-    mapModel = new MAPJS.MapModel(function layoutCalculator(idea) {
-      return MAPJS.calculateLayout(idea, dimensionProvider);
-    });
-    var mediator = new MAPJS.KineticMediator(mapModel, stage);
     mapModel.setIdea(idea);
+    $(window).resize(setStageDimensions);
   }
   var attachTooltips=function(){
     _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
@@ -54,7 +60,7 @@ $(function(){
       }
       logUserActivity(_.toArray(arguments));
     });
-    $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, 'double click to edit'));
+    $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, null));
     $('#menuEdit').click(mapModel.editNode);
     $('#menuDelete').click(mapModel.removeSubIdea);
     $('#menuClear').click(mapModel.clear);
@@ -105,5 +111,5 @@ $(function(){
   $(window).bind('beforeunload', function() {
     if (changed && !saving) {
       return 'There are unsaved changes.';
-  }});
+    }});
 });

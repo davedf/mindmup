@@ -2,7 +2,11 @@
 <script src="/mapjs/observable.js"></script>
 <script src="/mapjs/content.js"></script>
 <script src="/mapjs/mindmap.js"></script>
-<script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>
+<% if settings.online? then %>
+  <script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>
+<% else %>
+  <script type="text/javascript" src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0.js"></script>
+<% end %>
 <script type="text/javascript" src="/mapjs/kinetic.bezier.js"></script>
 <script type="text/javascript" src="/mapjs/kinetic.idea.js"></script>
 <script type="text/javascript" src="/mapjs/kinetic.connector.js"></script>
