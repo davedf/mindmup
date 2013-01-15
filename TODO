@@ -1,18 +1,16 @@
 Today Damjan
 
-bugfix for reorder to last
-if nothing selected, execute menu bar commands on map center 
-resize canvas on window resize
-line spacing
-keyboard shortcuts: navigate using arrows, add sibling
-replace new node text with a random message from an array (eg 'A brilliant idea...','A cunning plan...','We'll be famous...')
 
 Today Other
-
+on node deletion, select parent node
+press space to edit
+exploratory Testing
+newly added node gets selected
+newly added node is in edit mode
+clear map recenter and set node to edit
 
 clean up old editor dependencies
 get s3 to be maps.mindmup.com
-exploratory Testing
 sharing advanced segments
 
 

@@ -56,7 +56,9 @@ helpers do
 
     if session['welcome'].nil? 
       session['welcome'] = 'true';
-      %q{<div class='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><p><strong>Welcome to MindMup</strong> We are still in Beta, so any 
+      %q{<div class='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>
+      <p><strong>Welcome to MindMup</strong>
+      We are still in Beta and the site doesn't work on mobile devices yet. Any 
          <a href='#' class='menuFeedback' data-target='#modalFeedback' data-toggle='modal'>feedback</a>
          is greatly appreciated, especially if you spot any problems.</p></div>}
     end

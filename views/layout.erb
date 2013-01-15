@@ -48,7 +48,7 @@
         <div class="container">
 
             <ul class="nav pull-left nav-collapse">
-              <li><p class="navbar-text"><strong>Edit map:&nbsp; </strong> </p></li>
+              <li> <button id="menuHelp" rel='tooltip' title='Help' class="btn" data-target="#modalHelp" data-toggle="modal"><i class="icon-info-sign" ></i></button> </li>
               <li> <button id="menuAdd" rel='tooltip' title='Add idea' class="btn"><i class="icon-plus" ></i></button> </li>
               <li> <button id="menuEdit" rel='tooltip' title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
               <li> <button id="menuDelete" rel='tooltip' title='Delete idea' class="btn"><i class="icon-remove"></i></button> </li>
@@ -89,6 +89,7 @@
     <%= erb :alert %>
     <%= erb :feedback %>
     <%= erb :about %>
+    <%= erb :help %>
     <%= erb :terms_and_conditions%>
     <%= yield %>
     <div class="alert bottombar"><button type="button" class="close" data-dismiss="alert">×</button>
