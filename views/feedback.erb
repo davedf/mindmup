@@ -52,8 +52,8 @@
     $('#modalScreenInfo').val(JSON.stringify(window.screen)+ " resolution:"+ $(window).width() +"x"+$(window).height());
     $("#modalFeedback form").submit();			
   }
-	$(function() {
-		$(".menuFeedback").click(function() {
+  $(function() {
+    $('#modalFeedback').on('show', function () {
 			logActivity("Feedback","Open");
       $('#modalFeedback textarea').val('');
     });
