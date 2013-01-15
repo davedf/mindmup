@@ -29,7 +29,9 @@ $(function(){
     };
     setStageDimensions();
     stage.attrs.x = 0.5 * stage.getWidth();
-    stage.attrs.y = 0.5 * stage.getHeight();
+    var initialLayout=MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
+    var minY=_.min(initialLayout.nodes, function(node){return node.y}).y;
+    stage.attrs.y = Math.max(-1*minY+$('#topbar').outerHeight()+5,0.5 * stage.getHeight());
     mapModel.setIdea(idea);
     $(window).resize(setStageDimensions);
   }
