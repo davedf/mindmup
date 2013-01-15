@@ -72,6 +72,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			callback: node.remove.bind(node)
 		});
 		node.off('click dblclick tap dragstart dragmove dragend mouseover mouseout :textChanged :nodeEditRequested');
+		mapModel.removeEventListener('nodeEditRequested:' + n.id, node.editNode);
 	});
 	mapModel.addEventListener('nodeMoved', function (n, reason) {
 		var node = nodeByIdeaId[n.id];
@@ -117,7 +118,11 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	(function () {
 		var keyboardEventHandlers = {
 			13: mapModel.addSubIdea.bind(mapModel),
-			8: mapModel.removeSubIdea.bind(mapModel)
+			8: mapModel.removeSubIdea.bind(mapModel),
+			37: mapModel.selectNodeLeft.bind(mapModel),
+			38: mapModel.selectNodeUp.bind(mapModel),
+			39: mapModel.selectNodeRight.bind(mapModel),
+			40: mapModel.selectNodeDown.bind(mapModel)
 		};
 		jQuery(document).keydown(function (evt) {
 			var eventHandler = keyboardEventHandlers[evt.which];
@@ -127,4 +132,14 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			}
 		});
 	}());
+};
+MAPJS.KineticMediator.dimensionProvider = function (title) {
+	'use strict';
+	var text = new Kinetic.Idea({
+		text: title
+	});
+	return {
+		width: text.getWidth(),
+		height: text.getHeight()
+	};
 };

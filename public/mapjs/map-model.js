@@ -1,7 +1,8 @@
 /*global observable*/
 var MAPJS = MAPJS || {};
-MAPJS.MapModel = function (layoutCalculator) {
+MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	'use strict';
+	titlesToRandomlyChooseFrom = titlesToRandomlyChooseFrom || ['double click to edit'];
 	var self = this,
 		currentLayout = {
 			nodes: {},
@@ -62,6 +63,7 @@ MAPJS.MapModel = function (layoutCalculator) {
 		idea = anIdea;
 		idea.addEventListener('changed', onIdeaChanged);
 		onIdeaChanged();
+		self.selectNode(idea.id);
 	};
 	this.selectNode = function (id) {
 		if (id !== currentlySelectedIdeaId) {
@@ -72,8 +74,105 @@ MAPJS.MapModel = function (layoutCalculator) {
 			self.dispatchEvent('nodeSelectionChanged', id, true);
 		}
 	};
+	var parentNode = function (root, id) {
+		var rank, childResult;
+		for (rank in root.ideas) {
+			if (root.ideas[rank].id === id) {
+				return root;
+			}
+			childResult = parentNode(root.ideas[rank], id);
+			if (childResult) {
+				return childResult;
+			}
+		}
+	};
+	var isRootOrRightHalf = function (id) {
+		return currentLayout.nodes[id].x >= currentLayout.nodes[idea.id].x;
+	};
+	var isRootOrLeftHalf = function (id) {
+		return currentLayout.nodes[id].x <= currentLayout.nodes[idea.id].x;
+	};
+	this.selectNodeLeft = function () {
+		var node,
+			rank,
+			isRoot = currentlySelectedIdeaId === idea.id,
+			targetRank = isRoot ? -Infinity : Infinity,
+			targetNode;
+		if (isRootOrLeftHalf(currentlySelectedIdeaId)) {
+			node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
+			for (rank in node.ideas) {
+				rank = parseFloat(rank);
+				if (isRoot && rank < 0 && rank > targetRank || !isRoot && rank > 0 && rank < targetRank) {
+					targetRank = rank;
+				}
+			}
+			if (targetRank !== Infinity && targetRank !== -Infinity) {
+				self.selectNode(node.ideas[targetRank].id);
+			}
+		} else {
+			self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
+		}
+	};
+	this.selectNodeRight = function () {
+		var node, rank, minimumPositiveRank = Infinity;
+		if (isRootOrRightHalf(currentlySelectedIdeaId)) {
+			node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
+			for (rank in node.ideas) {
+				rank = parseFloat(rank);
+				if (rank > 0 && rank < minimumPositiveRank) {
+					minimumPositiveRank = rank;
+				}
+			}
+			if (minimumPositiveRank !== Infinity) {
+				self.selectNode(node.ideas[minimumPositiveRank].id);
+			}
+		} else {
+			self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
+		}
+	};
+	var currentlySelectedIdeaRank = function (parent) {
+		var rank;
+		for (rank in parent.ideas) {
+			rank = parseFloat(rank);
+			if (parent.ideas[rank].id === currentlySelectedIdeaId) {
+				return rank;
+			}
+		}
+	};
+	this.selectNodeUp = function () {
+		var parent = parentNode(idea, currentlySelectedIdeaId), myRank, previousSiblingRank, rank;
+		if (parent) {
+			myRank = currentlySelectedIdeaRank(parent);
+			previousSiblingRank = myRank > 0 ? -Infinity : Infinity;
+			for (rank in parent.ideas) {
+				rank = parseFloat(rank);
+				if (myRank < 0 && rank < 0 && rank > myRank && rank < previousSiblingRank || myRank > 0 && rank > 0 && rank < myRank && rank > previousSiblingRank) {
+					previousSiblingRank = rank;
+				}
+			}
+			if (previousSiblingRank !== Infinity && previousSiblingRank !== -Infinity) {
+				self.selectNode(parent.ideas[previousSiblingRank].id);
+			}
+		}
+	};
+	this.selectNodeDown = function () {
+		var parent = parentNode(idea, currentlySelectedIdeaId), myRank, nextSiblingRank, rank;
+		if (parent) {
+			myRank = currentlySelectedIdeaRank(parent);
+			nextSiblingRank = myRank > 0 ? Infinity : -Infinity;
+			for (rank in parent.ideas) {
+				rank = parseFloat(rank);
+				if (myRank < 0 && rank < 0 && rank < myRank && rank > nextSiblingRank || myRank > 0 && rank > 0 && rank > myRank && rank < nextSiblingRank) {
+					nextSiblingRank = rank;
+				}
+			}
+			if (nextSiblingRank !== Infinity && nextSiblingRank !== -Infinity) {
+				self.selectNode(parent.ideas[nextSiblingRank].id);
+			}
+		}
+	};
 	this.addSubIdea = function (title) {
-		idea.addSubIdea(currentlySelectedIdeaId, title || 'double click to edit');
+		idea.addSubIdea(currentlySelectedIdeaId, title || titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())]);
 	};
 	this.removeSubIdea = function () {
 		idea.removeSubIdea(currentlySelectedIdeaId);
@@ -123,7 +222,7 @@ MAPJS.MapModel = function (layoutCalculator) {
 			nodeId,
 			node,
 			rootNode = currentLayout.nodes[idea.id],
-			verticallyClosestNode;
+			verticallyClosestNode = { id: null, y: Infinity };
 		updateCurrentDroppable(undefined);
 		self.dispatchEvent('nodeMoved', nodeBeingDragged);
 		for (nodeId in currentLayout.nodes) {
@@ -144,10 +243,8 @@ MAPJS.MapModel = function (layoutCalculator) {
 				return;
 			}
 		}
-		if (verticallyClosestNode) {
-			if (idea.positionBefore(id, verticallyClosestNode.id)) {
-				return;
-			}
+		if (idea.positionBefore(id, verticallyClosestNode.id)) {
+			return;
 		}
 		self.dispatchEvent('nodeMoved', nodeBeingDragged, 'failed');
 	};
