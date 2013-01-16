@@ -1,5 +1,5 @@
 $(function(){
-  var mapModel; 
+  var mapModel;
   var mediator;
   var changed=false;
   var saving=false;
@@ -110,10 +110,10 @@ $(function(){
     $.ajax('/s3proxy/'+mapId,{ dataType: 'json', success:jsonLoadSuccess, error: jsonFail });
   };
   $('.modal').on('show', function () {
-    mediator.enableInput(false);
+    mapModel.setInputEnabled(false);
   });
   $('.modal').on('hidden', function () {
-    mediator.enableInput(true);
+    mapModel.setInputEnabled(true);
   });
 
 
