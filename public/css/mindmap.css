@@ -11,14 +11,6 @@ html, body {
 #toolbarSocial {
   margin-right: 20px;
 }
-#logo-img {
-  width:30px;
-  height:30px;
-  margin:3px 0px 0px 10px;
-}
-#logo-link {
-  padding:0px;
-}
 @media (max-width: 979px) {
   .navbar-fixed-top {
     margin-bottom:0px;
