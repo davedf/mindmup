@@ -16,6 +16,7 @@ configure do
   set :s3_max_upload_size, 100
   set :key_id_generator, UUID.new
   set :current_map_data_version, ENV['CURRENT_MAP_DATA_VERSION'] || "a1"
+  set :network_timeout_millis, ENV['NETWORK_TIMEOUT_MILLIS']||10000
   offline =  ENV['OFFLINE'] || "online"
   set :online, offline == "offline" ? false : true
   AWS.config(:access_key_id=>settings.s3_key_id, :secret_access_key=>settings.s3_secret_key)

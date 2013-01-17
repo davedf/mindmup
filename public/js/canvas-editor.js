@@ -40,21 +40,33 @@ $(function(){
     _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
   }
   var attach_menu_listeners=function(active_content){
-    var publishMap = function(result) {
-      var publishTime=Date.now();
-      logMapActivity('Publish',result.key);
-      $("#s3form [name='file']").val(JSON.stringify(active_content));
-      for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
-      $('#s3form').submit();
-    }
-    var saveTimeoutOccurred = function() {
-      saving=false;
-      $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
-      $('#toolbarSave p').show();
-      showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
-      sendErrorReport('Map save failed');
-    }
+    var publishMap=function(){
+      var saveTimeoutOccurred = function() {
+        $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
+        $('#toolbarSave p').show();
+        showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
+        sendErrorReport('Map save failed');
+      }
+      var submitS3Form = function(result) {
+        var publishTime=Date.now();
+        logMapActivity('Publish',result.key);
+        $("#s3form [name='file']").val(JSON.stringify(active_content));
+        for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
+        saving = true;
+        $('#s3form').submit();
+      }
+      var fetchPublishingConfig=function(){
+        logUserActivity('Fetching publishing config');
+        $.ajax("/publishingConfig",{dataType: 'json',success:submitS3Form, error:function(result){
+          setTimeout(fetchPublishingConfig,1000);
+         }
+        });
+      }
+      setTimeout(saveTimeoutOccurred,parseInt(container.attr('network_timeout_millis')));
+      fetchPublishingConfig();
+    };
     active_content.addEventSink(function() {
+      saving=false;
       if (!changed) {
         $("#toolbarShare").hide();
         $("#toolbarSave").show();
@@ -68,12 +80,9 @@ $(function(){
     $('#menuDelete').click(mapModel.removeSubIdea);
     $('#menuClear').click(mapModel.clear);
     $("#menuPublish").click(function(){
-      saving = true;
-      $(this).html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
+      $('#menuPublish').html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
       $('#toolbarSave p').hide();
-      setTimeout(saveTimeoutOccurred,5000);
-      logUserActivity('Fetching publishing config');
-      $.getJSON("/publishingConfig", publishMap);
+      publishMap();
     });
   }
   function updateTitle(newTitle){
