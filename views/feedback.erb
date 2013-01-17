@@ -40,7 +40,7 @@
 			
 <script>
   sendErrorReport=function(message){
-    logActivity("Feedback","Open");
+		logActivity("Error",message);
     $('#modalFeedback textarea').val(message);
     $('#modalFeedback [name=q1_name]').val('automated error report');
     sendFeedbackForm();

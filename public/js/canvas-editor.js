@@ -41,13 +41,16 @@ $(function(){
   }
   var attach_menu_listeners=function(active_content){
     var publishMap=function(){
+      var publishing = true;
       var saveTimeoutOccurred = function() {
+        publishing = false;
         $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
         $('#toolbarSave p').show();
         showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
         sendErrorReport('Map save failed');
       }
       var submitS3Form = function(result) {
+        publishing=false;
         var publishTime=Date.now();
         logMapActivity('Publish',result.key);
         $("#s3form [name='file']").val(JSON.stringify(active_content));
@@ -58,7 +61,7 @@ $(function(){
       var fetchPublishingConfig=function(){
         logUserActivity('Fetching publishing config');
         $.ajax("/publishingConfig",{dataType: 'json',success:submitS3Form, error:function(result){
-          setTimeout(fetchPublishingConfig,1000);
+          if (publishing) setTimeout(fetchPublishingConfig,1000);
          }
         });
       }
