@@ -79,7 +79,7 @@ $(function(){
   function updateTitle(newTitle){
     document.title=newTitle;
     $('.st_btn').attr('st_title',newTitle);
-    $('.brand').text(newTitle);
+    $('#map_title').text(newTitle);
   }
   var map_url=$('#container').attr('mindmap');
   var mapId=$('#container').attr('mapid');
