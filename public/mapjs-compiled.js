@@ -740,13 +740,15 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			opacity: 0.4
 		};
 		config.cornerRadius = 10;
-		config.draggable = config.level > 1;
+		config.draggable = true;
 		config.name = 'Idea';
 		Kinetic.Text.apply(this, [config]);
 		this.classType = 'Idea';
 		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
-		this.on('mouseover touchstart', setStageDraggable.bind(null, false));
-		this.on('mouseout touchend', setStageDraggable.bind(null, true));
+		if (config.level > 1) {
+			this.on('mouseover touchstart', setStageDraggable.bind(null, false));
+			this.on('mouseout touchend', setStageDraggable.bind(null, true));
+		}
 		this.editNode = function (shouldSelectAll) {
 			//this only works for solid color nodes
 			self.attrs.textFill = self.attrs.fill;
@@ -789,6 +791,12 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			if (shouldSelectAll) {
 				ideaInput.select();
 			}
+			self.getStage().on('xChange yChange', function () {
+				ideaInput.css({
+					top: canvasPosition.top + self.getAbsolutePosition().y,
+					left: canvasPosition.left + self.getAbsolutePosition().x
+				});
+			});
 		};
 	};
 }());
@@ -906,6 +914,26 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
 		var node = nodeByIdeaId[ideaId];
+		var finalStagePosition = {
+			x: stage.attrs.x,
+			y: stage.attrs.y
+		}
+		if (node.getAbsolutePosition().x + node.getWidth() > stage.getWidth()) {
+			finalStagePosition.x = stage.getWidth() - node.attrs.x - node.getWidth();
+		} else if (node.getAbsolutePosition().x < 0) {
+			finalStagePosition.x = -node.attrs.x;
+		}
+		if (node.getAbsolutePosition().y + node.getHeight() > stage.getHeight()) {
+			finalStagePosition.y = stage.getHeight() - node.attrs.y - node.getHeight();
+		} else if (node.getAbsolutePosition().y < 0) {
+			finalStagePosition.y = -node.attrs.y;
+		}
+		stage.transitionTo({
+			x: finalStagePosition.x,
+			y: finalStagePosition.y,
+			duration: 0.4,
+			easing: 'ease-in-out'
+		});
 		node.setIsSelected(isSelected);
 	});
 	mapModel.addEventListener('nodeDroppableChanged', function (ideaId, isDroppable) {
