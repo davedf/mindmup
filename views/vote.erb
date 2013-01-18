@@ -1,0 +1,39 @@
+<div id='modalVote' class='modal hide fade'>
+  <div class='modal-header'>
+    <button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
+    <h3>Vote on the next set of improvements</h3>
+  </div>
+  <div class='modal-body' >
+    <p>We love all the feedback you sent recently. To give you more power and influence over our work, let us know what you'd like us to focus on next.</p>
+    <form id="voteform">  
+  <label class="radio">
+  <input type="radio" name="optionsRadios" id="" value="file export">File export, saving into different formats...
+</label>
+<label class="radio">
+  <input type="radio" name="optionsRadios" id="optionsRadios2" value="bookmarks">A list of your maps, editing history...
+</label>
+<label class="radio">
+  <input type="radio" name="optionsRadios" id="optionsRadios2" value="node power">More powerful nodes: images, links, notes, ability to tick things off
+</label>
+<label class="radio">
+  <input type="radio" name="optionsRadios" id="optionsRadios2" value="personalisation">Personalising map style
+</label>
+<input type="text" name="other" placeholder="...Or something else?"/>
+</form>
+  </div>
+  <div class='modal-footer'>
+    <a href='#' data-dismiss='modal' class='btn'>Close</a>
+    <a href='#' data-dismiss='modal' class='btn btn-primary' id='sendVote'><i class='icon-thumbs-up'></i> Cast your vote</a>
+  </div>
+</div>
+
+<script>
+  $('#modalVote').on('show', function(){
+    $("input:checked","#voteform").attr("checked", false);
+    $("[name=other]","#voteform").val('');
+  });
+  $('#sendVote').click(function(){
+    logActivity('Feature Vote', $('input:checked','#voteform').val() || $('[name=other]','#voteform').val())
+    showAlert("Thanks for voting","We'll do our best to roll popular features out quickly","success");
+  });
+</script>
