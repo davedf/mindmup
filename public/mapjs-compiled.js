@@ -913,20 +913,21 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		});
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
-		var node = nodeByIdeaId[ideaId];
-		var finalStagePosition = {
-			x: stage.attrs.x,
-			y: stage.attrs.y
+		var node = nodeByIdeaId[ideaId],
+			finalStagePosition = {
+				x: stage.attrs.x,
+				y: stage.attrs.y
+			},
+			offset = 100;
+		if (node.getAbsolutePosition().x + node.getWidth() + offset > stage.getWidth()) {
+			finalStagePosition.x = stage.getWidth() - node.attrs.x - node.getWidth() - offset;
+		} else if (node.getAbsolutePosition().x < offset) {
+			finalStagePosition.x = -node.attrs.x + offset;
 		}
-		if (node.getAbsolutePosition().x + node.getWidth() > stage.getWidth()) {
-			finalStagePosition.x = stage.getWidth() - node.attrs.x - node.getWidth();
-		} else if (node.getAbsolutePosition().x < 0) {
-			finalStagePosition.x = -node.attrs.x;
-		}
-		if (node.getAbsolutePosition().y + node.getHeight() > stage.getHeight()) {
-			finalStagePosition.y = stage.getHeight() - node.attrs.y - node.getHeight();
-		} else if (node.getAbsolutePosition().y < 0) {
-			finalStagePosition.y = -node.attrs.y;
+		if (node.getAbsolutePosition().y + node.getHeight() + offset > stage.getHeight()) {
+			finalStagePosition.y = stage.getHeight() - node.attrs.y - node.getHeight() - offset;
+		} else if (node.getAbsolutePosition().y < offset) {
+			finalStagePosition.y = -node.attrs.y + offset;
 		}
 		stage.transitionTo({
 			x: finalStagePosition.x,
