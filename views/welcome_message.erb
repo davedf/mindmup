@@ -13,7 +13,7 @@ next_message=0;
 if session['welcome']=='true'
   next_message=1; #legacy check
 else
-  next_message=session['welcome'].to_i unless session['welcome'].nil?
+  next_message=session['welcome'].to_s.to_i unless session['welcome'].nil?
 end
 
 if next_message<messages.length then
