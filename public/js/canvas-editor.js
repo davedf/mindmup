@@ -57,7 +57,7 @@ $(function(){
       }
       var fetchPublishingConfig=function(){
         logUserActivity('Fetching publishing config');
-        $.ajax("/publishingConfig",{dataType: 'json',success:submitS3Form, error:function(result){
+        $.ajax("/publishingConfig",{dataType: 'json',cache:false,success:submitS3Form, error:function(result){
           if (publishing) setTimeout(fetchPublishingConfig,1000);
          }
         });
