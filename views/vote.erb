@@ -28,12 +28,19 @@
 </div>
 
 <script>
+$(function(){
   $('#modalVote').on('show', function(){
     $("input:checked","#voteform").attr("checked", false);
     $("[name=other]","#voteform").val('');
   });
   $('#sendVote').click(function(){
-    logActivity('Feature Vote', $('input:checked','#voteform').val() || $('[name=other]','#voteform').val())
-    showAlert("Thanks for voting","We'll do our best to roll popular features out quickly","success");
+    var val=$('input:checked','#voteform').val() || $('[name=other]','#voteform').val();
+    if (val){
+      logActivity('Feature Vote',val) 
+      showAlert("Thanks for voting","We'll do our best to roll popular features out quickly","success");
+    }
+    else return false;
   });
+  if (document.location.hash=='#vote'){ $('#modalVote').modal('show');}
+});
 </script>
