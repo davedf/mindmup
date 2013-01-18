@@ -12,7 +12,7 @@ html, body {
   margin-right: 20px;
 }
 #logo-img {
- background-image:url('/logo_32.png');
+ background-image:url('http://mindmup.s3.amazonaws.com/lib/img/logo_32.png');
  background-position:left center;
  background-repeat:no-repeat;
  margin-left:6px;
