@@ -85,12 +85,13 @@ $(function(){
       publishMap();
     });
     $("[rel=tooltip]").tooltip();
-    $("#menuShortcuts").popover({html:'true',content:
+    $("#menuShortcuts").popover({trigger:'hover',html:'true',content:
         '<strong>Enter</strong>: Add sibling<br/>' +
         '<strong>Tab</strong>: Add child<br/>' +
         '<strong>Space</strong>: Edit node<br/>' +
-        '<strong>Backspace or Delete</strong>: Remove node<br/>' +
-        '<strong>Arrow keys</strong>: Move selection to parent, child or siblings<br/>'
+        '<strong>Backspace</strong>: Remove node<br/>' +
+        '<strong>Delete</strong>: Remove node<br/>' +
+        '<strong>Arrow keys</strong>: Move selection<br/>'
        });
     $("#toolbarEdit button").click(function(){
       logActivity("Toolbar Click", $(this).attr('data-title'));
