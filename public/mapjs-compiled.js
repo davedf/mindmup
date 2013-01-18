@@ -152,7 +152,7 @@ var content;
       var newIdea=init({title:ideaTitle,id:(newId||(contentAggregate.maxId()+1))});
       appendSubIdea(parent,newIdea);
       contentAggregate.dispatchEvent('addSubIdea',parentId,ideaTitle,newIdea.id);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','addSubIdea',[parentId,ideaTitle,newIdea.id]);
       return true;
     }
     contentAggregate.removeSubIdea = function (subIdeaId){
@@ -285,9 +285,8 @@ var MAPJS = MAPJS || {};
 					return secondRank - firstRank;
 				} else if (firstRank < 0 && secondRank < 0) {
 					return firstRank - secondRank;
-				} else {
-					return secondRank - firstRank;
 				}
+				return secondRank - firstRank;
 			});
 			for (i = ranks.length - 1; i >= 0; i -= 1) {
 				subIdeaRank = ranks[i];
@@ -351,6 +350,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		idea,
 		isInputEnabled,
 		currentlySelectedIdeaId,
+		getRandomTitle = function () {
+			return titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())];
+		},
 		parentNode = function (root, id) {
 			var rank, childResult;
 			for (rank in root.ideas) {
@@ -406,8 +408,14 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			}
 			currentLayout = newLayout;
 		},
-		onIdeaChanged = function () {
+		onIdeaChanged = function (command, args) {
+			var newIdeaId;
 			updateCurrentLayout(layoutCalculator(idea));
+			if (command === 'addSubIdea') {
+				newIdeaId = args[2];
+				self.selectNode(newIdeaId);
+				self.editNode(true);
+			}
 		};
 	observable(this);
 	this.setIdea = function (anIdea) {
@@ -435,7 +443,11 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		}
 	};
 	this.addSubIdea = function (title) {
-		idea.addSubIdea(currentlySelectedIdeaId, title || titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())]);
+		idea.addSubIdea(currentlySelectedIdeaId, title || getRandomTitle());
+	};
+	this.addSiblingIdea = function () {
+		var parent = parentNode(idea, currentlySelectedIdeaId) || idea;
+		idea.addSubIdea(parent.id, getRandomTitle());
 	};
 	this.removeSubIdea = function () {
 		var parent = parentNode(idea, currentlySelectedIdeaId);
@@ -443,11 +455,11 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			self.selectNode(parent.id);
 		}
 	};
-	this.updateTitle = function (title) {
-		idea.updateTitle(currentlySelectedIdeaId, title);
+	this.updateTitle = function (ideaId, title) {
+		idea.updateTitle(ideaId, title);
 	};
-	this.editNode = function () {
-		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, {});
+	this.editNode = function (shouldSelectAll) {
+		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll);
 	};
 	this.clear = function () {
 		idea.clear();
@@ -735,7 +747,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
 		this.on('mouseover touchstart', setStageDraggable.bind(null, false));
 		this.on('mouseout touchend', setStageDraggable.bind(null, true));
-		this.editNode = function () {
+		this.editNode = function (shouldSelectAll) {
 			//this only works for solid color nodes
 			self.attrs.textFill = self.attrs.fill;
 			self.getLayer().draw();
@@ -772,6 +784,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				})
 				.blur(onCommit)
 				.focus();
+			if (shouldSelectAll) {
+				ideaInput.select();
+			}
 		};
 	};
 }());
@@ -848,6 +863,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			text: n.title,
 			opacity: 0
 		});
+		/* in kinetic 4.3 cannot use click because click if fired on dragend */
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dragstart', function () {
 			node.moveToTop();
@@ -875,9 +891,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			);
 		});
 		node.on(':textChanged', function (event) {
-			mapModel.updateTitle(event.text);
+			mapModel.updateTitle(n.id, event.text);
 		});
-		node.on(':nodeEditRequested', mapModel.editNode);
+		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, false));
 		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
 		nodeByIdeaId[n.id] = node;
 		layer.add(node);
@@ -948,8 +964,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	(function () {
 		var keyboardEventHandlers = {
-			13: mapModel.addSubIdea,
+			13: mapModel.addSiblingIdea,
 			8: mapModel.removeSubIdea,
+			9: mapModel.addSubIdea,
 			37: mapModel.selectNodeLeft,
 			38: mapModel.selectNodeUp,
 			39: mapModel.selectNodeRight,

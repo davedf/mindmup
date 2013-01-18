@@ -79,7 +79,7 @@ $(function(){
       logUserActivity(_.toArray(arguments));
     });
     $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, null));
-    $('#menuEdit').click(mapModel.editNode);
+    $('#menuEdit').click(mapModel.editNode.bind(mapModel,false));
     $('#menuDelete').click(mapModel.removeSubIdea);
     $('#menuClear').click(mapModel.clear);
     $("#menuPublish").click(function(){
