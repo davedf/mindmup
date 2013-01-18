@@ -779,6 +779,8 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 						onCommit();
 					} else if (e.which === ESC_KEY_CODE) {
 						updateText(currentText);
+					} else if (e.which === 9) {
+						e.preventDefault();
 					}
 					e.stopPropagation();
 				})

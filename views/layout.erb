@@ -20,11 +20,11 @@
     <%= erb :analytics %>
 
     <% if settings.online? then %>
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
       <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
     <% else %>
-      <script src="/js/offline/jquery-1.8.3.js"></script>
+      <script src="/js/offline/jquery-1.9.0.js"></script>
       <script src="/js/offline/underscore-1.4.3-min.js"></script>
       <script src="/js/offline/bootstrap.min.js"></script>
     <% end %>
@@ -59,7 +59,7 @@
               <li> <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
               <li> <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn"><i class="icon-remove"></i></button> </li>
               <li class="divider">&nbsp;&nbsp;</li>
-              <li> <button rel='tooltip' data-title='New map' data-placement='bottom' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
+              <li> <button rel='tooltip' data-title='New&nbsp;map' data-placement='bottom' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
               <li class="divider">&nbsp;&nbsp;</li>
               <li> <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn" data-placement='bottom'>
                 <img src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> </li>
