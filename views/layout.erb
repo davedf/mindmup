@@ -53,13 +53,16 @@
         </div>
         <div class="container">
 
-            <ul class="nav pull-left nav-collapse">
-              <li> <button id="menuHelp" rel='tooltip' title='Help' class="btn" data-target="#modalHelp" data-toggle="modal"><i class="icon-info-sign" ></i></button> </li>
-              <li> <button id="menuAdd" rel='tooltip' title='Add idea' class="btn"><i class="icon-plus" ></i></button> </li>
-              <li> <button id="menuEdit" rel='tooltip' title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
-              <li> <button id="menuDelete" rel='tooltip' title='Delete idea' class="btn"><i class="icon-remove"></i></button> </li>
+            <ul class="nav pull-left nav-collapse" id="toolbarEdit">
+              <li> <button id="menuHelp" rel='tooltip' data-placement='bottom' data-title='Help' class="btn" data-target="#modalHelp" data-toggle="modal"><i class="icon-info-sign" ></i></button> </li>
+              <li> <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn"><i class="icon-plus" ></i></button> </li>
+              <li> <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn"><i class="icon-pencil"></i></button> </li>
+              <li> <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn"><i class="icon-remove"></i></button> </li>
               <li class="divider">&nbsp;&nbsp;</li>
-              <li> <button rel='tooltip' title='New map' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
+              <li> <button rel='tooltip' data-title='New map' data-placement='bottom' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
+              <li class="divider">&nbsp;&nbsp;</li>
+              <li> <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn" data-placement='bottom'>
+                <img src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> </li>
             </ul>
             <span id="toolbarSave" class="hide">
               <ul class="nav nav-pills pull-right">
@@ -117,6 +120,6 @@
   js = d.createElement(s); js.id = id;
   js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
   fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script> 
+  }(document, 'script', 'facebook-jssdk'));</script> 
   </body>
 </html>

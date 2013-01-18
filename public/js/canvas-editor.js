@@ -36,9 +36,6 @@ $(function(){
     mapModel.setIdea(idea);
     $(window).resize(setStageDimensions);
   }
-  var attachTooltips=function(){
-    _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
-  }
   var attach_menu_listeners=function(active_content){
     var publishMap=function(){
       var publishing = true;
@@ -87,6 +84,17 @@ $(function(){
       $('#toolbarSave p').hide();
       publishMap();
     });
+    $("[rel=tooltip]").tooltip();
+    $("#menuShortcuts").popover({html:'true',content:
+        '<strong>Enter</strong>: Add sibling<br/>' +
+        '<strong>Tab</strong>: Add child<br/>' +
+        '<strong>Space</strong>: Edit node<br/>' +
+        '<strong>Backspace or Delete</strong>: Remove node<br/>' +
+        '<strong>Arrow keys</strong>: Move selection to parent, child or siblings<br/>'
+       });
+    $("#toolbarEdit button").click(function(){
+      logActivity("Toolbar Click", $(this).attr('data-title'));
+    });
   }
   function updateTitle(newTitle){
     document.title=newTitle;
@@ -130,7 +138,6 @@ $(function(){
 
 
   $.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
-  attachTooltips();
   $(window).bind('beforeunload', function() {
     if (changed && !saving) {
       return 'There are unsaved changes.';
