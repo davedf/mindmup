@@ -655,12 +655,12 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			controlPointOffset: 0
 		};
 	};
-	calculateConnector = function (parent, child, ctrl) {
+	calculateConnector = function (parent, child) {
 		var tolerance = 10,
 			childMid = child.attrs.y + child.getHeight() * 0.5,
 			parentMid = parent.attrs.y + parent.getHeight() * 0.5,
 			childHorizontalOffset;
-		if (Math.abs(parentMid - childMid) < Math.min(child.getHeight(), parent.getHeight()) * 0.75) {
+		if (Math.abs(parentMid - childMid) + tolerance < Math.max(child.getHeight(), parent.getHeight()) * 0.75) {
 			return horizontalConnector(parent, child);
 		}
 		childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0 : 1;
@@ -681,8 +681,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			var context = this.getContext(),
 				shapeFrom = this.shapeFrom,
 				shapeTo = this.shapeTo,
-				ctrl = 0.2,
-				conn = calculateConnector(shapeFrom, shapeTo, ctrl),
+				conn = calculateConnector(shapeFrom, shapeTo),
 				offset,
 				maxOffset;
 			if (!conn) {
