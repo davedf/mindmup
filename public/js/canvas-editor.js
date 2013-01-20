@@ -85,7 +85,7 @@ $(function(){
       publishMap();
     });
     $("[rel=tooltip]").tooltip();
-    $("#menuShortcuts").popover({trigger:'hover',html:'true',content:
+    $("#menuShortcuts").popover({trigger:'click',html:'true',content:
         '<strong>Enter</strong>: Add sibling<br/>' +
         '<strong>Tab</strong>: Add child<br/>' +
         '<strong>Space</strong>: Edit node<br/>' +
