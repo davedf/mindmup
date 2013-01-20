@@ -22,6 +22,7 @@ configure do
   AWS.config(:access_key_id=>settings.s3_key_id, :secret_access_key=>settings.s3_secret_key)
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
+  set :root, File.dirname(__FILE__)
 end
 get '/' do
   @mapId = settings.default_map

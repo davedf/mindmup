@@ -10,7 +10,7 @@ All map operations have a keyboard shortcut. Click
   }
 ];
 next_message=0;
-if session['welcome']=='true'
+if session['welcome']=='true' || session['welcome']==true
   next_message=1; #legacy check
 else
   next_message=session['welcome'].to_s.to_i unless session['welcome'].nil?
@@ -19,7 +19,7 @@ end
 if next_message<messages.length then
  session['welcome']=next_message+1;
 %>
- <div class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>&times;</button>
+ <div id='welcome_message' class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>&times;</button>
    <p>
    <%=messages[next_message]; %></p>
  </div>
