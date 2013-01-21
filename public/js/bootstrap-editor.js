@@ -14,7 +14,7 @@ $(function(){
       var processNewLabels = function(jquery_labels) {
         _.each(jquery_labels,function(domLabel){
           var currentLabel=$(domLabel);
-          currentLabel.addClass('btn');          
+          currentLabel.addClass('btn');
           currentLabel.click(function(){
             $("#map2 .MAP_label").popover('destroy');
             var placementVal = $(window).height()/2 > currentLabel.offset().top ? 'bottom' : 'top';
