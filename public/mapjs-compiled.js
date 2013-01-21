@@ -21,7 +21,9 @@ var observable = function (base) {
 			);
 		}
 	};
-	base.addEventSink = eventSinks.push.bind(eventSinks);
+	base.addEventSink = function(eventSink) {
+    eventSinks.push(eventSink);
+  }
 	base.dispatchEvent = function (eventType) {
 		var eventArguments, listeners, i;
 		eventArguments = Array.prototype.slice.call(arguments, 1);
@@ -63,6 +65,13 @@ var content;
              return result || idea.findSubIdeaById(childIdeaId);
           },
           undefined);
+      };
+      contentIdea.find = function(predicate){
+        var current= predicate(contentIdea) ? [_.pick(contentIdea,'id','title')] : [];
+        if (_.size(contentIdea.ideas)==0)
+          return current;
+        else
+          return _.reduce(contentIdea.ideas,function(result,idea){ return _.union(result,idea.find(predicate)) },current);
       };
       return contentIdea;
     };
@@ -957,7 +966,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			x: n.x,
 			y: n.y,
 			duration: 0.4,
-			easing: (reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out')
+			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out'
 		});
 	});
 	mapModel.addEventListener('nodeTitleChanged', function (n) {
