@@ -25,7 +25,7 @@ configure do
   set :root, File.dirname(__FILE__)
 end
 get '/' do
-  @mapId = settings.default_map
+  @mapId = session['mapid']||settings.default_map
   erb :editor
 end
 
@@ -39,6 +39,7 @@ get "/s3proxy/:mapId" do
 end
 get "/map/:mapId" do
   @mapId = params[:mapId]
+  session['mapid']=@mapId
   erb :editor
 end
 
