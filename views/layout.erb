@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>MindMup Editor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindMup: Zero-Friction Free Online Mind Mapping</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="keywords" content="mind mapping, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
+    <meta name="description" content="MindMup is a zero friction free online mind mapping tool. MindMup is free and aims to create the most productive online mind mapping canvas out there" />
     <% if settings.online? then %>
-      <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
-      <link rel="stylesheet" href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css">
+      <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet"/>
+      <link rel="stylesheet" href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css"/>
     <% else %>
       <link href="/offline/bootstrap-combined.min.css" rel="stylesheet">
       <link rel="stylesheet" href="/offline/fortawesome/font-awesome.min.css">
@@ -16,7 +18,7 @@
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <!-- Fav and touch icons -->
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://blog.mindmup.com/feeds/posts/default" />
     <%= erb :analytics %>
 
     <% if settings.online? then %>
@@ -39,7 +41,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a id='logo-img' class="brand hidden-phone" href="/" rel="tooltip" title="Mindmup Home">
+          <a id='logo-img' class="brand hidden-phone" href="/map/default" rel="tooltip" title="Mindmup Home">
             &nbsp;
           </a>
           <a id="map_title" class="brand hidden-phone map_title" href="#">
@@ -47,26 +49,30 @@
           <ul class="nav pull-right nav-collapse">
             <li> <a href="#" data-target="#modalVote" data-toggle="modal">Vote on features <i class="icon-thumbs-up"></i></a> </li>
             <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a> </li>
-            <li> <a href="http://blog.mindmup.com" target="_blank">News/Blog <i class='icon-bullhorn'></i></a></li>
-            <li> <a href="http://blog.mindmup.com/feeds/posts/default" target="_blank">RSS<i class="icon-rss"></i></a> </li>
-
+            <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" href="#">About MindMup <b class="caret"></b></a>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <li><a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal">One-minute introduction</a> 
+            <li><a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal">Site terms & conditions/Legal info</a></li>
+            <li> <a href="http://blog.mindmup.com" target="_blank">News/Blog</a></li>
+            <li><a href="#" class="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Contact us</a></li> 
+            </ul>
+            </li>
           </ul>
         </div>
         <div class="container">
 
             <ul class="nav pull-left nav-collapse" id="toolbarEdit">
               <li> <button id="menuHelp" rel='tooltip' data-placement='bottom' data-title='Help' class="btn" data-target="#modalHelp" data-toggle="modal"><i class="icon-info-sign" ></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-remove"></i></button> </li>
+              <li> <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> </li>
+              <li> <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> </li>
+              <li> <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-remove"></i></button> </li>
+              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button> </li>
+              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button> </li>
               <li class="divider">&nbsp;&nbsp;</li>
               <li> <button rel='tooltip' data-title='New&nbsp;map' data-placement='bottom' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
               <li class="divider">&nbsp;&nbsp;</li>
               <li> <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn" data-placement='bottom'>
                 <img src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> </li>
-              <li class="divider">&nbsp;&nbsp;</li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-plus-sign"></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-minus-sign"></i></button> </li>
             </ul>
             <span id="toolbarSave" class="hide">
               <ul class="nav nav-pills pull-right">
@@ -99,20 +105,13 @@
       </div>
       <%= erb :welcome_message%>
     </div>
+    <%= erb :about %>
     <%= erb :vote %>
     <%= erb :alert %>
     <%= erb :feedback %>
-    <%= erb :about %>
     <%= erb :help %>
     <%= erb :terms_and_conditions%>
     <%= yield %>
-    <div class="alert bottombar"><button type="button" class="close" data-dismiss="alert">×</button>
-      <p><a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal">About this project</a> |
-      <a href="" class="menuterms"  data-target="#modalTerms" data-toggle="modal">Site terms & conditions</a> |
-       <a href="#" class="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Contact us</a>  |
-       <a href="http://blog.mindmup.com" target="_blank">Project News/Blog</a></li>
-      </p>
-    </div>
     <script type="text/javascript">var switchTo5x=true;</script>
     <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
     <script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
