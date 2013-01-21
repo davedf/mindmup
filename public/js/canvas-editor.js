@@ -5,8 +5,25 @@ $(function(){
   var saving=false;
   var container = jQuery('#container');
   var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
+  var wasRelevantOnLoad=false;
+
   logUserActivity('Creating canvas Size ' + JSON.stringify(canvasSize));
 
+  /* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
+  var startedFromNew= function(contentAggregate){
+    return contentAggregate.id==1; 
+  }
+  var isNodeRelevant= function(ideaNode){
+    return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/)==-1; 
+  }
+  var isNodeIrrelevant= function(ideaNode){
+    return !isNodeRelevant(ideaNode);
+  }
+  var isMapRelevant = function(contentAggregate){
+    return startedFromNew(contentAggregate) &&
+      contentAggregate.find(isNodeRelevant).length>5 &&
+      contentAggregate.find(isNodeIrrelevant).length<3;
+  };
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
@@ -48,8 +65,13 @@ $(function(){
       }
       var submitS3Form = function(result) {
         publishing=false;
-        var publishTime=Date.now();
-        logMapActivity('Publish',result.key);
+        var relevant=isMapRelevant(active_content);
+        if (relevant && !wasRelevantOnLoad)
+          logMapActivity('Created Relevant',result.key);
+        else if (wasRelevantOnLoad)
+          logMapActivity('Saved Relevant',result.key);
+        else 
+          logMapActivity('Saved Irrelevant',result.key);
         $("#s3form [name='file']").val(JSON.stringify(active_content));
         for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
         saving = true;
@@ -111,6 +133,7 @@ $(function(){
     attach_menu_listeners(idea);
     logMapActivity('View',mapId);
     updateTitle(idea.title);
+    wasRelevantOnLoad=isMapRelevant(idea);
   };
   var loadAlertDiv=showAlert('Please wait, loading the map...','<i class="icon-spinner icon-spin"></i>');
   logUserActivity("loading map [" + map_url +"]");
