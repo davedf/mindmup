@@ -353,6 +353,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	'use strict';
 	titlesToRandomlyChooseFrom = titlesToRandomlyChooseFrom || ['double click to edit'];
 	var self = this,
+		analytic,
 		currentLayout = {
 			nodes: {},
 			connectors: {}
@@ -428,6 +429,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			}
 		};
 	observable(this);
+	analytic = self.dispatchEvent.bind(self, 'analytic', 'mapModel');
 	this.setIdea = function (anIdea) {
 		if (idea) {
 			idea.removeEventListener('changed', onIdeaChanged);
@@ -473,6 +475,14 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	};
 	this.clear = function () {
 		idea.clear();
+	};
+	this.scaleUp = function (source) {
+		self.dispatchEvent('mapScaleChanged', true);
+		analytic('scaleUp', source);
+	};
+	this.scaleDown = function (source) {
+		self.dispatchEvent('mapScaleChanged', false);
+		analytic('scaleDown', source);
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -775,13 +785,13 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				},
 				onCommit = function () {
 					updateText(ideaInput.val());
-				};
+				}, scale = self.getStage().getScale().x || 1;
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
-					width: self.getWidth(),
-					height: self.getHeight()
+					width: self.getWidth() * scale,
+					height: self.getHeight() * scale
 				})
 				.val(joinLines(currentText))
 				.appendTo('body')
@@ -923,28 +933,29 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
 		var node = nodeByIdeaId[ideaId],
-			finalStagePosition = {
-				x: stage.attrs.x,
-				y: stage.attrs.y
-			},
-			offset = 100;
-		if (node.getAbsolutePosition().x + node.getWidth() + offset > stage.getWidth()) {
-			finalStagePosition.x = stage.getWidth() - node.attrs.x - node.getWidth() - offset;
-		} else if (node.getAbsolutePosition().x < offset) {
-			finalStagePosition.x = -node.attrs.x + offset;
+			scale = stage.getScale().x || 1,
+			offset = 100,
+			move = { x: 0, y: 0 };
+		node.setIsSelected(isSelected);
+		if (!isSelected) {
+			return;
 		}
-		if (node.getAbsolutePosition().y + node.getHeight() + offset > stage.getHeight()) {
-			finalStagePosition.y = stage.getHeight() - node.attrs.y - node.getHeight() - offset;
+		if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
+			move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
+		} else if (node.getAbsolutePosition().x < offset) {
+			move.x  = offset - node.getAbsolutePosition().x;
+		}
+		if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
+			move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
 		} else if (node.getAbsolutePosition().y < offset) {
-			finalStagePosition.y = -node.attrs.y + offset;
+			move.y = offset - node.getAbsolutePosition().y;
 		}
 		stage.transitionTo({
-			x: finalStagePosition.x,
-			y: finalStagePosition.y,
+			x: stage.attrs.x + move.x,
+			y: stage.attrs.y + move.y,
 			duration: 0.4,
 			easing: 'ease-in-out'
 		});
-		node.setIsSelected(isSelected);
 	});
 	mapModel.addEventListener('nodeDroppableChanged', function (ideaId, isDroppable) {
 		var node = nodeByIdeaId[ideaId];
@@ -1002,6 +1013,16 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			callback: connector.remove.bind(connector)
 		});
 	});
+	mapModel.addEventListener('mapScaleChanged', function (isScaleUp) {
+		var scale = (stage.getScale().x || 1) * (isScaleUp ? 1.25 : 0.8);
+		stage.transitionTo({
+			scale: {
+				x: scale,
+				y: scale
+			},
+			duration: 0.1
+		});
+	});
 	(function () {
 		var keyboardEventHandlers = {
 			13: mapModel.addSiblingIdea,
@@ -1036,4 +1057,18 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 		width: text.getWidth(),
 		height: text.getHeight()
 	};
+};
+/*global jQuery*/
+jQuery.fn.mapToolbarWidget = function (mapModel) {
+	'use strict';
+	this.each(function () {
+		var element = jQuery(this);
+		element.find('.scaleUp').click(function () {
+			mapModel.scaleUp('toolbar');
+		});
+		element.find('.scaleDown').click(function () {
+			mapModel.scaleDown('toolbar');
+		});
+	});
+	return this;
 };

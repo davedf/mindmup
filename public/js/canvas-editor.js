@@ -11,10 +11,10 @@ $(function(){
 
   /* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
   var startedFromNew= function(contentAggregate){
-    return contentAggregate.id==1; 
+    return contentAggregate.id==1;
   }
   var isNodeRelevant= function(ideaNode){
-    return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/)==-1; 
+    return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/)==-1;
   }
   var isNodeIrrelevant= function(ideaNode){
     return !isNodeRelevant(ideaNode);
@@ -70,7 +70,7 @@ $(function(){
           logMapActivity('Created Relevant',result.key);
         else if (wasRelevantOnLoad)
           logMapActivity('Saved Relevant',result.key);
-        else 
+        else
           logMapActivity('Saved Irrelevant',result.key);
         $("#s3form [name='file']").val(JSON.stringify(active_content));
         for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
@@ -97,6 +97,7 @@ $(function(){
       }
       logUserActivity(_.toArray(arguments));
     });
+    $('#toolbarEdit').mapToolbarWidget(mapModel);
     $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, null));
     $('#menuEdit').click(mapModel.editNode.bind(mapModel,false));
     $('#menuDelete').click(mapModel.removeSubIdea);
