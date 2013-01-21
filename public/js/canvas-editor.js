@@ -97,11 +97,10 @@ $(function(){
       }
       logUserActivity(_.toArray(arguments));
     });
+    mapModel.addEventListener('analytic', function (origin, action, source) {
+      logActivity(source, action);
+    });
     $('#toolbarEdit').mapToolbarWidget(mapModel);
-    $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, null));
-    $('#menuEdit').click(mapModel.editNode.bind(mapModel,false));
-    $('#menuDelete').click(mapModel.removeSubIdea);
-    $('#menuClear').click(mapModel.clear);
     $("#menuPublish").click(function(){
       $('#menuPublish').html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
       $('#toolbarSave p').hide();
@@ -117,7 +116,7 @@ $(function(){
         '<strong>Arrow keys</strong>: Move selection<br/>'
        });
     $("#toolbarEdit button").click(function(){
-      logActivity("Toolbar Click", $(this).attr('data-title'));
+         logActivity("Toolbar Click", $(this).attr('data-title'));
     });
   }
   function updateTitle(newTitle){

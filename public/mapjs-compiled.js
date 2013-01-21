@@ -425,7 +425,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			if (command === 'addSubIdea') {
 				newIdeaId = args[2];
 				self.selectNode(newIdeaId);
-				self.editNode(true);
+				self.editNode('internal', true);
 			}
 		};
 	observable(this);
@@ -454,14 +454,17 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			self.dispatchEvent('nodeSelectionChanged', id, true);
 		}
 	};
-	this.addSubIdea = function (title) {
-		idea.addSubIdea(currentlySelectedIdeaId, title || getRandomTitle());
+	this.addSubIdea = function (source) {
+		analytic('addSubIdea', source);
+		idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle());
 	};
-	this.addSiblingIdea = function () {
+	this.addSiblingIdea = function (source) {
+		analytic('addSiblingIdea', source);
 		var parent = parentNode(idea, currentlySelectedIdeaId) || idea;
 		idea.addSubIdea(parent.id, getRandomTitle());
 	};
-	this.removeSubIdea = function () {
+	this.removeSubIdea = function (source) {
+		analytic('removeSubIdea', source);		
 		var parent = parentNode(idea, currentlySelectedIdeaId);
 		if (idea.removeSubIdea(currentlySelectedIdeaId)) {
 			self.selectNode(parent.id);
@@ -470,8 +473,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	this.updateTitle = function (ideaId, title) {
 		idea.updateTitle(ideaId, title);
 	};
-	this.editNode = function (shouldSelectAll) {
-		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll);
+	this.editNode = function (source, shouldSelectAll) {
+		analytic('editNode', source);
+		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll );
 	};
 	this.clear = function () {
 		idea.clear();
@@ -500,12 +504,13 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 					}
 				}
 			};
-		self.selectNodeLeft = function () {
+		self.selectNodeLeft = function (source) {
 			var node,
 				rank,
 				isRoot = currentlySelectedIdeaId === idea.id,
 				targetRank = isRoot ? -Infinity : Infinity,
 				targetNode;
+			analytic('selectNodeLeft', source);
 			if (isRootOrLeftHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
 				for (rank in node.ideas) {
@@ -521,8 +526,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
 			}
 		};
-		self.selectNodeRight = function () {
+		self.selectNodeRight = function (source) {
 			var node, rank, minimumPositiveRank = Infinity;
+			analytic('selectNodeRight', source);
 			if (isRootOrRightHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
 				for (rank in node.ideas) {
@@ -538,8 +544,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
 			}
 		};
-		self.selectNodeUp = function () {
+		self.selectNodeUp = function (source) {
 			var parent = parentNode(idea, currentlySelectedIdeaId), myRank, previousSiblingRank, rank, isPreviousSiblingWithNegativeRank, isPreviousSiblingWithPositiveRank;
+			analytic('selectNodeUp', source);
 			if (parent) {
 				myRank = currentlySelectedIdeaRank(parent);
 				previousSiblingRank = myRank > 0 ? -Infinity : Infinity;
@@ -556,8 +563,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				}
 			}
 		};
-		self.selectNodeDown = function () {
+		self.selectNodeDown = function (source) {
 			var parent = parentNode(idea, currentlySelectedIdeaId), myRank, nextSiblingRank, rank, isNextSiblingWithNegativeRank, isNextSiblingWithPositiveRank;
+			analytic('selectNodeDown', source);
 			if (parent) {
 				myRank = currentlySelectedIdeaRank(parent);
 				nextSiblingRank = myRank > 0 ? Infinity : -Infinity;
@@ -922,7 +930,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		node.on(':textChanged', function (event) {
 			mapModel.updateTitle(n.id, event.text);
 		});
-		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, false));
+		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
 		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
 		nodeByIdeaId[n.id] = node;
 		layer.add(node);
@@ -1025,15 +1033,15 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	(function () {
 		var keyboardEventHandlers = {
-			13: mapModel.addSiblingIdea,
-			8: mapModel.removeSubIdea,
-			9: mapModel.addSubIdea,
-			37: mapModel.selectNodeLeft,
-			38: mapModel.selectNodeUp,
-			39: mapModel.selectNodeRight,
-			40: mapModel.selectNodeDown,
-			46: mapModel.removeSubIdea,
-			32: mapModel.editNode
+			13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
+			8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+			9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
+			37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
+			38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
+			39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
+			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
+			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+			32: mapModel.editNode.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
 				var eventHandler = keyboardEventHandlers[evt.which];
@@ -1063,12 +1071,14 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	this.each(function () {
 		var element = jQuery(this);
-		element.find('.scaleUp').click(function () {
-			mapModel.scaleUp('toolbar');
+		['scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
+			element.find('.' + methodName).click(function () {
+				if (mapModel[methodName]) {
+					mapModel[methodName]('toolbar');
+				}
+			});
 		});
-		element.find('.scaleDown').click(function () {
-			mapModel.scaleDown('toolbar');
-		});
+
 	});
 	return this;
 };
