@@ -21,7 +21,9 @@ var observable = function (base) {
 			);
 		}
 	};
-	base.addEventSink = eventSinks.push.bind(eventSinks);
+	base.addEventSink = function(eventSink) {
+    eventSinks.push(eventSink);
+  }
 	base.dispatchEvent = function (eventType) {
 		var eventArguments, listeners, i;
 		eventArguments = Array.prototype.slice.call(arguments, 1);
@@ -63,6 +65,13 @@ var content;
              return result || idea.findSubIdeaById(childIdeaId);
           },
           undefined);
+      };
+      contentIdea.find = function(predicate){
+        var current= predicate(contentIdea) ? [_.pick(contentIdea,'id','title')] : [];
+        if (_.size(contentIdea.ideas)==0)
+          return current;
+        else
+          return _.reduce(contentIdea.ideas,function(result,idea){ return _.union(result,idea.find(predicate)) },current);
       };
       return contentIdea;
     };
@@ -152,7 +161,7 @@ var content;
       var newIdea=init({title:ideaTitle,id:(newId||(contentAggregate.maxId()+1))});
       appendSubIdea(parent,newIdea);
       contentAggregate.dispatchEvent('addSubIdea',parentId,ideaTitle,newIdea.id);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','addSubIdea',[parentId,ideaTitle,newIdea.id]);
       return true;
     }
     contentAggregate.removeSubIdea = function (subIdeaId){
@@ -196,8 +205,8 @@ var content;
         var after_rank = parentIdea.findChildRankById(positionBeforeIdeaId);
         if (!after_rank) return false;
         var sibling_ranks=_(_.map(_.keys(parentIdea.ideas), parseFloat)).reject(function(k){return k*current_rank<0});
-        var siblings_between=_.reject(_.sortBy(sibling_ranks,Math.abs),function(k){ return Math.abs(k)>=Math.abs(after_rank) });
-        var before_rank = siblings_between.length > 0 ? _.max(siblings_between) : 0;
+        var candidate_siblings=_.reject(_.sortBy(sibling_ranks,Math.abs),function(k){ return Math.abs(k)>=Math.abs(after_rank) });
+        var before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings) : 0;
         if (before_rank == current_rank)
           return false;
         new_rank = before_rank + (after_rank - before_rank) / 2;
@@ -207,6 +216,7 @@ var content;
           return false;
         new_rank = max_rank + 10 * (current_rank < 0 ? -1 : 1);
       }
+      if (new_rank==current_rank) return false;
       parentIdea.ideas[new_rank] = parentIdea.ideas[current_rank];
       delete parentIdea.ideas[current_rank];
       contentAggregate.dispatchEvent('positionBefore',ideaId,positionBeforeIdeaId);
@@ -285,9 +295,8 @@ var MAPJS = MAPJS || {};
 					return secondRank - firstRank;
 				} else if (firstRank < 0 && secondRank < 0) {
 					return firstRank - secondRank;
-				} else {
-					return secondRank - firstRank;
 				}
+				return secondRank - firstRank;
 			});
 			for (i = ranks.length - 1; i >= 0; i -= 1) {
 				subIdeaRank = ranks[i];
@@ -344,6 +353,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	'use strict';
 	titlesToRandomlyChooseFrom = titlesToRandomlyChooseFrom || ['double click to edit'];
 	var self = this,
+		analytic,
 		currentLayout = {
 			nodes: {},
 			connectors: {}
@@ -351,6 +361,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		idea,
 		isInputEnabled,
 		currentlySelectedIdeaId,
+		getRandomTitle = function () {
+			return titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())];
+		},
 		parentNode = function (root, id) {
 			var rank, childResult;
 			for (rank in root.ideas) {
@@ -406,10 +419,17 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			}
 			currentLayout = newLayout;
 		},
-		onIdeaChanged = function () {
+		onIdeaChanged = function (command, args) {
+			var newIdeaId;
 			updateCurrentLayout(layoutCalculator(idea));
+			if (command === 'addSubIdea') {
+				newIdeaId = args[2];
+				self.selectNode(newIdeaId);
+				self.editNode('internal', true);
+			}
 		};
 	observable(this);
+	analytic = self.dispatchEvent.bind(self, 'analytic', 'mapModel');
 	this.setIdea = function (anIdea) {
 		if (idea) {
 			idea.removeEventListener('changed', onIdeaChanged);
@@ -434,23 +454,39 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			self.dispatchEvent('nodeSelectionChanged', id, true);
 		}
 	};
-	this.addSubIdea = function (title) {
-		idea.addSubIdea(currentlySelectedIdeaId, title || titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())]);
+	this.addSubIdea = function (source) {
+		analytic('addSubIdea', source);
+		idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle());
 	};
-	this.removeSubIdea = function () {
+	this.addSiblingIdea = function (source) {
+		analytic('addSiblingIdea', source);
+		var parent = parentNode(idea, currentlySelectedIdeaId) || idea;
+		idea.addSubIdea(parent.id, getRandomTitle());
+	};
+	this.removeSubIdea = function (source) {
+		analytic('removeSubIdea', source);		
 		var parent = parentNode(idea, currentlySelectedIdeaId);
 		if (idea.removeSubIdea(currentlySelectedIdeaId)) {
 			self.selectNode(parent.id);
 		}
 	};
-	this.updateTitle = function (title) {
-		idea.updateTitle(currentlySelectedIdeaId, title);
+	this.updateTitle = function (ideaId, title) {
+		idea.updateTitle(ideaId, title);
 	};
-	this.editNode = function () {
-		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, {});
+	this.editNode = function (source, shouldSelectAll) {
+		analytic('editNode', source);
+		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll );
 	};
 	this.clear = function () {
 		idea.clear();
+	};
+	this.scaleUp = function (source) {
+		self.dispatchEvent('mapScaleChanged', true);
+		analytic('scaleUp', source);
+	};
+	this.scaleDown = function (source) {
+		self.dispatchEvent('mapScaleChanged', false);
+		analytic('scaleDown', source);
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -468,12 +504,13 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 					}
 				}
 			};
-		self.selectNodeLeft = function () {
+		self.selectNodeLeft = function (source) {
 			var node,
 				rank,
 				isRoot = currentlySelectedIdeaId === idea.id,
 				targetRank = isRoot ? -Infinity : Infinity,
 				targetNode;
+			analytic('selectNodeLeft', source);
 			if (isRootOrLeftHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
 				for (rank in node.ideas) {
@@ -489,8 +526,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
 			}
 		};
-		self.selectNodeRight = function () {
+		self.selectNodeRight = function (source) {
 			var node, rank, minimumPositiveRank = Infinity;
+			analytic('selectNodeRight', source);
 			if (isRootOrRightHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
 				for (rank in node.ideas) {
@@ -506,8 +544,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				self.selectNode(parentNode(idea, currentlySelectedIdeaId).id);
 			}
 		};
-		self.selectNodeUp = function () {
+		self.selectNodeUp = function (source) {
 			var parent = parentNode(idea, currentlySelectedIdeaId), myRank, previousSiblingRank, rank, isPreviousSiblingWithNegativeRank, isPreviousSiblingWithPositiveRank;
+			analytic('selectNodeUp', source);
 			if (parent) {
 				myRank = currentlySelectedIdeaRank(parent);
 				previousSiblingRank = myRank > 0 ? -Infinity : Infinity;
@@ -524,8 +563,9 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				}
 			}
 		};
-		self.selectNodeDown = function () {
+		self.selectNodeDown = function (source) {
 			var parent = parentNode(idea, currentlySelectedIdeaId), myRank, nextSiblingRank, rank, isNextSiblingWithNegativeRank, isNextSiblingWithPositiveRank;
+			analytic('selectNodeDown', source);
 			if (parent) {
 				myRank = currentlySelectedIdeaRank(parent);
 				nextSiblingRank = myRank > 0 ? Infinity : -Infinity;
@@ -643,12 +683,12 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			controlPointOffset: 0
 		};
 	};
-	calculateConnector = function (parent, child, ctrl) {
+	calculateConnector = function (parent, child) {
 		var tolerance = 10,
 			childMid = child.attrs.y + child.getHeight() * 0.5,
 			parentMid = parent.attrs.y + parent.getHeight() * 0.5,
 			childHorizontalOffset;
-		if (Math.abs(parentMid - childMid) < Math.min(child.getHeight(), parent.getHeight()) * 0.75) {
+		if (Math.abs(parentMid - childMid) + tolerance < Math.max(child.getHeight(), parent.getHeight()) * 0.75) {
 			return horizontalConnector(parent, child);
 		}
 		childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0 : 1;
@@ -669,8 +709,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			var context = this.getContext(),
 				shapeFrom = this.shapeFrom,
 				shapeTo = this.shapeTo,
-				ctrl = 0.2,
-				conn = calculateConnector(shapeFrom, shapeTo, ctrl),
+				conn = calculateConnector(shapeFrom, shapeTo),
 				offset,
 				maxOffset;
 			if (!conn) {
@@ -728,14 +767,16 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 			opacity: 0.4
 		};
 		config.cornerRadius = 10;
-		config.draggable = config.level > 1;
+		config.draggable = true;
 		config.name = 'Idea';
 		Kinetic.Text.apply(this, [config]);
 		this.classType = 'Idea';
 		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
-		this.on('mouseover touchstart', setStageDraggable.bind(null, false));
-		this.on('mouseout touchend', setStageDraggable.bind(null, true));
-		this.editNode = function () {
+		if (config.level > 1) {
+			this.on('mouseover touchstart', setStageDraggable.bind(null, false));
+			this.on('mouseout touchend', setStageDraggable.bind(null, true));
+		}
+		this.editNode = function (shouldSelectAll) {
 			//this only works for solid color nodes
 			self.attrs.textFill = self.attrs.fill;
 			self.getLayer().draw();
@@ -752,13 +793,13 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				},
 				onCommit = function () {
 					updateText(ideaInput.val());
-				};
+				}, scale = self.getStage().getScale().x || 1;
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
-					width: self.getWidth(),
-					height: self.getHeight()
+					width: self.getWidth() * scale,
+					height: self.getHeight() * scale
 				})
 				.val(joinLines(currentText))
 				.appendTo('body')
@@ -767,11 +808,22 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 						onCommit();
 					} else if (e.which === ESC_KEY_CODE) {
 						updateText(currentText);
+					} else if (e.which === 9) {
+						e.preventDefault();
 					}
 					e.stopPropagation();
 				})
 				.blur(onCommit)
 				.focus();
+			if (shouldSelectAll) {
+				ideaInput.select();
+			}
+			self.getStage().on('xChange yChange', function () {
+				ideaInput.css({
+					top: canvasPosition.top + self.getAbsolutePosition().y,
+					left: canvasPosition.left + self.getAbsolutePosition().x
+				});
+			});
 		};
 	};
 }());
@@ -848,6 +900,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			text: n.title,
 			opacity: 0
 		});
+		/* in kinetic 4.3 cannot use click because click if fired on dragend */
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dragstart', function () {
 			node.moveToTop();
@@ -875,9 +928,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			);
 		});
 		node.on(':textChanged', function (event) {
-			mapModel.updateTitle(event.text);
+			mapModel.updateTitle(n.id, event.text);
 		});
-		node.on(':nodeEditRequested', mapModel.editNode);
+		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
 		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
 		nodeByIdeaId[n.id] = node;
 		layer.add(node);
@@ -887,8 +940,30 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		});
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
-		var node = nodeByIdeaId[ideaId];
+		var node = nodeByIdeaId[ideaId],
+			scale = stage.getScale().x || 1,
+			offset = 100,
+			move = { x: 0, y: 0 };
 		node.setIsSelected(isSelected);
+		if (!isSelected) {
+			return;
+		}
+		if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
+			move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
+		} else if (node.getAbsolutePosition().x < offset) {
+			move.x  = offset - node.getAbsolutePosition().x;
+		}
+		if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
+			move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
+		} else if (node.getAbsolutePosition().y < offset) {
+			move.y = offset - node.getAbsolutePosition().y;
+		}
+		stage.transitionTo({
+			x: stage.attrs.x + move.x,
+			y: stage.attrs.y + move.y,
+			duration: 0.4,
+			easing: 'ease-in-out'
+		});
 	});
 	mapModel.addEventListener('nodeDroppableChanged', function (ideaId, isDroppable) {
 		var node = nodeByIdeaId[ideaId];
@@ -911,7 +986,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			x: n.x,
 			y: n.y,
 			duration: 0.4,
-			easing: (reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out')
+			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out'
 		});
 	});
 	mapModel.addEventListener('nodeTitleChanged', function (n) {
@@ -946,16 +1021,27 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			callback: connector.remove.bind(connector)
 		});
 	});
+	mapModel.addEventListener('mapScaleChanged', function (isScaleUp) {
+		var scale = (stage.getScale().x || 1) * (isScaleUp ? 1.25 : 0.8);
+		stage.transitionTo({
+			scale: {
+				x: scale,
+				y: scale
+			},
+			duration: 0.1
+		});
+	});
 	(function () {
 		var keyboardEventHandlers = {
-			13: mapModel.addSubIdea,
-			8: mapModel.removeSubIdea,
-			37: mapModel.selectNodeLeft,
-			38: mapModel.selectNodeUp,
-			39: mapModel.selectNodeRight,
-			40: mapModel.selectNodeDown,
-			46: mapModel.removeSubIdea,
-			32: mapModel.editNode
+			13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
+			8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+			9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
+			37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
+			38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
+			39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
+			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
+			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+			32: mapModel.editNode.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
 				var eventHandler = keyboardEventHandlers[evt.which];
@@ -979,4 +1065,20 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 		width: text.getWidth(),
 		height: text.getHeight()
 	};
+};
+/*global jQuery*/
+jQuery.fn.mapToolbarWidget = function (mapModel) {
+	'use strict';
+	this.each(function () {
+		var element = jQuery(this);
+		['scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
+			element.find('.' + methodName).click(function () {
+				if (mapModel[methodName]) {
+					mapModel[methodName]('toolbar');
+				}
+			});
+		});
+
+	});
+	return this;
 };

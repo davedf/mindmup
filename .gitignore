@@ -14,6 +14,7 @@ test/version_tmp
 tmp
 .DS_Store
 public/.DS_Store
+public/offline
 
 # YARD artifacts
 .yardoc

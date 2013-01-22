@@ -1,12 +1,12 @@
 <link href="/css/mindmap.css" rel="stylesheet"></link>
-<% if settings.online? then %>
-  <script type="text/javascript" src="/js/kinetic-v4.2.0.js"></script>
+<% if !settings.online? then %>
+  <script type="text/javascript" src="/offline/kinetic-v4.2.0-custom-min.js"></script>
 <% else %>
-  <script type="text/javascript" src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0.js"></script>
+  <script type="text/javascript" src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js"></script>
 <% end %>
 <script type="text/javascript" src="/mapjs-compiled.js"></script>
 <script type="text/javascript" src="/js/canvas-editor.js"></script>
-<div id="container" mindmap="<%=map_url(@mapId)%>" mapid="<%=@mapId%>"></div>
+<div network_timeout_millis="<%=settings.network_timeout_millis%>" id="container" mindmap="<%=map_url(@mapId)%>" mapid="<%=@mapId%>"></div>
 <form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" >
   <input type="hidden" name="AWSAccessKeyId" > 

@@ -2,6 +2,7 @@
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
     <h3>Ask a question or send feedback</h3>
+    <p>Or, alternatively, just send us an e-mail at <a href="mailto:contact@mindmup.com" target="_blank">contact@mindmup.com</a>.</p>
   </div>
   <div class="modal-body">
 	<form class="form-horizontal" action="http://submit.jotformpro.com/submit/<%=ENV['JOTFORM_CONTACT']%>/" method="post" name="form_<%=ENV['JOTFORM_CONTACT']%>" id="<%=ENV['JOTFORM_CONTACT']%>" accept-charset="utf-8" novalidate="true" target="jotForm">
@@ -38,30 +39,4 @@
 		
 <iframe id="jotForm" name="jotForm" style="display:none;visibility:hidden" ></iframe>
 			
-<script>
-  sendErrorReport=function(message){
-    logActivity("Feedback","Open");
-    $('#modalFeedback textarea').val(message);
-    $('#modalFeedback [name=q1_name]').val('automated error report');
-    sendFeedbackForm();
-  }
-  sendFeedbackForm=function(){
-    $('#modalPageInfo').val(window.location.href);
-    $('#modalBrowserInfo').val(navigator.userAgent);
-    $('#modalActivityLog').val(JSON.stringify(_userActivityLog));
-    $('#modalScreenInfo').val(JSON.stringify(window.screen)+ " resolution:"+ $(window).width() +"x"+$(window).height());
-    $("#modalFeedback form").submit();			
-  }
-  $(function() {
-    $('#modalFeedback').on('show', function () {
-			logActivity("Feedback","Open");
-      $('#modalFeedback textarea').val('');
-    });
-		$("#sendFeedBackBtn").click(function() {				
-      logActivity("Feedback","Send");
-      sendFeedbackForm();
-			$('#modalFeedback').modal('hide');
-			showAlert("Thank you for your feedback!","We'll get back to you as soon as possible.")
-		});
-	});
-</script>
+<script src="/js/feedback.js" type="text/javascript"></script>

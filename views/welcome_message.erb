@@ -1,0 +1,29 @@
+<%
+messages=[
+  %q{
+<strong>Welcome to MindMup</strong> We are still in Beta and the site doesn't work on mobile devices yet. Any <a href='#' class='menuFeedback' data-target='#modalFeedback' data-toggle='modal'>feedback</a> is greatly appreciated, especially if you spot any problems.</p>
+  },
+  %q{
+<strong> Did you know that our keyboard shortcuts allow you create maps very productively?</strong>
+All map operations have a keyboard shortcut. Click
+ on the keyboard button in the toolbar to show or hide shortcuts while you edit.
+  }
+];
+next_message=0;
+if session['welcome']=='true' || session['welcome']==true
+  next_message=1; #legacy check
+else
+  next_message=session['welcome'].to_s.to_i unless session['welcome'].nil?
+end
+
+if next_message<messages.length then
+ session['welcome']=next_message+1;
+%>
+ <div id='welcome_message' class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>&times;</button>
+   <p>
+   <%=messages[next_message]; %></p>
+ </div>
+ <script>
+   logActivity('Welcome Message','<%=(next_message)%>');
+ </script>
+<% end %>

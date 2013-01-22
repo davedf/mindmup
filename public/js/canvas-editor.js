@@ -5,8 +5,25 @@ $(function(){
   var saving=false;
   var container = jQuery('#container');
   var canvasSize= { width:  $('#container').width(), height: $('#container').height()};
+  var wasRelevantOnLoad=false;
+
   logUserActivity('Creating canvas Size ' + JSON.stringify(canvasSize));
 
+  /* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
+  var startedFromNew= function(contentAggregate){
+    return contentAggregate.id==1;
+  }
+  var isNodeRelevant= function(ideaNode){
+    return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/)==-1;
+  }
+  var isNodeIrrelevant= function(ideaNode){
+    return !isNodeRelevant(ideaNode);
+  }
+  var isMapRelevant = function(contentAggregate){
+    return startedFromNew(contentAggregate) &&
+      contentAggregate.find(isNodeRelevant).length>5 &&
+      contentAggregate.find(isNodeIrrelevant).length<3;
+  };
   var initCanvas=function(idea){
     var stage = new Kinetic.Stage({
       container: 'container',
@@ -36,50 +53,81 @@ $(function(){
     mapModel.setIdea(idea);
     $(window).resize(setStageDimensions);
   }
-  var attachTooltips=function(){
-    _.each($('[rel=tooltip]'),function(item){ $(item).tooltip({placement:'bottom',title:$(item).attr('title')})});
-  }
   var attach_menu_listeners=function(active_content){
-    var publishMap = function(result) {
-      var publishTime=Date.now();
-      logMapActivity('Publish',result.key);
-      $("#s3form [name='file']").val(JSON.stringify(active_content));
-      for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
-      $('#s3form').submit();
-    }
-    var saveTimeoutOccurred = function() {
-      saving=false;
-      $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
-      $('#toolbarSave p').show();
-      showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
-      sendErrorReport('Map save failed');
-    }
+    var publishMap=function(){
+      var publishing = true;
+      var saveTimeoutOccurred = function() {
+        publishing = false;
+        $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
+        $('#toolbarSave p').show();
+        showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
+        sendErrorReport('Map save failed');
+      }
+      var submitS3Form = function(result) {
+        publishing=false;
+        var relevant=isMapRelevant(active_content);
+        if (relevant && !wasRelevantOnLoad)
+          logMapActivity('Created Relevant',result.key);
+        else if (wasRelevantOnLoad)
+          logMapActivity('Saved Relevant',result.key);
+        else
+          logMapActivity('Saved Irrelevant',result.key);
+        $("#s3form [name='file']").val(JSON.stringify(active_content));
+        for (var name in result) {$('#s3form [name='+name+']').val(result[name])};
+        saving = true;
+        $('#s3form').submit();
+      }
+      var fetchPublishingConfig=function(){
+        logUserActivity('Fetching publishing config');
+        $.ajax("/publishingConfig",{dataType: 'json',cache:false,success:submitS3Form, error:function(result){
+          if (publishing) setTimeout(fetchPublishingConfig,1000);
+         }
+        });
+      }
+      setTimeout(saveTimeoutOccurred,parseInt(container.attr('network_timeout_millis')));
+      fetchPublishingConfig();
+    };
     active_content.addEventSink(function() {
+      saving=false;
       if (!changed) {
         $("#toolbarShare").hide();
         $("#toolbarSave").show();
+        $('#menuPublish').effect('highlight');
         logMapActivity('Edit');
         changed = true;
       }
       logUserActivity(_.toArray(arguments));
     });
-    $('#menuAdd').click(mapModel.addSubIdea.bind(mapModel, null));
-    $('#menuEdit').click(mapModel.editNode);
-    $('#menuDelete').click(mapModel.removeSubIdea);
-    $('#menuClear').click(mapModel.clear);
+    mapModel.addEventListener('analytic', function (origin, action, source) {
+      logActivity('Map Model',action,source);
+    });
+    $('#toolbarEdit').mapToolbarWidget(mapModel);
     $("#menuPublish").click(function(){
-      saving = true;
-      $(this).html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
+      $('#menuPublish').html('<i class="icon-spinner icon-spin"></i>Saving...').removeClass('btn-primary').attr("disabled", true);
       $('#toolbarSave p').hide();
-      setTimeout(saveTimeoutOccurred,5000);
-      logUserActivity('Fetching publishing config');
-      $.getJSON("/publishingConfig", publishMap);
+      publishMap();
+    });
+    $("[rel=tooltip]").tooltip();
+    $("#menuShortcuts").popover({
+        placement: function(){
+         return $('#menuShortcuts').offset().left<200?'right':'left'
+        },
+        trigger:'click',html:'true',content:
+        '<strong>Enter</strong>: Add sibling<br/>' +
+        '<strong>Tab</strong>: Add child<br/>' +
+        '<strong>Space</strong>: Edit node<br/>' +
+        '<strong>Backspace</strong>: Remove node<br/>' +
+        '<strong>Delete</strong>: Remove node<br/>' +
+        '<strong>Arrow keys</strong>: Move selection<br/>'
+       });
+    $("#toolbarEdit button").click(function(){
+         logActivity("Toolbar Click", $(this).attr('data-title'));
     });
   }
   function updateTitle(newTitle){
     document.title=newTitle;
     $('.st_btn').attr('st_title',newTitle);
-    $('.brand').text(newTitle);
+    $('#map_title').text(newTitle);
   }
   var map_url=$('#container').attr('mindmap');
   var mapId=$('#container').attr('mapid');
@@ -90,6 +138,7 @@ $(function(){
     attach_menu_listeners(idea);
     logMapActivity('View',mapId);
     updateTitle(idea.title);
+    wasRelevantOnLoad=isMapRelevant(idea);
   };
   var loadAlertDiv=showAlert('Please wait, loading the map...','<i class="icon-spinner icon-spin"></i>');
   logUserActivity("loading map [" + map_url +"]");
@@ -118,7 +167,6 @@ $(function(){
 
 
   $.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
-  attachTooltips();
   $(window).bind('beforeunload', function() {
     if (changed && !saving) {
       return 'There are unsaved changes.';

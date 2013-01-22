@@ -16,14 +16,16 @@ configure do
   set :s3_max_upload_size, 100
   set :key_id_generator, UUID.new
   set :current_map_data_version, ENV['CURRENT_MAP_DATA_VERSION'] || "a1"
+  set :network_timeout_millis, ENV['NETWORK_TIMEOUT_MILLIS']||10000
   offline =  ENV['OFFLINE'] || "online"
   set :online, offline == "offline" ? false : true
   AWS.config(:access_key_id=>settings.s3_key_id, :secret_access_key=>settings.s3_secret_key)
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
+  set :root, File.dirname(__FILE__)
 end
 get '/' do
-  @mapId = settings.default_map
+  @mapId = session['mapid']||settings.default_map
   erb :editor
 end
 
@@ -37,6 +39,7 @@ get "/s3proxy/:mapId" do
 end
 get "/map/:mapId" do
   @mapId = params[:mapId]
+  session['mapid']=@mapId
   erb :editor
 end
 
@@ -52,18 +55,6 @@ get "/publishingConfig" do
 end
 
 helpers do  
-  def welcome_alert
-
-    if session['welcome'].nil? 
-      session['welcome'] = 'true';
-      %q{<div class='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>
-      <p><strong>Welcome to MindMup</strong>
-      We are still in Beta and the site doesn't work on mobile devices yet. Any 
-         <a href='#' class='menuFeedback' data-target='#modalFeedback' data-toggle='modal'>feedback</a>
-         is greatly appreciated, especially if you spot any problems.</p></div>}
-    end
-
-  end
   def map_key mapId
     (mapId.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapId + ".json"
   end
