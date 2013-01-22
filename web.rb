@@ -25,8 +25,12 @@ configure do
   set :root, File.dirname(__FILE__)
 end
 get '/' do
-  @mapId = session['mapid']||settings.default_map
-  erb :editor
+  if session['mapid'].nil? 
+    @mapId=settings.default_map
+    erb :editor
+  else
+    redirect "/map/#{session['mapid']}"
+  end
 end
 
 get "/s3/:mapId" do

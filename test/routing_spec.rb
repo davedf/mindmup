@@ -35,11 +35,9 @@ describe 'Map request routing' do
     end
     it "uses the last viewed map as the homepage, if the user had a previous map" do
       get "/",{}, {'rack.session'=>{'mapid'=>'PreviousMap'}}
-      last_response.should be_ok
-      last_response.should_not be_redirect
-      container_div=Nokogiri::HTML(last_response.body).css('#container')[0]
-      container_div['mindmap'].should=='http://testS3Url/testfolder/PreviousMap.json'
-      container_div['mapid'].should=='PreviousMap'
+      last_response.should be_redirect
+      follow_redirect!
+      last_request.url.should=='http://example.org/map/PreviousMap'
     end
   end
   it "appends network timeout millis setting to the container div" do
