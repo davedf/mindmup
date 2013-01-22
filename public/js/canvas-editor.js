@@ -92,6 +92,7 @@ $(function(){
       if (!changed) {
         $("#toolbarShare").hide();
         $("#toolbarSave").show();
+        $('#menuPublish').effect('highlight');
         logMapActivity('Edit');
         changed = true;
       }
@@ -107,7 +108,11 @@ $(function(){
       publishMap();
     });
     $("[rel=tooltip]").tooltip();
-    $("#menuShortcuts").popover({trigger:'click',html:'true',content:
+    $("#menuShortcuts").popover({
+        placement: function(){
+         return $('#menuShortcuts').offset().left<200?'right':'left'
+        },
+        trigger:'click',html:'true',content:
         '<strong>Enter</strong>: Add sibling<br/>' +
         '<strong>Tab</strong>: Add child<br/>' +
         '<strong>Space</strong>: Edit node<br/>' +

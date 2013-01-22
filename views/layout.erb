@@ -25,6 +25,7 @@
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
       <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"/></script>
     <% else %>
       <script src="/offline/jquery.min.js"></script>
       <script src="/offline/underscore-min.js"></script>
@@ -44,67 +45,88 @@
           <a id='logo-img' class="brand hidden-phone" href="/map/default" rel="tooltip" title="Mindmup Home">
             &nbsp;
           </a>
-          <a id="map_title" class="brand hidden-phone map_title" href="#">
-            MindMup: Zero-friction online mind mapping</a>
+          <ul class="nav nav-collapse pull-left">
+            <li> <a href="/map/new" ><i class="icon-lightbulb"></i> Create a Map</a> </li>
+            <li> <a href="#" ><i class="icon-user"></i> My Maps</a></li>
+
+          </ul>
           <ul class="nav pull-right nav-collapse">
-            <li> <a href="#" data-target="#modalVote" data-toggle="modal">Vote on features <i class="icon-thumbs-up"></i></a> </li>
-            <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a> </li>
-            <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" href="#">About MindMup <b class="caret"></b></a>
+            <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false"
+              data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
+            <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
+            <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" href="#">About the site <b class="caret"></b></a>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Talk to Us <i class="icon-comment"></i></a> </li>
             <li><a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal">One-minute introduction</a> 
+            <li> <a href="#" data-target="#modalVote" data-toggle="modal">Vote on features <i class="icon-thumbs-up"></i></a> </li>
             <li><a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal">Site terms & conditions/Legal info</a></li>
             <li> <a href="http://blog.mindmup.com" target="_blank">News/Blog</a></li>
             <li><a href="#" class="menuFeedback" data-target="#modalFeedback" data-toggle="modal">Contact us</a></li> 
             </ul>
-            </li>
-          </ul>
-        </div>
-        <div class="container">
 
-            <ul class="nav pull-left nav-collapse" id="toolbarEdit">
-              <li> <button id="menuHelp" rel='tooltip' data-placement='bottom' data-title='Help' class="btn" data-target="#modalHelp" data-toggle="modal"><i class="icon-info-sign" ></i></button> </li>
-              <li> <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> </li>
-              <li> <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> </li>
-              <li> <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-remove"></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button> </li>
-              <li> <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button> </li>
-              <li class="divider">&nbsp;&nbsp;</li>
-              <li> <button rel='tooltip' data-title='New&nbsp;map' data-placement='bottom' class="btn" onclick="document.location='/map/new'"><i class="icon-file"></i></button> </li>
-              <li class="divider">&nbsp;&nbsp;</li>
-              <li> <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn" data-placement='bottom'>
-                <img src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> </li>
-            </ul>
-            <span id="toolbarSave" class="hide">
-              <ul class="nav nav-pills pull-right">
-                <li><p class="navbar-text"><strong>You have unsaved changes.</strong>&nbsp; </p></li>
-                <li><button id="menuPublish" class="btn btn-primary">Save Now</button></li>
-              </ul>
-            </span>
-              <ul  id="toolbarShare" class="nav nav-pills pull-right nav-collapse">
-                <li><p class="navbar-text"><strong>Share map:</strong> </p></li>
-                <li><span class='st_email_large st_btn' displayText='Email'></span></li>
-                <li><span class='st_twitter_large st_btn' displayText='Tweet'></span></li>
-                <li><span class='st_facebook_large st_btn' displayText='Facebook'></span></li>
-                <li class="dropdown"><button href="#"
-                  class="dropdown-toggle btn" style="margin-top:-1px; margin-left:2px; height:32px" data-toggle="dropdown"><i class="icon-th-list"></i> <b class="caret"></b> </button>
-                <div class="dropdown-menu">
-                  <span class='st_googleplus_large st_btn' displayText='Google +'></span>
-                  <span class='st_reddit_large st_btn' displayText='Reddit'></span>
-                  <span class='st_evernote_large st_btn' displayText='Evernote'></span>
-                  <span class='st_linkedin_large st_btn' displayText='LinkedIn'></span>
-                  <span class='st_pinterest_large st_btn' displayText='Pinterest'></span>
-                </div>
-                </li>
-              </ul>
-          <ul id="toolbarSocial" class="nav nav-collapse pull-right">
-            <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false"
-              data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
-            <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
+            </li>
           </ul>
         </div>
       </div>
       <%= erb :welcome_message%>
     </div>
+      <div id="floating-toolbar" class="floating span2 well well-small">
+        <h4>Tools <button class="close pull-right"><i class="icon-resize-small"></i></button></h4>
+        <div id="toolbar-inner">
+        <div class="toolbar" id="toolbarEdit">
+        <ul class="nav nav-stacked">
+          <li>
+            <div class="btn-group">
+               <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button> 
+               <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button> 
+               <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn">
+                <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> 
+             </div>
+          </li>
+        <li>
+            <div class="btn-group">
+             <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> 
+               <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> 
+               <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-remove"></i></button> 
+
+            </div>
+        </li>
+      </ul>
+
+          </div>
+    <div class="toolbar"
+      id="toolbarShare">
+      <h5>Share this map</h5>
+                <span class='st_email_large st_btn' displayText='Email'></span>
+                <span class='st_twitter_large st_btn' displayText='Tweet'></span>
+                <span class='st_facebook_large st_btn' displayText='Facebook'></span>
+                  <span class='st_googleplus_large st_btn' displayText='Google +'></span>
+                  <span class='st_reddit_large st_btn' displayText='Reddit'></span>
+                  <span class='st_evernote_large st_btn' displayText='Evernote'></span>
+                  <span class='st_linkedin_large st_btn' displayText='LinkedIn'></span>
+                  <span class='st_pinterest_large st_btn' displayText='Pinterest'></span>
+          <p>... or just copy the URL </p>
+    </div>
+      </div>
+      <span id="toolbarSave" class="hide">
+          <button id="menuPublish" class="btn btn-primary">Save Map</button>
+        </span>
+  </div>
+  <script>
+$(function(){
+  $('#floating-toolbar').draggable({containment:'window'});
+  $('#floating-toolbar h4 button').click(function(){
+    if ($('#toolbar-inner').is(':visible')){
+      $('#toolbar-inner').hide();
+      $('.icon-resize-small','#floating-toolbar').removeClass("icon-resize-small").addClass("icon-resize-full");
+    }
+    else {
+      $('#toolbar-inner').show(); 
+      $('.icon-resize-full','#floating-toolbar').addClass("icon-resize-small").removeClass("icon-resize-full");
+    }
+  });
+});
+</script>
     <%= erb :about %>
     <%= erb :vote %>
     <%= erb :alert %>
