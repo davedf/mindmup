@@ -99,7 +99,8 @@ $(function(){
       logUserActivity(_.toArray(arguments));
     });
     mapModel.addEventListener('analytic', function (origin, action, source) {
-      logActivity('Map Model',action,source);
+      if (source!='internal')
+        logActivity('Map Model',action,source);
     });
     $('#toolbarEdit').mapToolbarWidget(mapModel);
     $("#menuPublish").click(function(){
