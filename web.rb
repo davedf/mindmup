@@ -23,6 +23,7 @@ configure do
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
+  set :current_file_version, settings.key_id_generator.generate(:compact) 
 end
 get '/' do
   if session['mapid'].nil? 
