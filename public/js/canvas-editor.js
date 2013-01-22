@@ -110,7 +110,7 @@ $(function(){
     $("[rel=tooltip]").tooltip();
     $("#menuShortcuts").popover({
         placement: function(){
-         return $('#menuShortcuts').offset().left<200?'right':'left'
+         return $('#menuShortcuts').offset().left < 220 ?'right':'left'
         },
         trigger:'click',html:'true',content:
         '<strong>Enter</strong>: Add sibling<br/>' +
@@ -158,15 +158,26 @@ $(function(){
     logMapActivity('ProxyLoad',mapId);
     $.ajax('/s3proxy/'+mapId,{ dataType: 'json', success:jsonLoadSuccess, error: jsonFail });
   };
+  $.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
   $('.modal').on('show', function () {
     mapModel.setInputEnabled(false);
   });
   $('.modal').on('hidden', function () {
     mapModel.setInputEnabled(true);
   });
+  $('#floating-toolbar').draggable({containment:'window'});
+  $('#floating-toolbar button.close').click(function(){
+    if ($('#toolbar-inner').is(':visible')){
+      $('#toolbar-inner').hide();
+      $('.icon-resize-small','#floating-toolbar').removeClass("icon-resize-small").addClass("icon-resize-full");
+    }
+    else {
+      $('#toolbar-inner').show(); 
+      $('.icon-resize-full','#floating-toolbar').addClass("icon-resize-small").removeClass("icon-resize-full");
+    }
+  });
 
 
-  $.ajax(map_url,{ dataType: 'json', success:jsonLoadSuccess, error: jsonTryProxy });
   $(window).bind('beforeunload', function() {
     if (changed && !saving) {
       return 'There are unsaved changes.';

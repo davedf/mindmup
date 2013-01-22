@@ -23,10 +23,10 @@ html, body {
   }
 }
 @media screen {
-  #topbar .nav li a { font-weight:bold; }
+  #topbar  .nav > li > a { font-weight:bold; }
 }
 #floating-toolbar { position:absolute; top:100px; right:10px;z-index:999; border:1px solid #0088cc; border-radius:9px; }
-#toolbarEdit ul li { margin-top:5px; }
+#toolbarEdit button { margin-top:5px; }
 .ideaInput {
   position: absolute;
   z-index: 999;
