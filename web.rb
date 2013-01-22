@@ -1,8 +1,10 @@
 require 'pp'
 require 'sinatra'
-require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require 'uuid'
 require 'aws-sdk'
+
+require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
+require File.dirname(__FILE__)+'/lib/freemind_format.rb'
 
 configure do
   set :s3_website,ENV['S3_WEBSITE']
