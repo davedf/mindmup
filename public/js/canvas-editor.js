@@ -107,6 +107,13 @@ $(function(){
       $('#toolbarSave p').hide();
       publishMap();
     });
+    $('.mapExport').click(function () {
+      var formats={'.mm':MAPJS.freemindFormat, '.mup':JSON.stringify};
+      var dataFormat = $(this).data('format');
+      var url = 'data:application/json;base64,' + $.base64.encode(formats[dataFormat](active_content));
+      $(this).attr('href', url).attr('download',active_content.title + dataFormat);
+      return true;
+    });
     $("[rel=tooltip]").tooltip();
     $("#menuShortcuts").popover({
         placement: function(){

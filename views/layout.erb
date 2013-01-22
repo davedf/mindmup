@@ -26,10 +26,12 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
       <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
       <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"/></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/jquery.base64.min.js"></script>
     <% else %>
       <script src="/offline/jquery.min.js"></script>
       <script src="/offline/underscore-min.js"></script>
       <script src="/offline/bootstrap.min.js"></script>
+      <script src="/offline/jquery.base64.min.js"></script>
     <% end %>
   </head>
   <body>
@@ -90,6 +92,15 @@
               <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> 
               <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> 
               <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-trash"></i></button> 
+            </div>
+            </li>
+            <li>
+            <div class="btn-group">
+              <button class="btn btn-small dropdown-toggle" data-toggle="dropdown">Export Map&nbsp;<span class="caret"></span></button>
+              <ul class="dropdown-menu">
+                <li><a href='#' class="mapExport" data-format=".mup">MindMup</a> </li>
+                <li><a href='#' class="mapExport" data-format=".mm">Freemind</a></li> 
+              </ul>
             </div>
             </li>
           </ul>
