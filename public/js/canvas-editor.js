@@ -110,7 +110,7 @@ $(function(){
     $("[rel=tooltip]").tooltip();
     $("#menuShortcuts").popover({
         placement: function(){
-         return $('#menuShortcuts').offset().left < 220 ?'right':'left'
+         return $('#menuShortcuts').offset().left < 250 ?'right':'left'
         },
         trigger:'click',html:'true',content:
         '<strong>Enter</strong>: Add sibling<br/>' +
