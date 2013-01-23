@@ -69,7 +69,14 @@ development and testing without an internet connection.
 Executing tests
 ---------------
 
-The server does very little apart from serving files. There are some server-side tests that you should run before committing, in the test folder. Run them with:
+We do a bunch of exploratory tests and some manual sanity tests before each release, 
+and use this [ACC Matrix](https://github.com/mindmup/mindmup/wiki/Attribute%2C-Component%2C-Capability-matrix) to guide testing. Most client tests
+are in the MapJS project, so see that as well. This server does very little apart from some basic routing, so there are not many automated tests
+in this project. For server testing, there are a few RSpec tests that should run before commiting. Execute them with: 
+
     rspec test/*.rb
 
 The tests don't depend on the .env file intentionally. Supply your own config as part of the test if needed.
+
+
+
