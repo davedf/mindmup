@@ -10,7 +10,6 @@ jQuery.fn.alertWidget = function (alert) {
 	this.each(function () {
 		var element = jQuery(this);
 		alert.addEventListener('shown', function (message, detail, type) {
-			console.log('showing');
 			element.append(
 				'<div class="alert fade in alert-' + type + '">\
 					<button type="button" class="close" data-dismiss="alert">&#215;</button>\
