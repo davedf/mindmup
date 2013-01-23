@@ -29,20 +29,20 @@ configure do
 end
 get '/' do
   if session['mapid'].nil? 
-    @mapId=settings.default_map
+    @mapid=settings.default_map
     erb :editor
   else
     redirect "/map/#{session['mapid']}"
   end
 end
 
-get "/s3/:mapId" do
-  redirect "/map/#{params[:mapId]}"
+get "/s3/:mapid" do
+  redirect "/map/#{params[:mapid]}"
 end
 
-get "/s3proxy/:mapId" do
+get "/s3proxy/:mapid" do
   content_type 'application/json'
-  settings.s3_bucket.objects[map_key(params[:mapId])].read
+  settings.s3_bucket.objects[map_key(params[:mapid])].read
 end
 get "/export/mindmup/:mapid" do
   content_type 'application/octet-stream'
@@ -58,9 +58,9 @@ get "/export/freemind/:mapid" do
   attachment (Rack::Utils.escape(json['title'])+'.mm')
   freemind_format(json)
 end
-get "/map/:mapId" do
-  @mapId = params[:mapId]
-  session['mapid']=@mapId
+get "/map/:mapid" do
+  @mapid = params[:mapid]
+  session['mapid']=@mapid
   erb :editor
 end
 
@@ -76,12 +76,12 @@ get "/publishingConfig" do
 end
 
 helpers do  
-  def map_key mapId
-    (mapId.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapId + ".json"
+  def map_key mapid
+    (mapid.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapid + ".json"
   end
-  def map_url mapId
+  def map_url mapid
     if settings.online?
-      "http://%s/%s" %  [settings.s3_website, map_key(mapId)]
+      "http://%s/%s" %  [settings.s3_website, map_key(mapid)]
     else
       "/offline/default.json"
     end
