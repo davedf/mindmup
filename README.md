@@ -26,20 +26,20 @@ Configuration
 
 The server depends on the following environment variables:
 
-GOOGLE_ANALYTICS_ACCOUNT _Google analytics ID to use for tracking. Don't use the production IDs in staging. Not used in dev and testing_
-S3_BUCKET_NAME _Only the name of S3 Bucket where files are located (eg mindmup)_
-S3_KEY_ID _AWS Access key ID that has write access for the bucket_
-S3_SECRET_KEY _AWS Secret key corresponding to the ID above_
-S3_UPLOAD_FOLDER _folder within the bucket where user maps are stored. (eg map). Avoid using the same folder for production and testing_
-S3_WEBSITE _website domain name where user files are publicly accessible. Don't specify protocol or slashes (eg mindmup.s3.amazonaws.com)_
-SITE_URL _public URL for the web site instance, used to get S3 to redirect back to us. Include protocol and slashes (eg http://localhost:5000/)_
-JOTFORM_CONTACT _ID of the form that will receive feedback on JotForm_
-SHARETHIS_PUB _ShareThis publisher ID for share links_
-DEFAULT_MAP _name or key of the map to be shown on homepage (eg default)_
-RACK_SESSION_SECRET _hashing key for rack sessions (should be relatively random, alphanumeric)_
-MAX_UPLOAD_SIZE _in KB, maximum size allowed for the users to upload. If not defined, 100 is the default value_
-NETWORK_TIMEOUT_MILLIS _number of milliseconds before we start reporting to users that there is a problem, in case of a timeout. Default is 10000._
-CURRENT_MAP_DATA_VERSION _prefix for files signaling the data format. For now, we use a1. This is to help in the future with format versioning_
+- GOOGLE_ANALYTICS_ACCOUNT _Google analytics ID to use for tracking. Don't use the production IDs in staging. Not used in dev and testing_
+- S3_BUCKET_NAME _Only the name of S3 Bucket where files are located (eg mindmup)_
+- S3_KEY_ID _AWS Access key ID that has write access for the bucket_
+- S3_SECRET_KEY _AWS Secret key corresponding to the ID above_
+- S3_UPLOAD_FOLDER _folder within the bucket where user maps are stored. (eg map). Avoid using the same folder for production and testing_
+- S3_WEBSITE _website domain name where user files are publicly accessible. Don't specify protocol or slashes (eg mindmup.s3.amazonaws.com)_
+- SITE_URL _public URL for the web site instance, used to get S3 to redirect back to us. Include protocol and slashes (eg http://localhost:5000/)_
+- JOTFORM_CONTACT _ID of the form that will receive feedback on JotForm_
+- SHARETHIS_PUB _ShareThis publisher ID for share links_
+- DEFAULT_MAP _name or key of the map to be shown on homepage (eg default)_
+- RACK_SESSION_SECRET _hashing key for rack sessions (should be relatively random, alphanumeric)_
+- MAX_UPLOAD_SIZE _in KB, maximum size allowed for the users to upload. If not defined, 100 is the default value_
+- NETWORK_TIMEOUT_MILLIS _number of milliseconds before we start reporting to users that there is a problem, in case of a timeout. Default is 10000._
+- CURRENT_MAP_DATA_VERSION _prefix for files signaling the data format. For now, we use a1. This is to help in the future with format versioning_
 
 Running standalone
 ------------------
