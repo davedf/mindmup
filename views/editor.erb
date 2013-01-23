@@ -6,7 +6,7 @@
 <% end %>
 <script type="text/javascript" src="/mapjs-compiled.js?version=<%=settings.current_file_version%>"></script>
 <script type="text/javascript" src="/js/canvas-editor.js?version=<%=settings.current_file_version%>"></script>
-<div network_timeout_millis="<%=settings.network_timeout_millis%>" id="container" mindmap="<%=map_url(@mapId)%>" mapid="<%=@mapId%>"></div>
+<div network_timeout_millis="<%=settings.network_timeout_millis%>" id="container" mindmap="<%=map_url(@mapid)%>" mapid="<%=@mapid%>"></div>
 <form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" >
   <input type="hidden" name="AWSAccessKeyId" > 

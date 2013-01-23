@@ -6,18 +6,24 @@ get s3 to be maps.mindmup.com
 -- hide toolbar on phone/add menu with edit items...
 
 - add some info into README.md - setup/run project/env variables....
-- config.ru - make session secret configurable
-- migrate to other base64 library & change in setup_offline.sh
-- web.rb
-   -- publishing config to @ vars
-   -- make max upload size configurable
-   -- review if we export through client or server /  review export paths if we keep them on the server
-   -- @mapId to @map_id
- 
+
+// default.json to offline, deal with it as with a script (setup_offline)
+// config.ru - make session secret configurable
+// migrate to other base64 library & change in setup_offline.sh
+// web.rb
+   // publishing config to @ vars
+   // make max upload size configurable
+   // @mapId to @map_id
+// kill help
+//welcome message. add message id to data-message in dom, move script out to check onload if there is a welcome message, and if so, log activity
 
 
-- default.json to offline, deal with it as with a script (setup_offline)
-- move /public/css and /public/js into /public
+-- review if we export through client or server /  review export paths if we keep them on the server
+
+
+
+
+move /public/css and /public/js into /public
 
 - canvas editor needs love!
   - split out functional stuff from layout/menu stuff
@@ -26,14 +32,14 @@ get s3 to be maps.mindmup.com
 
 - views
   - analytics.erb into two javascript files, select in layout which one to load
-  - kill help
+
   - alert to a javascript file
   - move editor specific stuff from layout into editor
   - perhaps move social scripts into a separate erb from layout
   - move script out of voting 
      -- should alert/feedback/voting go into same script or not? perhaps compile + minimise.... 
         perhaps keep individual files in /public/js and compile to /public
-  - welcome message. add message id to data-message in dom, move script out to check onload if there is a welcome message, and if so, log activity
+
  
  
  --- later ---
