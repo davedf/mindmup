@@ -1,8 +1,10 @@
 require 'pp'
 require 'sinatra'
-require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require 'uuid'
 require 'aws-sdk'
+
+require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
+require File.dirname(__FILE__)+'/lib/freemind_format.rb'
 
 configure do
   set :s3_website,ENV['S3_WEBSITE']
@@ -23,10 +25,15 @@ configure do
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
+  set :current_file_version, settings.key_id_generator.generate(:compact) 
 end
 get '/' do
-  @mapId = session['mapid']||settings.default_map
-  erb :editor
+  if session['mapid'].nil? 
+    @mapId=settings.default_map
+    erb :editor
+  else
+    redirect "/map/#{session['mapid']}"
+  end
 end
 
 get "/s3/:mapId" do
@@ -34,8 +41,22 @@ get "/s3/:mapId" do
 end
 
 get "/s3proxy/:mapId" do
-  response.headers['Content-Type']='application/json'
+  content_type 'application/json'
   settings.s3_bucket.objects[map_key(params[:mapId])].read
+end
+get "/export/mindmup/:mapid" do
+  content_type 'application/octet-stream'
+  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  json=JSON.parse(contents)
+  attachment (Rack::Utils.escape(json['title'])+'.mup')
+  contents
+end
+get "/export/freemind/:mapid" do
+  content_type 'application/octet-stream'
+  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  json=JSON.parse(contents)
+  attachment (Rack::Utils.escape(json['title'])+'.mm')
+  freemind_format(json)
 end
 get "/map/:mapId" do
   @mapId = params[:mapId]
