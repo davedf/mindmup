@@ -41,8 +41,22 @@ get "/s3/:mapId" do
 end
 
 get "/s3proxy/:mapId" do
-  response.headers['Content-Type']='application/json'
+  content_type 'application/json'
   settings.s3_bucket.objects[map_key(params[:mapId])].read
+end
+get "/export/mindmup/:mapid" do
+  content_type 'application/octet-stream'
+  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  json=JSON.parse(contents)
+  attachment (Rack::Utils.escape(json['title'])+'.mup')
+  contents
+end
+get "/export/freemind/:mapid" do
+  content_type 'application/octet-stream'
+  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  json=JSON.parse(contents)
+  attachment (Rack::Utils.escape(json['title'])+'.mm')
+  freemind_format(json)
 end
 get "/map/:mapId" do
   @mapId = params[:mapId]

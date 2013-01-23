@@ -95,11 +95,11 @@
             </div>
             </li>
             <li>
-            <div class="btn-group">
-              <button class="btn btn-small dropdown-toggle" data-toggle="dropdown">Export Map&nbsp;<span class="caret"></span></button>
+            <div id='menuExport' class="btn-group">
+              <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown">Export Map&nbsp;<span class="caret"></span></button>
               <ul class="dropdown-menu">
-                <li><a href='#' class="mapExport" data-format=".mup" target="_blank">MindMup</a> </li>
-                <li><a href='#' class="mapExport" data-format=".mm" target="_blank">Freemind</a></li> 
+                <li><a rel='nofollow' href='/export/mindmup/<%=@mapId%>'>MindMup</a> </li>
+                <li><a rel='nofollow' href='/export/freemind/<%=@mapId%>'>FreeMind</a> </li>
               </ul>
             </div>
             </li>
