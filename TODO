@@ -1,22 +1,23 @@
 exploratory Testing
-newly added node gets selected
-newly added node is in edit mode
-clear map recenter and set node to edit
 
-clean up old editor dependencies
 get s3 to be maps.mindmup.com
-sharing advanced segments
 
 
 ========================
 - pure DOM renderer.
-alert...('Hi... we're in Beta and still sorting out accessibility on some devices. if the map does not load on your device, see the plain HTML version')
   
 Later:
 --Popup on canvas map 
---multi-line edit in text area, instead of an input
 --externalise canvas style configuration (radius, backgrounds, wordwrap limits...)
 context sensitive menus
-find a way of loading json reliably from CDN without having to save as javascript
-help page
-revisit website design
+
+
+- add some info into README.md - setup/run project/env variables....
+- config.ru - make session secret configurable
+- migrate to other base64 library & change in setup_offline.sh
+- web.rb
+   -- publishing config to @ vars
+   -- make max upload size configurable
+   -- review if we export through client or server /  review export paths if we keep them on the server
+   -- @mapId to @map_id
+
