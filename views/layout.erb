@@ -58,7 +58,7 @@
             <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
             <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" href="#">About&nbsp;MindMup&nbsp;<b class="caret"></b></a>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-              <li><a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal"><i class="icon-coffee"></i>&nbsp;One-minute intro</a> 
+              <li><a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal"><i class="icon-coffee"></i>&nbsp;One-minute intro</a>
               <li> <a href="#" data-target="#modalVote" data-toggle="modal"><i class="icon-bullhorn"></i>&nbsp;Vote on features</a> </li>
               <li><a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal"><i class="icon-legal"></i>&nbsp;Legal info</a></li>
               <li> <a href="http://blog.mindmup.com" target="_blank"><i class="icon-rss"></i>&nbsp;News/Blog</a></li>
@@ -81,17 +81,17 @@
           <ul class="unstyled">
             <li>
             <div class="btn-group">
-              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button> 
-              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button> 
+              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button>
+              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button>
               <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn">
-                <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button> 
+                <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button>
             </div>
             </li>
             <li>
             <div class="btn-group">
-              <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button> 
-              <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button> 
-              <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-trash"></i></button> 
+              <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button>
+              <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button>
+              <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-trash"></i></button>
             </div>
             </li>
             <li>
@@ -138,5 +138,9 @@
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
       fjs.parentNode.insertBefore(js, fjs);
       }(document, 'script', 'facebook-jssdk'));</script>
+    <script src="/js/alert.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/activity-log.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/feedback.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/main.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
   </body>
 </html>

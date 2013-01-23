@@ -61,7 +61,7 @@ $(function(){
         $('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
         $('#toolbarSave p').show();
         showAlert('Unfortunately, there was a problem saving the map.','Please try again later. We have sent an error report and we will look into this as soon as possible','error');
-        sendErrorReport('Map save failed');
+        MM.sendErrorReport('Map save failed');
       }
       var submitS3Form = function(result) {
         publishing=false;
@@ -157,7 +157,7 @@ $(function(){
     logUserActivity(msg);
     loadAlertDiv.detach();
     showAlert('Unfortunately, there was a problem loading the map.','An automated error report was sent and we will look into this as soon as possible','error');
-    sendErrorReport(msg);
+    MM.sendErrorReport(msg);
   };
   var jsonTryProxy=function(map_url){
     logMapActivity('ProxyLoad',mapId);

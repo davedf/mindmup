@@ -1,40 +1,13 @@
+<script id="analytics" type="text/javascript">
+  var _gaq;
+  <% if production? then %>
+    _gaq.push(['_setAccount', '<%=ENV["GOOGLE_ANALYTICS_ACCOUNT"]%>']);
+    _gaq.push(['_trackPageview']);
 
-<script id='analytics'>
-<% if production? then %>
-
-	var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', '<%=ENV["GOOGLE_ANALYTICS_ACCOUNT"]%>']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();	  
-var logActivity=function(category, eventType, label){
-	_gaq.push(['_trackEvent',category, eventType, label]);
-  logUserActivity(category + ',' + eventType + ',' + label);
-}
-
-<% else %>
-var logActivity=function(category, eventType, label){
-	console.log("logActivity:",category, eventType, label||'')
-  logUserActivity(category + ',' + eventType + ',' + label);
-}
-
-<% end %> 
-var logMapActivity=function(eventType, label){
-	logActivity("Map",eventType, label);
-}
-var _userActivityLog=[];
-var _userActivityCounter=0;
-var _MAX_EVENTS_TO_LOG=10000;
-var logUserActivity=function(eventInfo){
-  <% unless production? %>
-    console.log("logUserActivity:",eventInfo);
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
   <% end %>
-  _userActivityCounter++;
-  if (_userActivityLog.length>_MAX_EVENTS_TO_LOG) _userActivityLog.shift();
-  _userActivityLog.push({id:_userActivityCounter,ts:(new Date()).toGMTString(),event:eventInfo});
-}
 </script>
