@@ -12,4 +12,5 @@
 	MM.sendErrorReport = feedback.sendErrorReport;
 	window.logUserActivity = window.logActivity = activityLog.log;
 	window.logMapActivity = activityLog.log.bind(activityLog, 'Map');
+	window.showAlert = alert.show;
 }());
