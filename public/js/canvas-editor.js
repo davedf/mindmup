@@ -87,7 +87,8 @@ $(function(){
       setTimeout(saveTimeoutOccurred,parseInt(container.attr('network_timeout_millis')));
       fetchPublishingConfig();
     };
-    active_content.addEventSink(function() {
+    active_content.addEventListener('changed', function() {
+      var args = [arguments[0]].concat(arguments[1]);
       saving=false;
       if (!changed) {
         $("#toolbarShare").hide();
@@ -96,7 +97,7 @@ $(function(){
         logMapActivity('Edit');
         changed = true;
       }
-      logUserActivity(_.toArray(arguments));
+      logUserActivity(args);
     });
     mapModel.addEventListener('analytic', function (origin, action, source) {
       if (source!='internal')
@@ -176,7 +177,7 @@ $(function(){
       $('.icon-resize-small','#floating-toolbar').removeClass("icon-resize-small").addClass("icon-resize-full");
     }
     else {
-      $('#toolbar-inner').show(); 
+      $('#toolbar-inner').show();
       $('.icon-resize-full','#floating-toolbar').addClass("icon-resize-small").removeClass("icon-resize-full");
     }
   });
