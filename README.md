@@ -65,3 +65,11 @@ We don't package any of third party javascript dependencies (and there are plent
 page loading experience, all third party dependencies are retrieved from CDNs where available or the S3 file storage. To run offline, set the environment
 variable OFFLINE to true, and run the setup_offline.sh script in the root folder to download all the dependencies to /public/offline. This enables
 development and testing without an internet connection.
+
+Executing tests
+---------------
+
+The server does very little apart from serving files. There are some server-side tests that you should run before committing, in the test folder. Run them with:
+    rspec test/*.rb
+
+The tests don't depend on the .env file intentionally. Supply your own config as part of the test if needed.
