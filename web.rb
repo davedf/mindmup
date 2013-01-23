@@ -83,7 +83,7 @@ helpers do
     if settings.online?
       "http://%s/%s" %  [settings.s3_website, map_key(mapId)]
     else
-      "/default.json"
+      "/offline/default.json"
     end
   end
 end
