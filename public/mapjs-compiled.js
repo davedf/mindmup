@@ -1,6 +1,6 @@
 var observable = function (base) {
 	'use strict';
-	var eventListenersByType = {}, eventSinks = [];
+	var eventListenersByType = {};
 	base.addEventListener = function (type, listener) {
 		eventListenersByType[type] = eventListenersByType[type] || [];
 		eventListenersByType[type].push(listener);
@@ -21,15 +21,9 @@ var observable = function (base) {
 			);
 		}
 	};
-	base.addEventSink = function(eventSink) {
-    eventSinks.push(eventSink);
-  }
 	base.dispatchEvent = function (eventType) {
 		var eventArguments, listeners, i;
 		eventArguments = Array.prototype.slice.call(arguments, 1);
-		for (i = 0; i < eventSinks.length; i += 1) {
-			eventSinks[i].apply(base, arguments);
-		}
 		listeners = base.listeners(eventType);
 		for (i = 0; i < listeners.length; i += 1) {
 			if (listeners[i].apply(base, eventArguments) === false) {
@@ -141,16 +135,14 @@ var content;
       new_rank = max_rank - 10 * sign(current_rank);
       contentAggregate.ideas[new_rank] = contentAggregate.ideas[current_rank];
       delete contentAggregate.ideas[current_rank];
-      contentAggregate.dispatchEvent('flip',ideaId);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','flip', [ideaId]);
       return true;
     }
     contentAggregate.updateTitle = function (ideaId, title) {
       var idea=findIdeaById(ideaId);
       if (!idea) return false;
       idea.title=title;
-      contentAggregate.dispatchEvent('updateTitle', ideaId,title);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','updateTitle', [ideaId,title]);
       return true;
     };
     contentAggregate.addSubIdea = function(parentId,ideaTitle){
@@ -160,15 +152,13 @@ var content;
       if (!parent) return false;
       var newIdea=init({title:ideaTitle,id:(newId||(contentAggregate.maxId()+1))});
       appendSubIdea(parent,newIdea);
-      contentAggregate.dispatchEvent('addSubIdea',parentId,ideaTitle,newIdea.id);
       contentAggregate.dispatchEvent('changed','addSubIdea',[parentId,ideaTitle,newIdea.id]);
       return true;
     }
     contentAggregate.removeSubIdea = function (subIdeaId){
       var result = traverseAndRemoveIdea(contentAggregate,subIdeaId);
       if (result) {
-        contentAggregate.dispatchEvent('removeSubIdea',subIdeaId);
-        contentAggregate.dispatchEvent('changed',undefined);
+        contentAggregate.dispatchEvent('changed','removeSubIdea',[subIdeaId]);
       }
       return result;
     }
@@ -183,8 +173,7 @@ var content;
       traverseAndRemoveIdea(contentAggregate,ideaId);
       if (!idea) return false;
       appendSubIdea(parent,idea);
-      contentAggregate.dispatchEvent('changeParent',ideaId,newParentId);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','changeParent',[ideaId,newParentId]);
       return true;
     }
     contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId) {
@@ -219,14 +208,8 @@ var content;
       if (new_rank==current_rank) return false;
       parentIdea.ideas[new_rank] = parentIdea.ideas[current_rank];
       delete parentIdea.ideas[current_rank];
-      contentAggregate.dispatchEvent('positionBefore',ideaId,positionBeforeIdeaId);
-      contentAggregate.dispatchEvent('changed',undefined);
+      contentAggregate.dispatchEvent('changed','positionBefore',[ideaId,positionBeforeIdeaId]);
       return true;
-    }
-    contentAggregate.clear = function () {
-      delete contentAggregate.ideas;
-      contentAggregate.dispatchEvent('clear', undefined);
-      contentAggregate.dispatchEvent('changed', undefined);
     }
     init(contentAggregate);
     return observable(contentAggregate);
@@ -464,7 +447,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		idea.addSubIdea(parent.id, getRandomTitle());
 	};
 	this.removeSubIdea = function (source) {
-		analytic('removeSubIdea', source);		
+		analytic('removeSubIdea', source);
 		var parent = parentNode(idea, currentlySelectedIdeaId);
 		if (idea.removeSubIdea(currentlySelectedIdeaId)) {
 			self.selectNode(parent.id);
@@ -476,9 +459,6 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 	this.editNode = function (source, shouldSelectAll) {
 		analytic('editNode', source);
 		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll );
-	};
-	this.clear = function () {
-		idea.clear();
 	};
 	this.scaleUp = function (source) {
 		self.dispatchEvent('mapScaleChanged', true);
@@ -1067,9 +1047,10 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 	};
 };
 /*global jQuery*/
+/*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
-	this.each(function () {
+	return this.each(function () {
 		var element = jQuery(this);
 		['scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
@@ -1078,9 +1059,7 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 				}
 			});
 		});
-
 	});
-	return this;
 };var MAPJS = MAPJS || {};
 
 MAPJS.freemindFormat = function (idea) {

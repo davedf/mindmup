@@ -5,9 +5,6 @@ html, body {
   width:100%;
   min-height: 100%;
 }
-#modalHelp .modal-body {
-  max-height:307px;
-}
 #toolbarSocial {
   margin-right: 20px;
 }

@@ -1,25 +1,39 @@
-$(function () {
-  var sendFeedbackForm=function () {
-    $('#modalPageInfo').val(window.location.href);
-    $('#modalBrowserInfo').val(navigator.userAgent);
-    $('#modalActivityLog').val(JSON.stringify(_userActivityLog));
-    $('#modalScreenInfo').val(JSON.stringify(window.screen) + ' resolution:' + $(window).width() + 'x' + $(window).height());
-    $('#modalFeedback form').submit();
-  }
-  window.sendErrorReport = function (message) {
-    logActivity('Error',message);
-    $('#modalFeedback textarea').val(message);
-    $('#modalFeedback [name=q1_name]').val('automated error report');
-    sendFeedbackForm();
-  }
-  $('#modalFeedback').on('show', function () {
-    logActivity('Feedback','Open');
-    $('#modalFeedback textarea').val('');
-  });
-  $('#sendFeedBackBtn').click(function () {
-    logActivity('Feedback','Send');
-    sendFeedbackForm();
-    $('#modalFeedback').modal('hide');
-    showAlert('Thank you for your feedback!','We\'ll get back to you as soon as possible.')
-  });
-});
+/*global jQuery, navigator, window, MM*/
+MM.Feedback = function (activityLog, alert) {
+	'use strict';
+	var sendFeedbackForm = function (element) {
+		element.find('[name=q11_pageInfo]').val(window.location.href);
+		element.find('[name=q8_browserInfo]').val(navigator.userAgent);
+		element.find('[name=q9_activityLog]').val(JSON.stringify(activityLog.getLog()));
+		element.find('[name=q10_screenInfo]').val(JSON.stringify(window.screen) + ' resolution:' + jQuery(window).width() + 'x' + jQuery(window).height());
+		element.find('form').submit();
+	};
+	this.feedbackOpened = function () {
+		activityLog.log('Feedback', 'Open');
+	};
+	this.sendFeedback = function (element) {
+		activityLog.log('Feedback', 'Send');
+		sendFeedbackForm(element);
+		alert.show('Thank you for your feedback!', 'We\'ll get back to you as soon as possible.');
+	};
+	this.sendErrorReport = function (element, message) {
+		activityLog.log('Error', message);
+		element.find('textarea').val(message);
+		element.find('[name=q1_name]').val('automated error report');
+		sendFeedbackForm(element);
+	};
+};
+jQuery.fn.feedbackWidget = function (feedback) {
+	'use strict';
+	return this.each(function () {
+		var element = jQuery(this);
+		element.on('show', function () {
+			element.find('textarea').val('');
+			feedback.feedbackOpened();
+		});
+		jQuery('#sendFeedBackBtn').click(function () {
+			feedback.sendFeedback(element);
+			element.modal('hide');
+		});
+	});
+};
