@@ -30,3 +30,4 @@ jQuery(function () {
 });
 //mapWidget - initial stage y???
 //todo widget (tracking behaviour)
+//add window.onerror

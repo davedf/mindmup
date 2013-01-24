@@ -42,9 +42,9 @@ MM.MapRepository = function (activityLog, feedback, alert) {
 						activityLog.log('Map', 'Edit');
 						changed = true;
 					}
-					activityLog.log([arg1, arg2]);
+					activityLog.log(['Map', arg1].concat(arg2));
 				});
-				//logMapActivity('View', mapId);
+				activityLog.log('Map', 'View', mapId);
 				document.title = active_content.title;
 				$('.st_btn').attr('st_title', active_content.title);
 				$('#map_title').text(active_content.title);
