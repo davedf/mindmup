@@ -1,14 +1,14 @@
-/*global jQuery, observable*/
+/*global jQuery, MM, observable*/
 /*jslint es5: true*/
-var MM = MM || {};
 MM.Alert = function () {
 	'use strict';
 	observable(this);
 	this.show = this.dispatchEvent.bind(this, 'shown');
+	this.hide = this.dispatchEvent.bind(this, 'hidden');
 };
 jQuery.fn.alertWidget = function (alert) {
 	'use strict';
-	this.each(function () {
+	return this.each(function () {
 		var element = jQuery(this);
 		alert.addEventListener('shown', function (message, detail, type) {
 			type = type || 'info';
@@ -21,6 +21,8 @@ jQuery.fn.alertWidget = function (alert) {
 					'</div>'
 			);
 		});
+		alert.addEventListener('hidden', function () {
+			element.find('.alert').remove();
+		});
 	});
-	return this;
 };

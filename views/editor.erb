@@ -1,19 +1,12 @@
 <link href="/css/mindmap.css?version=<%=settings.current_file_version%>" rel="stylesheet"></link>
-<% if !settings.online? then %>
-  <script type="text/javascript" src="/offline/kinetic-v4.2.0-custom-min.js"></script>
-<% else %>
-  <script type="text/javascript" src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js"></script>
-<% end %>
-<script type="text/javascript" src="/mapjs-compiled.js?version=<%=settings.current_file_version%>"></script>
-<script type="text/javascript" src="/js/canvas-editor.js?version=<%=settings.current_file_version%>"></script>
 <div network_timeout_millis="<%=settings.network_timeout_millis%>" id="container" mindmap="<%=map_url(@mapid)%>" mapid="<%=@mapid%>"></div>
 <form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" >
-  <input type="hidden" name="AWSAccessKeyId" > 
-  <input type="hidden" name="acl" value="public-read"> 
+  <input type="hidden" name="AWSAccessKeyId" >
+  <input type="hidden" name="acl" value="public-read">
   <input type="hidden" name="success_action_redirect" >
   <input type="hidden" name="policy" >
   <input type="hidden" name="signature" >
   <input type="hidden" name="Content-Type">
-  <input type="hidden" name="file"/> 
+  <input type="hidden" name="file"/>
 </form>

@@ -17,23 +17,9 @@
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
     <link rel="alternate" type="application/rss+xml" title="RSS" href="http://blog.mindmup.com/feeds/posts/default" />
-    <%= erb :analytics %>
-
-    <% if settings.online? then %>
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
-      <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
-      <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"/></script>
-    <% else %>
-      <script src="/offline/jquery.min.js"></script>
-      <script src="/offline/underscore-min.js"></script>
-      <script src="/offline/bootstrap.min.js"></script>
-    <% end %>
   </head>
   <body>
-
     <div id='topbar' class="navbar navbar-fixed-top navbar">
       <div class="navbar-inner">
         <div class="container">
@@ -47,8 +33,6 @@
           </a>
           <ul class="nav nav-collapse pull-left">
             <li> <a href="/map/new" ><i class="icon-lightbulb"></i> Create a Map</a> </li>
-            <!--<li> <a href="#" ><i class="icon-user"></i> My Maps</a></li>-->
-
           </ul>
           <ul class="nav pull-right nav-collapse">
             <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false"
@@ -62,7 +46,6 @@
               <li> <a href="http://blog.mindmup.com" target="_blank"><i class="icon-rss"></i>&nbsp;News/Blog</a></li>
               <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal"><i class="icon-comment"></i>&nbsp;Talk to Us</a> </li>
             </ul>
-
             </li>
           </ul>
         </div>
@@ -81,7 +64,7 @@
             <div class="btn-group">
               <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button>
               <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button>
-              <button id="menuShortcuts" data-title='Keyboard shortcuts' class="btn">
+              <button data-title='Keyboard shortcuts' class="btn keyboardShortcuts">
                 <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button>
             </div>
             </li>
@@ -103,8 +86,7 @@
             </li>
           </ul>
         </div>
-        <div class="toolbar"
-          id="toolbarShare">
+        <div class="toolbar" id="toolbarShare">
           <h5>Share this map</h5>
           <span class='st_email_large st_btn' displayText='Email'></span>
           <span class='st_twitter_large st_btn' displayText='Tweet'></span>
@@ -123,21 +105,55 @@
     <%= erb :feedback %>
     <%= erb :terms_and_conditions%>
     <%= yield %>
-    <script type="text/javascript">var switchTo5x=true;</script>
-    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
-    <script type="text/javascript">stLight.options({tracking:'google',publisher: "<%=ENV["SHARETHIS_PUB"]%>"});</script>
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
     <div id="fb-root"></div>
-    <script>(function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
-      fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));</script>
-    <script src="/js/alert.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <%= erb :analytics %>
+    <% if settings.online? then %>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
+      <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"/></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js" type="text/javascript"></script>
+    <% else %>
+      <script src="/offline/jquery.min.js"></script>
+      <script src="/offline/underscore-min.js"></script>
+      <script src="/offline/bootstrap.min.js"></script>
+      <script src="/offline/kinetic-v4.2.0-custom-min.js" type="text/javascript"></script>
+    <% end %>
+    <script src="/mapjs-compiled.js?version=<%=settings.current_file_version%>" type="text/javascript" ></script>
+    <script src="/js/mm.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
     <script src="/js/activity-log.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/alert.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/map-repository.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
     <script src="/js/feedback.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/vote.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/todo.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/map-widget.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script src="/js/floating-toolbar.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
     <script src="/js/main.js?version=<%=settings.current_file_version%>" type="text/javascript"></script>
+    <script>
+      var switchTo5x = true;//This is Sparta!
+    </script>
+    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+    <script>
+      stLight.options({tracking: 'google', publisher: "<%=ENV["SHARETHIS_PUB"]%>"});
+      (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (!d.getElementById(id)) {
+          js = d.createElement(s);
+          js.id = id;
+          js.src = "//platform.twitter.com/widgets.js";
+          fjs.parentNode.insertBefore(js, fjs);
+        }
+      }(document, "script", "twitter-wjs"));
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id))
+          return;
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
   </body>
 </html>

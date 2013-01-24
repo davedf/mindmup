@@ -1047,9 +1047,10 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 	};
 };
 /*global jQuery*/
+/*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
-	this.each(function () {
+	return this.each(function () {
 		var element = jQuery(this);
 		['scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
@@ -1058,9 +1059,20 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 				}
 			});
 		});
-
+		element.find('.keyboardShortcuts').popover({
+			placement: function () {
+				return element.find('.keyboardShortcuts').offset().left < 250 ? 'right' : 'left';
+			},
+			trigger: 'click',
+			html: 'true',
+			content: '<strong>Enter</strong>: Add sibling<br/>\
+				<strong>Tab</strong>: Add child<br/>\
+				<strong>Space</strong>: Edit node<br/>\
+				<strong>Backspace</strong>: Remove node<br/>\
+				<strong>Delete</strong>: Remove node<br/>\
+				<strong>Arrow keys</strong>: Move selection<br/>'
+		});
 	});
-	return this;
 };var MAPJS = MAPJS || {};
 
 MAPJS.freemindFormat = function (idea) {

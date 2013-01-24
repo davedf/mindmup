@@ -1,5 +1,5 @@
 /*global jQuery, navigator, window, MM*/
-MM.Feedback = function (alert, activityLog) {
+MM.Feedback = function (activityLog, alert) {
 	'use strict';
 	var sendFeedbackForm = function (element) {
 		element.find('[name=q11_pageInfo]').val(window.location.href);
@@ -16,7 +16,7 @@ MM.Feedback = function (alert, activityLog) {
 		sendFeedbackForm(element);
 		alert.show('Thank you for your feedback!', 'We\'ll get back to you as soon as possible.');
 	};
-	this.sendErrorReport = this.sendErrorReport = function (element, message) {
+	this.sendErrorReport = function (element, message) {
 		activityLog.log('Error', message);
 		element.find('textarea').val(message);
 		element.find('[name=q1_name]').val('automated error report');
@@ -25,7 +25,7 @@ MM.Feedback = function (alert, activityLog) {
 };
 jQuery.fn.feedbackWidget = function (feedback) {
 	'use strict';
-	this.each(function () {
+	return this.each(function () {
 		var element = jQuery(this);
 		element.on('show', function () {
 			element.find('textarea').val('');
@@ -35,6 +35,5 @@ jQuery.fn.feedbackWidget = function (feedback) {
 			feedback.sendFeedback(element);
 			element.modal('hide');
 		});
-		return this;
 	});
 };
