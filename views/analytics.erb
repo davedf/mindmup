@@ -1,6 +1,7 @@
 <script id="analytics" type="text/javascript">
   var _gaq;
   <% if production? then %>
+    _gaq = [];
     _gaq.push(['_setAccount', '<%=ENV["GOOGLE_ANALYTICS_ACCOUNT"]%>']);
     _gaq.push(['_trackPageview']);
 
