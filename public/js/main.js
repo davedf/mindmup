@@ -3,8 +3,8 @@ jQuery(function () {
 	'use strict';
 	var activityLog = new MM.ActivityLog(10000, _gaq ? _gaq.push.bind(_gaq) : console.log.bind(console)),
 		alert = new MM.Alert(),
-		feedback = new MM.Feedback(activityLog, alert),
-		mapRepository = new MM.MapRepository(activityLog, feedback, alert),
+		jotForm = new MM.JotForm(jQuery('#modalFeedback form'), activityLog, alert),
+		mapRepository = new MM.MapRepository(activityLog, alert),
 		mapModel = new MAPJS.MapModel(
 			function layoutCalculator(idea) {
 				return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
@@ -13,9 +13,10 @@ jQuery(function () {
 		),
 		container;
 	mapModel.addEventListener('analytic', activityLog.log);
+	jQuery('[data-category]').trackingWidget(activityLog);
 	jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 	jQuery('#topbar').alertWidget(alert);
-	jQuery('#modalFeedback').feedbackWidget(feedback);
+	jQuery('#modalFeedback').feedbackWidget(jotForm);
 	jQuery('#modalVote').voteWidget(activityLog, alert);
 	jQuery('[rel=tooltip]').tooltip();
 	jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);

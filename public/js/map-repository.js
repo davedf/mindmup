@@ -1,5 +1,5 @@
 /*global $, setTimeout, jQuery, content, window, document, MM*/
-MM.MapRepository = function (activityLog, feedback, alert) {
+MM.MapRepository = function (activityLog, alert) {
 	'use strict';
 	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
 	var active_content,
@@ -59,7 +59,7 @@ MM.MapRepository = function (activityLog, feedback, alert) {
 					'An automated error report was sent and we will look into this as soon as possible',
 					'error'
 				);
-				feedback.sendErrorReport(msg);
+				activityLog.sendError(msg);
 			},
 			jsonTryProxy = function (map_url) {
 				activityLog.log('Map', 'ProxyLoad', mapId);
@@ -85,7 +85,7 @@ MM.MapRepository = function (activityLog, feedback, alert) {
 					'Please try again later. We have sent an error report and we will look into this as soon as possible',
 					'error'
 				);
-				MM.sendErrorReport('Map save failed');
+				activityLog.sendError('Map save failed');
 			},
 			submitS3Form = function (result) {
 				var name,

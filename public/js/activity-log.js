@@ -26,3 +26,15 @@ MM.ActivityLog = function (maxNumberOfElements, analyticCallback) {
 		return activityLog;
 	};
 };
+jQuery.fn.trackingWidget = function (activityLog) {
+	'use strict';
+	return this.each(function () {
+		var element = jQuery(this),
+			category = element.data('category'),
+			eventType = element.data('event-type') || '',
+			label = element.data('label') || '';
+		element.click(function () {
+			activityLog.log(category, eventType, label);
+		});
+	});
+};

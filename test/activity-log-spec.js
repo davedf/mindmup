@@ -48,3 +48,33 @@ describe('activity log', function () {
 		}]);
 	});
 });
+describe('tracking widget', function () {
+	'use strict';
+	var element, activityLog;
+	beforeEach(function () {
+		activityLog = new MM.ActivityLog(10, jQuery.noop);
+		element = jQuery('<input type="button" data-category="Feedback" data-event-type="Open" data-label="topmenubar"></input>').appendTo('body');
+	});
+	it('should be used as a jquery plugin', function () {
+		var result = element.trackingWidget(activityLog);
+
+		expect(result).toBe(element);
+	});
+	it('should invoke log method on activityLog and pass in category, eventType and label as parameters', function () {
+		spyOn(activityLog, 'log');
+		element.trackingWidget(activityLog);
+
+		element.click();
+
+		expect(activityLog.log).toHaveBeenCalledWith('Feedback', 'Open', 'topmenubar');
+	});
+	it('should send empty strings for missing attributes', function () {
+		element = jQuery('<input type="button" data-category="Feedback"></input>').appendTo('body');
+		spyOn(activityLog, 'log');
+		element.trackingWidget(activityLog);
+
+		element.click();
+
+		expect(activityLog.log).toHaveBeenCalledWith('Feedback', '', '');
+	});
+});

@@ -44,7 +44,7 @@
               <li> <a href="#" data-target="#modalVote" data-toggle="modal"><i class="icon-bullhorn"></i>&nbsp;Vote on features</a> </li>
               <li><a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal"><i class="icon-legal"></i>&nbsp;Legal info</a></li>
               <li> <a href="http://blog.mindmup.com" target="_blank"><i class="icon-rss"></i>&nbsp;News/Blog</a></li>
-              <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal"><i class="icon-comment"></i>&nbsp;Talk to Us</a> </li>
+              <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal" data-category="Feedback" data-event-type="Open" data-label="topbar"><i class="icon-comment"></i>&nbsp;Talk to Us</a> </li>
             </ul>
             </li>
           </ul>
@@ -54,7 +54,7 @@
     </div>
     <div id="floating-toolbar" class="floating span2 well well-small">
       <span id="toolbarSave" class="hide pull-left">
-        <button id="menuPublish" class="btn btn-primary">Save Map</button>
+        <button id="menuPublish" class="btn btn-primary" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
       </span>
       <button class="close pull-right"><i class="icon-resize-small"></i></button>
       <div id="toolbar-inner">
@@ -62,25 +62,25 @@
           <ul class="unstyled">
             <li>
             <div class="btn-group">
-              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' class="btn scaleUp"><i class="icon-zoom-in"></i></button>
-              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' class="btn scaleDown"><i class="icon-zoom-out"></i></button>
-              <button data-title='Keyboard shortcuts' class="btn keyboardShortcuts">
+              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;in' data-category="Toolbar Click" data-event-type="Zoom in" class="btn scaleUp"><i class="icon-zoom-in"></i></button>
+              <button rel='tooltip' data-placement='bottom' data-title='Zoom&nbsp;out' data-category="Toolbar Click" data-event-type="Zoom out" class="btn scaleDown"><i class="icon-zoom-out"></i></button>
+              <button data-title='Keyboard shortcuts' data-category="Toolbar Click" data-event-type="Keyboard shortcuts" class="btn keyboardShortcuts">
                 <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png"></button>
             </div>
             </li>
             <li>
             <div class="btn-group">
-              <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' class="btn addSubIdea"><i class="icon-plus" ></i></button>
-              <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' class="btn editNode"><i class="icon-pencil"></i></button>
-              <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' class="btn removeSubIdea"><i class="icon-trash"></i></button>
+              <button id="menuAdd" rel='tooltip' data-placement='bottom' data-title='Add idea' data-category="Toolbar Click" data-event-type="Add idea" class="btn addSubIdea"><i class="icon-plus" ></i></button>
+              <button id="menuEdit" rel='tooltip' data-placement='bottom' data-title='Edit idea' data-category="Toolbar Click" data-event-type="Edit idea" class="btn editNode"><i class="icon-pencil"></i></button>
+              <button id="menuDelete" rel='tooltip' data-placement='bottom' data-title='Delete idea' data-category="Toolbar Click" data-event-type="Delete idea" class="btn removeSubIdea"><i class="icon-trash"></i></button>
             </div>
             </li>
             <li>
             <div id='menuExport' class="btn-group">
               <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown">Export Map&nbsp;<span class="caret"></span></button>
               <ul class="dropdown-menu">
-                <li><a rel='nofollow' href='/export/mindmup/<%=@mapid%>'>MindMup</a> </li>
-                <li><a rel='nofollow' href='/export/freemind/<%=@mapid%>'>FreeMind</a> </li>
+                <li><a rel='nofollow' href='/export/mindmup/<%=@mapid%>' data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
+                <li><a rel='nofollow' href='/export/freemind/<%=@mapid%>' data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
               </ul>
             </div>
             </li>
