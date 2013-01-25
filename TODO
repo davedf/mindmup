@@ -17,42 +17,17 @@ get s3 to be maps.mindmup.com
 // kill help
 //welcome message. add message id to data-message in dom, move script out to check onload if there is a welcome message, and if so, log activity
 
-
 -- review if we export through client or server /  review export paths if we keep them on the server
 
-
-
-
-move /public/css and /public/js into /public
-
-- canvas editor needs love!
-  - split out functional stuff from layout/menu stuff
-  - move toolbar out into a jquery widget
-- feedback.js needs love!
-
-- views
-  - analytics.erb into two javascript files, select in layout which one to load
-
-  - alert to a javascript file
-  - move editor specific stuff from layout into editor
-  - perhaps move social scripts into a separate erb from layout
-  - move script out of voting 
-     -- should alert/feedback/voting go into same script or not? perhaps compile + minimise.... 
-        perhaps keep individual files in /public/js and compile to /public
-
- 
- 
- --- later ---
+- move /public/css and /public/js into /public
+- combine & minimize all our public/js files into one public/all.js
 
 ========================
 - pure DOM renderer.
-  
+
 Later:
---Popup on canvas map 
+--Popup on canvas map
 --externalise canvas style configuration (radius, backgrounds, wordwrap limits...)
-context sensitive menus
+- context sensitive menus
 
- - performance test on erb inside erb compared to just a single erb
-
-
-
+- performance test on erb inside erb compared to just a single erb
