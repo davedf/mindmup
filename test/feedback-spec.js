@@ -1,12 +1,13 @@
-/*global afterEach, beforeEach, describe, expect, it, jQuery, observable, spyOn*/
+/*global afterEach, beforeEach, describe, expect, it, jQuery, MM, observable, spyOn*/
 describe('feedbackWidget', function () {
 	'use strict';
-	var element, sendFeedbackButton, jotForm;
+	var element, sendFeedbackButton, jotForm, activityLog;
 	beforeEach(function () {
 		jotForm = observable({
-			wasOpened: jQuery.noop,
 			sendFeedback: jQuery.noop
 		});
+		activityLog = new MM.ActivityLog(10);
+		activityLog.log('Hello');
 		element = jQuery('<div display="none"></input></div>').appendTo('body');
 		sendFeedbackButton = jQuery('<input type="button" class="sendFeedback">').appendTo(element);
 	});
@@ -16,20 +17,12 @@ describe('feedbackWidget', function () {
 	it('should be used as a jQuery plugin', function () {
 		var result;
 
-		result = element.feedbackWidget(jotForm);
+		result = element.feedbackWidget(jotForm, activityLog);
 
 		expect(result).toBe(element);
 	});
-	it('should invoke wasOpened method on jotForm when element becomes visible', function () {
-		spyOn(jotForm, 'wasOpened');
-		element.feedbackWidget(jotForm);
-
-		element.modal('show');
-
-		expect(jotForm.wasOpened).toHaveBeenCalled();
-	});
 	it('should hide itself when sendFeedback button is clicked', function () {
-		element.feedbackWidget(jotForm);
+		element.feedbackWidget(jotForm, activityLog);
 		element.modal('show');
 
 		sendFeedbackButton.click();
@@ -38,11 +31,11 @@ describe('feedbackWidget', function () {
 	});
 	it('should invoke sendFeedback method on jotForm when sendFeedback button is clicked', function () {
 		spyOn(jotForm, 'sendFeedback');
-		element.feedbackWidget(jotForm);
+		element.feedbackWidget(jotForm, activityLog);
 
 		sendFeedbackButton.click();
 
-		expect(jotForm.sendFeedback).toHaveBeenCalled();
+		expect(jotForm.sendFeedback).toHaveBeenCalledWith(activityLog.getLog());
 	});
 });
 describe('JotForm', function () {

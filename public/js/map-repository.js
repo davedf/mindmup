@@ -59,7 +59,7 @@ MM.MapRepository = function (activityLog, alert) {
 					'An automated error report was sent and we will look into this as soon as possible',
 					'error'
 				);
-				activityLog.sendError(msg);
+				activityLog.error(msg);
 			},
 			jsonTryProxy = function (map_url) {
 				activityLog.log('Map', 'ProxyLoad', mapId);
@@ -85,7 +85,7 @@ MM.MapRepository = function (activityLog, alert) {
 					'Please try again later. We have sent an error report and we will look into this as soon as possible',
 					'error'
 				);
-				activityLog.sendError('Map save failed');
+				activityLog.error('Map save failed');
 			},
 			submitS3Form = function (result) {
 				var name,

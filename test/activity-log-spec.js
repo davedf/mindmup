@@ -1,10 +1,13 @@
 /*global afterEach, beforeEach, describe, expect, it, jasmine, jQuery, sinon, spyOn, MM*/
 describe('activity log', function () {
 	'use strict';
-	var activityLog, clock, analytic;
+	var activityLog, clock, logListener, errorListener;
 	beforeEach(function () {
-		analytic = jasmine.createSpy();
-		activityLog = new MM.ActivityLog(2, analytic);
+		logListener = jasmine.createSpy();
+		errorListener = jasmine.createSpy();
+		activityLog = new MM.ActivityLog(2);
+		activityLog.addEventListener('log', logListener);
+		activityLog.addEventListener('error', errorListener);
 		clock = sinon.useFakeTimers();
 	});
 	afterEach(function () {
@@ -22,15 +25,29 @@ describe('activity log', function () {
 			event: 'Hello,World'
 		}]);
 	});
-	it('should send analytics when log method invoked', function () {
+	it('should dispatch log event when log method invoked', function () {
 		activityLog.log('category', 'event type', 'label');
 
-		expect(analytic).toHaveBeenCalledWith(['_trackEvent', 'category', 'event type', 'label']);
+		expect(logListener).toHaveBeenCalledWith('category', 'event type', 'label');
 	});
-	it('should always send analytics as a 1 depth array', function () {
+	it('should always send log as a 1 depth array', function () {
 		activityLog.log(['category', 'event type', 'label']);
 
-		expect(analytic).toHaveBeenCalledWith(['_trackEvent', 'category', 'event type', 'label']);
+		expect(logListener).toHaveBeenCalledWith('category', 'event type', 'label');
+	});
+	it('should add error messages to the activity log', function () {
+		activityLog.error('Map save failed');
+
+		expect(activityLog.getLog()).toEqual([{
+			id: 1,
+			ts: new Date(),
+			event: 'Error,Map save failed'
+		}]);
+	});
+	it('should dispatch error event when error method invoked', function () {
+		activityLog.error('Map save failed');
+
+		expect(errorListener).toHaveBeenCalledWith('Map save failed', activityLog.getLog());
 	});
 	it('should not exceed maximum event size', function () {
 		activityLog.log('foo');

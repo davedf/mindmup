@@ -1,9 +1,10 @@
-/*global jQuery,MM*/
-MM.ActivityLog = function (maxNumberOfElements, analyticCallback) {
+/*global jQuery, MM, observable*/
+MM.ActivityLog = function (maxNumberOfElements) {
 	'use strict';
-	var activityLog = [], nextId = 1;
+	var activityLog = [], nextId = 1, self = this;
+	observable(this);
 	this.log = function () {
-		var analyticArgs = ['_trackEvent'];
+		var analyticArgs = ['log'];
 		if (activityLog.length === maxNumberOfElements) {
 			activityLog.shift();
 		}
@@ -20,7 +21,11 @@ MM.ActivityLog = function (maxNumberOfElements, analyticCallback) {
 				analyticArgs.push(element);
 			}
 		});
-		analyticCallback(analyticArgs);
+		self.dispatchEvent.apply(self, analyticArgs);
+	};
+	this.error = function (message) {
+		self.log('Error', message);
+		self.dispatchEvent('error', message, activityLog);
 	};
 	this.getLog = function () {
 		return activityLog;
