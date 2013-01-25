@@ -1,4 +1,4 @@
-/*global afterEach, beforeEach, describe, expect, it, jQuery, MM, observable, spyOn*/
+/*global afterEach, beforeEach, describe, expect, it, jQuery, MM, observable, spyOn, window*/
 describe('feedbackWidget', function () {
 	'use strict';
 	var element, sendFeedbackButton, jotForm, activityLog;
@@ -40,7 +40,29 @@ describe('feedbackWidget', function () {
 });
 describe('JotForm', function () {
 	'use strict';
-	it('should ', function () {
+	var alert, form, oldNavigator;
+	beforeEach(function () {
+		oldNavigator = window.navigator;
+		window.navigator = {
+			userAgent: 'User agent'
+		};
+		alert = new MM.Alert();
+		form = jQuery('<form></form>').appendTo('body');
+		form.submit = function () {
+			return false;
+		};
+	});
+	afterEach(function () {
+		window.navigator = oldNavigator;
+	});
+	it('should submit browser info when sendFeedback invoked', function () {
+		var underTest = new MM.JotForm(form, alert);
 
+		underTest.sendFeedback([]);
+
+		expect(form.find('[name=q8_browserInfo]').val()).toBe('User agent');
+		expect(form.find('[name=q9_activityLog]').val()).toBe('[]');
+		expect(form.find('[name=q10_screenInfo]').val()).toContain('resolution');
+		expect(form.find('[name=q11_pageInfo]').val()).toContain('.html');
 	});
 });

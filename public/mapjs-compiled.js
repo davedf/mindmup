@@ -1046,6 +1046,9 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 		height: text.getHeight()
 	};
 };
+MAPJS.KineticMediator.layoutCalculator = function (idea) {
+	return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
+};
 /*global jQuery*/
 /*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {

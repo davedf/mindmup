@@ -27,9 +27,7 @@ MM.ActivityLog = function (maxNumberOfElements) {
 		self.log('Error', message);
 		self.dispatchEvent('error', message, activityLog);
 	};
-	this.getLog = function () {
-		return activityLog;
-	};
+	this.getLog = activityLog.slice.bind(activityLog);
 };
 jQuery.fn.trackingWidget = function (activityLog) {
 	'use strict';

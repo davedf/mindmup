@@ -1,4 +1,5 @@
 /*global jQuery*/
+/*jslint es5: true*/
 jQuery.fn.floatingToolbarWidget = function (mapRepository) {
 	'use strict';
 	return this.each(function () {

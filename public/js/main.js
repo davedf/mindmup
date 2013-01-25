@@ -1,44 +1,40 @@
 /*global _gaq, console, jQuery, MM, MAPJS, window*/
-jQuery(function () {
+(function () {
 	'use strict';
-	var activityLog = new MM.ActivityLog(10000),
-		alert = new MM.Alert(),
-		jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
-		mapRepository = new MM.MapRepository(activityLog, alert),
-		mapModel = new MAPJS.MapModel(
-			function layoutCalculator(idea) {
-				return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
-			},
-			['A brilliant idea...', 'A cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise']
-		),
-		container;
-	window.onerror = activityLog.error;
-	activityLog.addEventListener('log', function () {
-		var args = ['_trackEvent'].concat(Array.prototype.slice.apply(arguments));
-		if (_gaq) {
-			_gaq.push(args);
-		} else {
-			console.log(args);
-		}
+	var setupTracking = function (activityLog, jotForm, mapModel) {
+		var logCallback = _gaq ? _gaq.push.bind(_gaq) : console.log.bind(console);
+		activityLog.addEventListener('log', function () {
+			logCallback.apply(null, ['_trackEvent'].concat(Array.prototype.slice.apply(arguments)));
+		});
+		window.onerror = activityLog.error;
+		activityLog.addEventListener('error', function (message) {
+			jotForm.sendError(message, activityLog.getLog());
+		});
+		mapModel.addEventListener('analytic', activityLog.log);
+	};
+	jQuery(function () {
+		var activityLog = new MM.ActivityLog(10000),
+			alert = new MM.Alert(),
+			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
+			mapRepository = new MM.MapRepository(activityLog, alert),
+			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, ['A brilliant idea...', 'A cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise']),
+			container = jQuery('#container');
+		setupTracking(activityLog, jotForm, mapModel);
+		jQuery('[data-category]').trackingWidget(activityLog);
+		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
+		jQuery('#topbar').alertWidget(alert);
+		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
+		jQuery('#modalVote').voteWidget(activityLog, alert);
+		jQuery('[rel=tooltip]').tooltip();
+		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
+		jQuery('body').todo(activityLog);
+		container.mapWidget(activityLog, mapModel);
+		mapRepository.loadMap(
+			container.attr('mindmap'),
+			container.attr('mapid'),
+			mapModel.setIdea
+		);
 	});
-	activityLog.addEventListener('error', function (message) {
-		jotForm.sendError(message, activityLog.getLog());
-	});
-	mapModel.addEventListener('analytic', activityLog.log);
-	jQuery('[data-category]').trackingWidget(activityLog);
-	jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
-	jQuery('#topbar').alertWidget(alert);
-	jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
-	jQuery('#modalVote').voteWidget(activityLog, alert);
-	jQuery('[rel=tooltip]').tooltip();
-	jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
-	jQuery('body').todo(activityLog);//TODO - move this into sensible, generic 'trackingBehaviour'
-	container = jQuery('#container');
-	container.mapWidget(activityLog, mapModel);
-	mapRepository.loadMap(
-		container.attr('mindmap'),
-		container.attr('mapid'),
-		mapModel.setIdea
-	);
-});
+}());
 //mapWidget - initial stage y???
+//welcome message
