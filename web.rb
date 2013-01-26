@@ -90,19 +90,18 @@ helpers do
 end
 
 assets do
-  serve '/public/js', from: 'public/js'
   serve '/public', from: 'public'
   js :app, '/js/app.js', [
     '/public/mapjs-compiled.js',
-    '/public/js/mm.js',
-    '/public/js/activity-log.js',
-    '/public/js/alert.js',
-    '/public/js/map-repository.js',
-    '/public/js/feedback.js',
-    '/public/js/vote.js',
-    '/public/js/todo.js',
-    '/public/js/map-widget.js',
-    '/public/js/floating-toolbar.js',
-    '/public/js/main.js'
+    '/public/mm.js',
+    '/public/activity-log.js',
+    '/public/alert.js',
+    '/public/map-repository.js',
+    '/public/feedback.js',
+    '/public/vote.js',
+    '/public/todo.js',
+    '/public/map-widget.js',
+    '/public/floating-toolbar.js',
+    '/public/main.js'
   ]
 end

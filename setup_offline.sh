@@ -14,5 +14,4 @@ curl http://mindmup.s3.amazonaws.com/lib/fortawesome/fontawesome-webfont.svg > p
 curl http://mindmup.s3.amazonaws.com/lib/fortawesome/fontawesome-webfont.ttf > public/offline/fortawesome/fontawesome-webfont.ttf
 curl http://mindmup.s3.amazonaws.com/lib/fortawesome/fontawesome-webfont.woff > public/offline/fortawesome/fontawesome-webfont.woff
 curl http://mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js > public/offline/jquery-ui-1.10.0.custom.min.js
-curl http://mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js > public/offline/jquery-ui-1.10.0.custom.min.js
 curl http://mindmup.s3.amazonaws.com/map/default.json > public/offline/default.json

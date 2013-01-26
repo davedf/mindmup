@@ -1,33 +1,12 @@
-exploratory Testing
-
-get s3 to be maps.mindmup.com
-
--- hide export if map changed, leave a message to save before exporting
--- hide toolbar on phone/add menu with edit items...
-
+- get s3 to be maps.mindmup.com
+- hide export if map changed, leave a message to save before exporting
+- hide toolbar on phone/add menu with edit items...
 - add some info into README.md - setup/run project/env variables....
-
-// default.json to offline, deal with it as with a script (setup_offline)
-// config.ru - make session secret configurable
-// migrate to other base64 library & change in setup_offline.sh
-// web.rb
-   // publishing config to @ vars
-   // make max upload size configurable
-   // @mapId to @map_id
-// kill help
-//welcome message. add message id to data-message in dom, move script out to check onload if there is a welcome message, and if so, log activity
-
--- review if we export through client or server /  review export paths if we keep them on the server
-
-- move /public/css and /public/js into /public
-- combine & minimize all our public/js files into one public/all.js
+- review if we export through client or server /  review export paths if we keep them on the server
 
 ========================
 - pure DOM renderer.
-
-Later:
---Popup on canvas map
---externalise canvas style configuration (radius, backgrounds, wordwrap limits...)
+- Popup on canvas map
+- externalise canvas style configuration (radius, backgrounds, wordwrap limits...)
 - context sensitive menus
-
 - performance test on erb inside erb compared to just a single erb
