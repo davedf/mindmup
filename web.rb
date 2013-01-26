@@ -2,6 +2,7 @@ require 'pp'
 require 'sinatra'
 require 'uuid'
 require 'aws-sdk'
+require 'sinatra/assetpack'
 
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require File.dirname(__FILE__)+'/lib/freemind_format.rb'
@@ -11,9 +12,9 @@ configure do
   set :base_url, ENV['SITE_URL'] || "/"
   set :s3_key_id, ENV['S3_KEY_ID']
   set :s3_form_expiry, (60*60*24*30)
-  set :s3_bucket_name, ENV['S3_BUCKET_NAME'] 
+  set :s3_bucket_name, ENV['S3_BUCKET_NAME']
   set :s3_secret_key, ENV['S3_SECRET_KEY']
-  set :s3_upload_folder, ENV['S3_UPLOAD_FOLDER']		
+  set :s3_upload_folder, ENV['S3_UPLOAD_FOLDER']
   set :default_map, ENV['DEFAULT_MAP']|| "map/default"
   set :s3_max_upload_size, ENV['MAX_UPLOAD_SIZE']||100
   set :key_id_generator, UUID.new
@@ -25,10 +26,10 @@ configure do
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
-  set :current_file_version, settings.key_id_generator.generate(:compact) 
+  set :current_file_version, settings.key_id_generator.generate(:compact)
 end
 get '/' do
-  if session['mapid'].nil? 
+  if session['mapid'].nil?
     @mapid=settings.default_map
     erb :editor
   else
@@ -70,12 +71,12 @@ get "/publishingConfig" do
   @s3_result_url= settings.base_url + "s3/" + @s3_upload_identifier
   @s3_content_type="text/plain"
   signer=S3PolicySigner.new
-  @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name, 
+  @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name,
                                @s3_key, @s3_result_url, settings.s3_max_upload_size*1024, @s3_content_type, settings.s3_form_expiry
   erb :s3UploadConfig, :layout => false
 end
 
-helpers do  
+helpers do
   def map_key mapid
     (mapid.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapid + ".json"
   end
@@ -88,3 +89,20 @@ helpers do
   end
 end
 
+assets do
+  serve '/public/js', from: 'public/js'
+  serve '/public', from: 'public'
+  js :app, '/js/app.js', [
+    '/public/mapjs-compiled.js',
+    '/public/js/mm.js',
+    '/public/js/activity-log.js',
+    '/public/js/alert.js',
+    '/public/js/map-repository.js',
+    '/public/js/feedback.js',
+    '/public/js/vote.js',
+    '/public/js/todo.js',
+    '/public/js/map-widget.js',
+    '/public/js/floating-toolbar.js',
+    '/public/js/main.js'
+  ]
+end

@@ -118,17 +118,7 @@
       <script src="/offline/bootstrap.min.js"></script>
       <script src="/offline/kinetic-v4.2.0-custom-min.js" ></script>
     <% end %>
-    <script src="/mapjs-compiled.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/mm.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/activity-log.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/alert.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/map-repository.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/feedback.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/vote.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/todo.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/map-widget.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/floating-toolbar.js?version=<%=settings.current_file_version%>"></script>
-    <script src="/js/main.js?version=<%=settings.current_file_version%>"></script>
+    <%= js :app %>
     <script>
       var switchTo5x = true;//This is Sparta!
     </script>

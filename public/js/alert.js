@@ -1,5 +1,4 @@
 /*global jQuery, MM, observable*/
-/*jslint es5: true*/
 MM.Alert = function () {
 	'use strict';
 	var self = this, lastId = 0;
@@ -21,10 +20,10 @@ jQuery.fn.alertWidget = function (alert) {
 			type = type || 'info';
 			detail = detail || '';
 			element.append(
-				'<div class="alert fade in alert-' + type + '" id="alert-' + id + '">\
-					<button type="button" class="close" data-dismiss="alert">&#215;</button>\
-					<strong>' + message + '</strong>\
-					&nbsp;' + detail +
+				'<div class="alert fade in alert-' + type + '" id="alert-' + id + '">' +
+					'<button type="button" class="close" data-dismiss="alert">&#215;</button>' +
+					'<strong>' + message + '</strong>' +
+					'&nbsp;' + detail +
 					'</div>'
 			);
 		});

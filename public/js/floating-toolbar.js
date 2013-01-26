@@ -1,5 +1,4 @@
 /*global jQuery*/
-/*jslint es5: true*/
 jQuery.fn.floatingToolbarWidget = function (mapRepository) {
 	'use strict';
 	return this.each(function () {
@@ -22,12 +21,12 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository) {
 			},
 			trigger: 'click',
 			html: 'true',
-			content: '<strong>Enter</strong>: Add sibling<br/>\
-				<strong>Tab</strong>: Add child<br/>\
-				<strong>Space</strong>: Edit node<br/>\
-				<strong>Backspace</strong>: Remove node<br/>\
-				<strong>Delete</strong>: Remove node<br/>\
-				<strong>Arrow keys</strong>: Move selection<br/>'
+			content: '<strong>Enter</strong>: Add sibling<br/>' +
+				'<strong>Tab</strong>: Add child<br/>' +
+				'<strong>Space</strong>: Edit node<br/>' +
+				'<strong>Backspace</strong>: Remove node<br/>' +
+				'<strong>Delete</strong>: Remove node<br/>' +
+				'<strong>Arrow keys</strong>: Move selection<br/>'
 		});
 		jQuery("#menuPublish").click(function () {
 			jQuery('#menuPublish')
