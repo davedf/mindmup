@@ -2,7 +2,7 @@
 (function () {
 	'use strict';
 	var setupTracking = function (activityLog, jotForm, mapModel) {
-		var logListener = _gaq ? function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.apply(arguments, 0, 3))); } : console.log.bind(console, '_trackEvent');
+		var logListener = _gaq ? function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.call(arguments, 0, 3))); } : console.log.bind(console, '_trackEvent');
 		activityLog.addEventListener('log', logListener);
 		window.onerror = activityLog.error;
 		activityLog.addEventListener('error', function (message) {
