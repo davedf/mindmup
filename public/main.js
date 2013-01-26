@@ -2,7 +2,7 @@
 (function () {
 	'use strict';
 	var setupTracking = function (activityLog, jotForm, mapModel) {
-		var logListener = _gaq ? function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.apply(arguments))); } : console.log.bind(console, '_trackEvent');
+		var logListener = _gaq ? function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.apply(arguments, 0, 3))); } : console.log.bind(console, '_trackEvent');
 		activityLog.addEventListener('log', logListener);
 		window.onerror = activityLog.error;
 		activityLog.addEventListener('error', function (message) {
@@ -19,20 +19,14 @@
 			container = jQuery('#container');
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('[data-category]').trackingWidget(activityLog);
-		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
+		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
+		jQuery('[rel=tooltip]').tooltip();
 		jQuery('#topbar').alertWidget(alert);
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
-		jQuery('[rel=tooltip]').tooltip();
+		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
-		jQuery('body').todo(activityLog);
 		container.mapWidget(activityLog, mapModel);
-		mapRepository.loadMap(
-			container.attr('mindmap'),
-			container.attr('mapid'),
-			mapModel.setIdea
-		);
+		mapRepository.loadMap(container.attr('mindmap'), container.attr('mapid'), mapModel.setIdea);
 	});
 }());
-//mapWidget - initial stage y???
-//welcome message

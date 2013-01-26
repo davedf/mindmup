@@ -1,23 +1,22 @@
 /*global jQuery, navigator, window, MM, observable*/
-var MM = MM || {};
-MM.JotForm = function (form, alert) {
+MM.JotForm = function (formElement, alert) {
 	'use strict';
-	var nameElement = form.find('[name=q1_name]'),
-		textArea = form.find('textarea'),
-		browserInfoElement = jQuery('<input type="hidden" name="q8_browserInfo" />').appendTo(form),
-		activityLogElement = jQuery('<input type="hidden" name="q9_activityLog" />').appendTo(form),
-		screenInfoElement = jQuery('<input type="hidden" name="q10_screenInfo" />').appendTo(form),
-		pageInfoElement = jQuery('<input type="hidden" name="q11_pageInfo" />').appendTo(form),
+	var nameElement = formElement.find('[name=q1_name]'),
+		textAreaElement = formElement.find('textarea'),
+		browserInfoElement = jQuery('<input type="hidden" name="q8_browserInfo" />').appendTo(formElement),
+		activityLogElement = jQuery('<input type="hidden" name="q9_activityLog" />').appendTo(formElement),
+		screenInfoElement = jQuery('<input type="hidden" name="q10_screenInfo" />').appendTo(formElement),
+		pageInfoElement = jQuery('<input type="hidden" name="q11_pageInfo" />').appendTo(formElement),
 		submitForm = function (log) {
 			browserInfoElement.val(navigator.userAgent);
 			activityLogElement.val(JSON.stringify(log));
 			screenInfoElement.val(JSON.stringify(window.screen) + ' resolution:' + jQuery(window).width() + 'x' + jQuery(window).height());
 			pageInfoElement.val(window.location.href);
-			form.submit();
-			textArea.val('');
+			formElement.submit();
+			textAreaElement.val('');
 		};
 	this.sendError = function (message, log) {
-		textArea.val(message);
+		textAreaElement.val(message);
 		nameElement.val('automated error report');
 		submitForm(log);
 		nameElement.val('');

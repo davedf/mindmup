@@ -23,25 +23,26 @@
     <div id="topbar" class="navbar navbar-fixed-top navbar">
       <div class="navbar-inner">
         <div class="container">
+          <!-- what is this anchor tag for? -->
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a id="logo-img" class="brand hidden-phone" href="/map/default" rel="tooltip" title="Mindmup Home">&nbsp;</a>
+          <a id="logo-img" class="brand hidden-phone" href="/map/default" rel="tooltip" title="Mindmup Home" data-category="Top Bar" data-event-type="Logo">&nbsp;</a>
           <ul class="nav nav-collapse pull-left">
-            <li> <a href="/map/new" ><i class="icon-lightbulb"></i> Create a Map</a> </li>
+            <li> <a href="/map/new" data-category="Top Bar" data-event-type="Create a Map"><i class="icon-lightbulb"></i> Create a Map</a> </li>
           </ul>
           <ul class="nav pull-right nav-collapse">
             <li class="menulink"> <div class="fb-like" data-href="http://facebook.com/mindmupapp" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false"></div> </li>
             <li class="menulink"> <a href="https://twitter.com/mindmup" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow</a> </li>
             <li class="dropdown">
-              <a class="dropdown-toggle" data-toggle="dropdown" href="#">About&nbsp;MindMup&nbsp;<b class="caret"></b></a>
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="About" data-event-type="Open">About&nbsp;MindMup&nbsp;<b class="caret"></b></a>
               <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                <li> <a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal"><i class="icon-coffee"></i>&nbsp;One-minute intro</a> </li>
-                <li> <a href="#" data-target="#modalVote" data-toggle="modal"><i class="icon-bullhorn"></i>&nbsp;Vote on features</a> </li>
-                <li> <a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal"><i class="icon-legal"></i>&nbsp;Legal info</a> </li>
-                <li> <a href="http://blog.mindmup.com" target="_blank"><i class="icon-rss"></i>&nbsp;News/Blog</a> </li>
+                <li> <a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal" data-category="About" data-event-type="One-minute intro"><i class="icon-coffee"></i>&nbsp;One-minute intro</a> </li>
+                <li> <a href="#" data-target="#modalVote" data-toggle="modal" data-category="About" data-event-type="Vote on features"><i class="icon-bullhorn"></i>&nbsp;Vote on features</a> </li>
+                <li> <a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal" data-category="About" data-event-type="Legal info"><i class="icon-legal"></i>&nbsp;Legal info</a> </li>
+                <li> <a href="http://blog.mindmup.com" target="_blank" data-category="About" data-event-type="News/Blog"><i class="icon-rss"></i>&nbsp;News/Blog</a> </li>
                 <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal" data-category="Feedback" data-event-type="Open" data-label="topbar"><i class="icon-comment"></i>&nbsp;Talk to Us</a> </li>
               </ul>
             </li>
@@ -54,8 +55,8 @@
       <span id="toolbarSave" class="hide pull-left">
         <button id="menuPublish" class="btn btn-primary" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
       </span>
-      <button class="close pull-right"><i class="icon-resize-small"></i></button>
-      <div id="toolbar-inner">
+      <button class="close pull-right" data-category="Toolbar Click" data-event-type="Expand/Collapse"><i class="toggle icon-resize-small"></i></button>
+      <div class="toolbar-inner">
         <div class="toolbar" id="toolbarEdit">
           <ul class="unstyled">
             <li>
@@ -76,7 +77,7 @@
             </li>
             <li>
               <div id="menuExport" class="btn-group">
-                <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown">Export Map&nbsp;<span class="caret"></span></button>
+                <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a rel="nofollow" href="/export/mindmup/<%=@mapid%>" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
                   <li><a rel="nofollow" href="/export/freemind/<%=@mapid%>" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>

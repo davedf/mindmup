@@ -99,7 +99,7 @@ assets do
     '/public/map-repository.js',
     '/public/feedback.js',
     '/public/vote.js',
-    '/public/todo.js',
+    '/public/welcome-message.js',
     '/public/map-widget.js',
     '/public/floating-toolbar.js',
     '/public/main.js'
