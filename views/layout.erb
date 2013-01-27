@@ -117,7 +117,7 @@
       <%= js :offline %>
     <% end %>
     <%= js :app %>
-    <script>
+    <script id="main">
       MM.main({
         googleAnalyticsAccount: '<%= ENV["GOOGLE_ANALYTICS_ACCOUNT"] %>',
         mapUrl: '<%= map_url(@mapid) %>',
