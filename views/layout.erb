@@ -3,21 +3,21 @@
   <head>
     <meta charset="utf-8">
     <title>MindMup: Zero-Friction Free Online Mind Mapping</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="keywords" content="mind mapping, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
     <meta name="description" content="MindMup is a zero friction free online mind mapping tool. MindMup is free and aims to create the most productive online mind mapping canvas out there" />
     <% if settings.online? then %>
-      <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet"/>
-      <link rel="stylesheet" href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css"/>
+      <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet" />
+      <link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% else %>
-      <link href="/offline/bootstrap-combined.min.css" rel="stylesheet">
-      <link rel="stylesheet" href="/offline/fortawesome/font-awesome.min.css">
+      <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
+      <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% end %>
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link href="/mindmap.css?version=<%=settings.current_file_version%>" rel="stylesheet"></link>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://blog.mindmup.com/feeds/posts/default" />
+    <link href="/mindmap.css?version=<%=settings.current_file_version%>" rel="stylesheet" />
+    <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
   <body>
     <div id="topbar" class="navbar navbar-fixed-top navbar">
@@ -41,7 +41,7 @@
               <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
                 <li> <a href="#" class="menuAbout" data-target="#modalAbout" data-toggle="modal" data-category="About" data-event-type="One-minute intro"><i class="icon-coffee"></i>&nbsp;One-minute intro</a> </li>
                 <li> <a href="#" data-target="#modalVote" data-toggle="modal" data-category="About" data-event-type="Vote on features"><i class="icon-bullhorn"></i>&nbsp;Vote on features</a> </li>
-                <li> <a href="#" class="menuterms"  data-target="#modalTerms" data-toggle="modal" data-category="About" data-event-type="Legal info"><i class="icon-legal"></i>&nbsp;Legal info</a> </li>
+                <li> <a href="#" class="menuterms" data-target="#modalTerms" data-toggle="modal" data-category="About" data-event-type="Legal info"><i class="icon-legal"></i>&nbsp;Legal info</a> </li>
                 <li> <a href="http://blog.mindmup.com" target="_blank" data-category="About" data-event-type="News/Blog"><i class="icon-rss"></i>&nbsp;News/Blog</a> </li>
                 <li> <a href="#" id="menuFeedback" data-target="#modalFeedback" data-toggle="modal" data-category="Feedback" data-event-type="Open" data-label="topbar"><i class="icon-comment"></i>&nbsp;Talk to Us</a> </li>
               </ul>
@@ -49,7 +49,7 @@
           </ul>
         </div>
       </div>
-      <%= erb :welcome_message%>
+      <%= erb :welcome_message %>
     </div>
     <div id="floating-toolbar" class="floating span2 well well-small">
       <span id="toolbarSave" class="hide pull-left">
@@ -96,16 +96,17 @@
           <span class="st_evernote_large st_btn" displayText="Evernote"></span>
           <span class="st_linkedin_large st_btn" displayText="LinkedIn"></span>
           <span class="st_pinterest_large st_btn" displayText="Pinterest"></span>
-          <p>... or just copy the URL </p>
+          <p>... or just copy the URL</p>
         </div>
       </div>
     </div>
     <%= erb :about %>
     <%= erb :vote %>
     <%= erb :feedback %>
-    <%= erb :terms_and_conditions%>
+    <%= erb :terms_and_conditions %>
     <%= yield %>
     <div id="fb-root"></div>
+    <!--script src="/public/global-namespace-watcher.js"></script-->
     <% if settings.online? then %>
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
@@ -113,10 +114,7 @@
       <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"></script>
       <script src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js"></script>
     <% else %>
-      <script src="/offline/jquery.min.js"></script>
-      <script src="/offline/underscore-min.js"></script>
-      <script src="/offline/bootstrap.min.js"></script>
-      <script src="/offline/kinetic-v4.2.0-custom-min.js" ></script>
+      <%= js :offline %>
     <% end %>
     <%= js :app %>
     <script>
@@ -130,6 +128,6 @@
       var switchTo5x = true;
     </script>
     <script src="//w.sharethis.com/button/buttons.js"></script>
-    <script>stLight.options({ tracking: 'google', publisher: "<%=ENV["SHARETHIS_PUB"]%>" });</script>
+    <script>stLight.options({ tracking: 'google', publisher: '<%= ENV["SHARETHIS_PUB"] %>' });</script>
   </body>
 </html>

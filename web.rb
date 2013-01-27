@@ -91,6 +91,7 @@ end
 
 assets do
   serve '/public', from: 'public'
+  serve '/offline', from: 'offline'
   js :app, [
     '/public/mapjs-compiled.js',
     '/public/mm.js',
@@ -103,5 +104,12 @@ assets do
     '/public/map-widget.js',
     '/public/floating-toolbar.js',
     '/public/main.js'
+  ]
+  js :offline, [
+    '/offline/jquery.min.js',
+    '/offline/underscore-min.js',
+    '/offline/bootstrap.min.js',
+    '/offline/jquery-ui-1.10.0.custom.min.js',
+    '/offline/kinetic-v4.2.0-custom-min.js'
   ]
 end

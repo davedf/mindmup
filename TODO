@@ -5,6 +5,7 @@
 
 - mapWidget - initial stage y
 - merge welcomeMessageWidget with trackingWidget (the only difference is that stuff happens on load rather than on click)
+- floating toolbar - move markup from javacript into .erb
 - change routing_spec.rb (welp?) && drop attributes from container div in editor.erb
 - discuss analytics_spec.rb (always have analytics? use non-prod account)
 
