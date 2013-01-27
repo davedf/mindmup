@@ -7,7 +7,6 @@
 - merge welcomeMessageWidget with trackingWidget (the only difference is that stuff happens on load rather than on click)
 - floating toolbar - move markup from javacript into .erb
 - make saving form dynamic (i.e. create it from javascript)
-- discuss analytics_spec.rb (always have analytics? use non-prod account)
 
 ========================
 - pure DOM renderer.

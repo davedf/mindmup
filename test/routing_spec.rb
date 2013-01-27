@@ -2,8 +2,8 @@ require File.join(File.dirname(__FILE__),'spec_helper.rb')
 
 describe 'Map request routing' do
   def last_response_config
-      n=Nokogiri::HTML last_response.body
-      eval(n.xpath('//script[@id="main"]').text().match('MM.main\(([^)]*)\)')[1])
+    n=Nokogiri::HTML last_response.body
+    eval(n.xpath('//script[@id="main"]').text().match('MM.main\(([^)]*)\)')[1])
   end
   describe 'named map route' do
     it "takes map ID from the url after /map, appends .json and prepends S3 website and folder to the mindmap attribute. sets mapid attrib to just the map id." do
@@ -39,10 +39,5 @@ describe 'Map request routing' do
       follow_redirect!
       last_request.url.should=='http://example.org/map/PreviousMap'
     end
-  end
-  it "appends network timeout millis setting to the container div" do
-    set :network_timeout_millis, 999
-    get "/map/ABCDEFGH"
-    last_response_config[:networkTimeoutMillis].should==999
   end
 end

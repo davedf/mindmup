@@ -106,7 +106,6 @@
     <%= erb :terms_and_conditions %>
     <%= yield %>
     <div id="fb-root"></div>
-    <!--script src="/public/global-namespace-watcher.js"></script-->
     <% if settings.online? then %>
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
@@ -119,7 +118,7 @@
     <%= js :app %>
     <script id="main">
       MM.main({
-        googleAnalyticsAccount: '<%= ENV["GOOGLE_ANALYTICS_ACCOUNT"] %>',
+        googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
         mapUrl: '<%= map_url(@mapid) %>',
         mapId: '<%= @mapid %>',
         scriptsToLoadAsynchronously: ['//www.google-analytics.com/ga.js', '//platform.twitter.com/widgets.js', '//connect.facebook.net/en_US/all.js#xfbml=1'],

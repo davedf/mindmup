@@ -8,6 +8,7 @@ require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require File.dirname(__FILE__)+'/lib/freemind_format.rb'
 
 configure do
+  set :google_analytics_account, ENV["GOOGLE_ANALYTICS_ACCOUNT"]
   set :s3_website,ENV['S3_WEBSITE']
   set :base_url, ENV['SITE_URL'] || "/"
   set :s3_key_id, ENV['S3_KEY_ID']
