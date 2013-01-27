@@ -1,4 +1,4 @@
-<div network_timeout_millis="<%=settings.network_timeout_millis%>" id="container" mindmap="<%=map_url(@mapid)%>" mapid="<%=@mapid%>"></div>
+<div id="container"></div>
 <form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
   <input type="hidden" name="key" />
   <input type="hidden" name="AWSAccessKeyId" />
