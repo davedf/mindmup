@@ -91,7 +91,7 @@ end
 
 assets do
   serve '/public', from: 'public'
-  js :app, '/js/app.js', [
+  js :app, [
     '/public/mapjs-compiled.js',
     '/public/mm.js',
     '/public/activity-log.js',

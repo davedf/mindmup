@@ -1,5 +1,5 @@
 /*global $, setTimeout, jQuery, content, window, document, MM*/
-MM.MapRepository = function (activityLog, alert) {
+MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
 	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
 	var active_content,
@@ -47,7 +47,6 @@ MM.MapRepository = function (activityLog, alert) {
 				activityLog.log('Map', 'View', mapId);
 				document.title = active_content.title;
 				$('.st_btn').attr('st_title', active_content.title);
-				$('#map_title').text(active_content.title);
 				load_content(active_content);
 			},
 			jsonFail = function (xhr, textStatus, errorMsg) {
@@ -121,7 +120,7 @@ MM.MapRepository = function (activityLog, alert) {
 					}
 				);
 			};
-		setTimeout(saveTimeoutOccurred, parseInt(jQuery('#container').attr('network_timeout_millis'), 10));
+		setTimeout(saveTimeoutOccurred, networkTimeoutMillis);
 		fetchPublishingConfig();
 	};
 };
