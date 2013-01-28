@@ -14,7 +14,7 @@
       <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
       <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% end %>
-    <%= css :app %>
+      <link href="/public/mindmap.css" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
   <body>
@@ -112,7 +112,17 @@
     <% else %>
       <%= js :offline %>
     <% end %>
-    <%= js :app %>
+    <script src="/public/mapjs-compiled.js"></script>
+    <script src="/public/mm.js"></script>
+    <script src="/public/activity-log.js"></script>
+    <script src="/public/alert.js"></script>
+    <script src="/public/map-repository.js"></script>
+    <script src="/public/feedback.js"></script>
+    <script src="/public/vote.js"></script>
+    <script src="/public/welcome-message.js"></script>
+    <script src="/public/map-widget.js"></script>
+    <script src="/public/floating-toolbar.js'"></script>
+    <script src="/public/main.js'"></script>
     <script id="main">
       MM.main({
         googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
