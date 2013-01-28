@@ -8,9 +8,7 @@ MM.Alert = function () {
 		self.dispatchEvent('shown', lastId, message, detail, type);
 		return lastId;
 	};
-	this.hide = function (id) {
-		self.dispatchEvent('hidden', id);
-	};
+	this.hide = this.dispatchEvent.bind(this, 'hidden');
 };
 jQuery.fn.alertWidget = function (alert) {
 	'use strict';
@@ -20,7 +18,7 @@ jQuery.fn.alertWidget = function (alert) {
 			type = type || 'info';
 			detail = detail || '';
 			element.append(
-				'<div class="alert fade in alert-' + type + '" id="alert-' + id + '">' +
+				'<div class="alert fade in alert-' + type + ' alert-no-' + id + '">' +
 					'<button type="button" class="close" data-dismiss="alert">&#215;</button>' +
 					'<strong>' + message + '</strong>' +
 					'&nbsp;' + detail +
@@ -28,7 +26,7 @@ jQuery.fn.alertWidget = function (alert) {
 			);
 		});
 		alert.addEventListener('hidden', function (id) {
-			element.find("#alert-" + id).remove();
+			element.find('.alert-no-' + id).remove();
 		});
 	});
 };
