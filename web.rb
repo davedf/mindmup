@@ -27,7 +27,6 @@ configure do
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
-  set :current_file_version, settings.key_id_generator.generate(:compact)
 end
 get '/' do
   if session['mapid'].nil?
@@ -112,5 +111,8 @@ assets do
     '/offline/bootstrap.min.js',
     '/offline/jquery-ui-1.10.0.custom.min.js',
     '/offline/kinetic-v4.2.0-custom-min.js'
+  ]
+  css :app, [
+    '/public/mindmap.css'
   ]
 end

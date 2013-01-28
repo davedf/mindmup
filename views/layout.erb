@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="keywords" content="mind mapping, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
     <meta name="description" content="MindMup is a zero friction free online mind mapping tool. MindMup is free and aims to create the most productive online mind mapping canvas out there" />
+    <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
     <% if settings.online? then %>
       <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet" />
       <link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
@@ -13,17 +14,13 @@
       <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
       <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% end %>
-    <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <link href="/mindmap.css?version=<%=settings.current_file_version%>" rel="stylesheet" />
+    <%= css :app %>
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
   <body>
     <div id="topbar" class="navbar navbar-fixed-top navbar">
       <div class="navbar-inner">
         <div class="container">
-          <!-- what is this anchor tag for? -->
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
