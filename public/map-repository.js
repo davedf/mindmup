@@ -38,6 +38,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 					if (!changed) {
 						$("#toolbarShare").hide();
 						$("#toolbarSave").show();
+						$("#menuExport").hide();
 						$('#menuPublish').effect('highlight');
 						activityLog.log('Map', 'Edit');
 						changed = true;
