@@ -27,7 +27,6 @@ MM.main = function (config) {
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
 			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, ['A brilliant idea...', 'A cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise']);
 		setupTracking(activityLog, jotForm, mapModel);
-		jQuery('[rel=tooltip]').tooltip();
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert);
@@ -37,6 +36,7 @@ MM.main = function (config) {
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		mapRepository.loadMap(config.mapUrl, config.mapId, mapModel.setIdea);
+		jQuery('[rel=tooltip]').tooltip();
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
