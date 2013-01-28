@@ -8,7 +8,7 @@
     <meta name="description" content="MindMup is a zero friction free online mind mapping tool. MindMup is free and aims to create the most productive online mind mapping canvas out there" />
     <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
     <% if settings.online? then %>
-      <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet" />
+      <link href="//mindmup.s3.amazonaws.com/lib/bootstrap-combined.min.css" rel="stylesheet" />
       <link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% else %>
       <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
@@ -104,9 +104,9 @@
     <%= yield %>
     <div id="fb-root"></div>
     <% if settings.online? then %>
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
-      <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/jquery.min.js"></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/underscore-min.js"></script>
+      <script src="//mindmup.s3.amazonaws.com/lib/bootstrap.min.js"></script>
       <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"></script>
       <script src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js"></script>
     <% else %>
