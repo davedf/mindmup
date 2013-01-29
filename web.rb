@@ -87,6 +87,38 @@ helpers do
       "/offline/default.json"
     end
   end
+
+  def load_scripts script_url_array 
+    script_tags=script_url_array.map do |url|
+      %Q{ <script>_currentScript='#{url}'</script><script src='#{url}' onload='_loadedScripts.push(this.src)' onerror='_errorScripts.push(this.src)'></script>}
+    end
+   %Q^<script>
+      _loadedScripts=[]
+      _errorScripts=[]
+      _jsErrorsWhileLoading=[]
+      _currentScript=null
+      window.onerror=function(message,url,line){
+        _jsErrorsWhileLoading.push({'message':message, 'url':url, 'line':line});
+      }
+    </script>
+    #{script_tags.join('\n')}
+    <script>
+      window.onerror=function(){};
+      if (_errorScripts.length>0 || _jsErrorsWhileLoading.length>0 || _loadedScripts.length!=#{script_url_array.length}){
+        var d=document.createElement("div");
+        var c=document.createElement('div');
+        d.appendChild(document.createTextNode("Unfortunately, there was an error while loading the JavaScript files required by this page."+
+          " This might be due to a temporary network error or a firewall blocking access to required scripts. "+ 
+          " Please try again later. " + 
+          " If the problem persists, we'd appreciate if you could contact us at contact@mindmup.com"));
+        d.style.position='absolute'; d.style.top='30%'; d.style.left='40%'; d.style.width='20%'; d.style.backgroundColor='#773333'; d.style.color='white'; d.style.fontWeight='bold'; d.style.padding='20px'; d.style.border='3px solid black';
+        c.style.position='absolute'; c.style.top=0; c.style.left=0; c.style.width='100%'; c.style.height='100%'; c.style.minHeight='100%'; c.style.backgroundColor='#999999'; 
+        c.appendChild(d);
+        document.getElementsByTagName("body")[0].appendChild(c);
+      }
+     </script>
+     ^
+  end
 end
 
 assets do

@@ -103,26 +103,24 @@
     <%= erb :terms_and_conditions %>
     <%= yield %>
     <div id="fb-root"></div>
-    <% if settings.online? then %>
-      <script src="//mindmup.s3.amazonaws.com/lib/jquery.min.js"></script>
-      <script src="//mindmup.s3.amazonaws.com/lib/underscore-min.js"></script>
-      <script src="//mindmup.s3.amazonaws.com/lib/bootstrap.min.js"></script>
-      <script src="//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js"></script>
-      <script src="//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js"></script>
-    <% else %>
-      <%= js :offline %>
-    <% end %>
-    <script src="/public/mapjs-compiled.js"></script>
-    <script src="/public/mm.js"></script>
-    <script src="/public/activity-log.js"></script>
-    <script src="/public/alert.js"></script>
-    <script src="/public/map-repository.js"></script>
-    <script src="/public/feedback.js"></script>
-    <script src="/public/vote.js"></script>
-    <script src="/public/welcome-message.js"></script>
-    <script src="/public/map-widget.js"></script>
-    <script src="/public/floating-toolbar.js"></script>
-    <script src="/public/main.js"></script>
+    <%= 
+     load_scripts ["//mindmup.s3.amazonaws.com/lib/jquery.min.js" , 
+     "//mindmup.s3.amazonaws.com/lib/underscore-min.js" ,
+     "//mindmup.s3.amazonaws.com/lib/bootsrap.min.js",
+     "//mindmup.s3.amazonaws.com/lib/jquery-ui-1.10.0.custom.min.js",
+     "//mindmup.s3.amazonaws.com/lib/kinetic-v4.2.0-custom-min.js",
+     "/public/mapjs-compiled.js",
+     "/public/mm.js",
+     "/public/activity-log.js",
+     "/public/alert.js",
+     "/public/map-repository.js",
+     "/public/feedback.js",
+     "/public/vote.js",
+     "/public/welcome-message.js",
+     "/public/map-widget.js",
+     "/public/floating-toolbar.js",
+     "/public/main.js"]
+    %>
     <script id="main">
       MM.main({
         googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
