@@ -2,12 +2,12 @@
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
 	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
-	var active_content,
+	var idea,
 		wasRelevantOnLoad,
 		changed,
 		saving,
-		startedFromNew = function (contentAggregate) {
-			return contentAggregate.id === 1;
+		startedFromNew = function () {
+			return idea.id === 1;
 		},
 		isNodeRelevant = function (ideaNode) {
 			return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/) === -1;
@@ -15,25 +15,23 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 		isNodeIrrelevant = function (ideaNode) {
 			return !isNodeRelevant(ideaNode);
 		},
-		isMapRelevant = function (contentAggregate) {
-			return startedFromNew(contentAggregate) &&
-				contentAggregate.find(isNodeRelevant).length > 5 &&
-				contentAggregate.find(isNodeIrrelevant).length < 3;
+		isMapRelevant = function () {
+			return startedFromNew() && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		};
 	this.loadMap = function (map_url, mapId, load_content) {
 		activityLog.log("loading map [" + map_url + "]");
 		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
-			jsonLoadSuccess = function (result, status) {
+			jsonLoadSuccess = function (result) {
 				alert.hide(alertId);
-				active_content = content(result);
-				wasRelevantOnLoad = isMapRelevant(active_content);
+				idea = content(result);
+				wasRelevantOnLoad = isMapRelevant();
 				activityLog.log("loaded JSON map document");
 				$(window).bind('beforeunload', function () {
 					if (changed && !saving) {
 						return 'There are unsaved changes.';
 					}
 				});
-				active_content.addEventListener('changed', function (arg1, arg2) {
+				idea.addEventListener('changed', function (command, args) {
 					saving = false;
 					if (!changed) {
 						$("#toolbarShare").hide();
@@ -43,23 +41,21 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 						activityLog.log('Map', 'Edit');
 						changed = true;
 					}
-					activityLog.log(['Map', arg1].concat(arg2));
+					activityLog.log(['Map', command].concat(args));
 				});
 				activityLog.log('Map', 'View', mapId);
-				document.title = active_content.title;
-				$('.st_btn').attr('st_title', active_content.title);
-				load_content(active_content);
+				document.title = idea.title;
+				$('.st_btn').attr('st_title', idea.title);
+				load_content(idea);
 			},
 			jsonFail = function (xhr, textStatus, errorMsg) {
-				var msg = "Error loading map document [" + map_url + "] status=" + textStatus + " error msg= " + errorMsg;
-				activityLog.log(msg);
+				activityLog.error("Error loading map document [" + map_url + "] status=" + textStatus + " error msg= " + errorMsg);
 				alert.hide(alertId);
 				alert.show(
 					'Unfortunately, there was a problem loading the map.',
 					'An automated error report was sent and we will look into this as soon as possible',
 					'error'
 				);
-				activityLog.error(msg);
 			},
 			jsonTryProxy = function (map_url) {
 				activityLog.log('Map', 'ProxyLoad', mapId);
@@ -88,17 +84,16 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 				activityLog.error('Map save failed');
 			},
 			submitS3Form = function (result) {
-				var name,
-					relevant = isMapRelevant(active_content);
+				var name;
 				publishing = false;
-				if (relevant && !wasRelevantOnLoad) {
+				if (isMapRelevant() && !wasRelevantOnLoad) {
 					activityLog.log('Map', 'Created Relevant', result.key);
 				} else if (wasRelevantOnLoad) {
 					activityLog.log('Map', 'Saved Relevant', result.key);
 				} else {
 					activityLog.log('Map', 'Saved Irrelevant', result.key);
 				}
-				$("#s3form [name='file']").val(JSON.stringify(active_content));
+				$("#s3form [name='file']").val(JSON.stringify(idea));
 				for (name in result) {
 					$('#s3form [name=' + name + ']').val(result[name]);
 				}
