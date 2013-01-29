@@ -27,6 +27,7 @@ configure do
   s3=AWS::S3.new()
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
+  set :cache_prevention_key, settings.key_id_generator.generate(:compact)
 end
 get '/' do
   if session['mapid'].nil?
@@ -90,6 +91,7 @@ helpers do
 
   def load_scripts script_url_array 
     script_tags=script_url_array.map do |url|
+      url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key
       %Q{ <script>_currentScript='#{url}'</script><script src='#{url}' onload='_loadedScripts.push(this.src)' onerror='_errorScripts.push(this.src)'></script>}
     end
    %Q^<script>
