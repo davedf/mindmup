@@ -92,38 +92,36 @@ helpers do
   def load_scripts script_url_array 
     script_tags=script_url_array.map do |url|
       url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key unless url.start_with? '//' 
-      %Q{ <script>ScriptHelper.currentScript='#{url}'</script><script src='#{url}' onload='ScriptHelper.loadedScripts.push(this.src)' onerror='ScriptHelper.errorScripts.push(this.src)'></script>}
+      %Q{<script>ScriptHelper.currentScript='#{url}'; ScriptHelper.expectedScripts.push('#{url}');</script>
+        <script src='#{url}' onload='ScriptHelper.loadedScripts.push("#{url}")' onerror='ScriptHelper.errorScripts.push("#{url}")'></script>}
     end
    %Q^<script>
       var ScriptHelper={
         loadedScripts:[],
+        expectedScripts:[],
         errorScripts:[],
         jsErrors:[],
         logError:function(message,url,line){
-          ScriptHelper.jsErrors.push({'message':message, 'url':url, 'line':line});
+          ScriptHelper.jsErrors.push({'message':message, 'url':url||ScriptHelper.currentScript, 'line':line});
         },
         failed: function(){
           return ScriptHelper.errorScripts.length>0 || ScriptHelper.jsErrors.length>0 || ScriptHelper.loadedScripts.length!=#{script_url_array.length}
+        },
+        failedScripts: function(){
+          var keys={},idx,result=[];
+          for (idx in ScriptHelper.errorScripts) { keys[ScriptHelper.errorScripts[idx]]=true };
+          for (idx in ScriptHelper.jsErrors) { keys[ScriptHelper.jsErrors[idx].url]=true };
+          for (idx in ScriptHelper.expectedScripts) { if (ScriptHelper.loadedScripts.indexOf(ScriptHelper.expectedScripts[idx])<0) keys[ScriptHelper.expectedScripts[idx]]=true; }
+          for (idx in keys) {result.push(idx)};
+          return result;
         }
       };
       window.onerror=ScriptHelper.logError;
     </script>
-    #{script_tags.join('\n')}
+    #{script_tags.join('')}
     <script>
       window.onerror=function(){};
-      if (ScriptHelper.failed()){
-        var d=document.createElement("div");
-        var c=document.createElement('div');
-        d.appendChild(document.createTextNode("Unfortunately, there was an error while loading the JavaScript files required by this page."+
-          " This might be due to a temporary network issue or a firewall blocking access to required scripts. "+ 
-          " Please try again later. " + 
-          " If the problem persists, we'd appreciate if you could contact us at contact@mindmup.com"));
-        d.style.position='absolute'; d.style.top='30%'; d.style.left='40%'; d.style.width='20%'; d.style.backgroundColor='#773333'; d.style.color='white'; d.style.fontWeight='bold'; d.style.padding='20px'; d.style.border='3px solid black';
-        c.style.position='absolute'; c.style.top=0; c.style.left=0; c.style.width='100%'; c.style.height='100%'; c.style.minHeight='100%'; c.style.backgroundColor='#999999'; 
-        c.appendChild(d);
-        document.getElementsByTagName("body")[0].appendChild(c);
-      }
-     </script>
+    </script>
      ^
   end
 end

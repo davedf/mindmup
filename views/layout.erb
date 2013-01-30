@@ -122,7 +122,18 @@
      "/main.js"]
     %>
     <script id="main">
-      if (ScriptHelper.failed()){
+      ScriptHelper.tryToNotifyGoogleAnalytics=function(){
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', '<%= settings.google_analytics_account %>']);
+        _gaq.push(['_trackEvent','Error','Script Load', ScriptHelper.failedScripts().join(';')]);
+        console.log(_gaq);
+        (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      }
+      ScriptHelper.showErrorMessage=function(){
         var d=document.createElement("div");
         var c=document.createElement('div');
         d.appendChild(document.createTextNode("Unfortunately, there was an error while loading the JavaScript files required by this page."+
@@ -133,6 +144,10 @@
         c.style.position='absolute'; c.style.top=0; c.style.left=0; c.style.width='100%'; c.style.height='100%'; c.style.minHeight='100%'; c.style.backgroundColor='#999999'; 
         c.appendChild(d);
         document.getElementsByTagName("body")[0].appendChild(c);
+      }
+      if (ScriptHelper.failed()){
+        ScriptHelper.showErrorMessage();
+        ScriptHelper.tryToNotifyGoogleAnalytics();
       }
       else {
         MM.main({
