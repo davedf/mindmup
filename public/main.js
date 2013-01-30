@@ -29,7 +29,9 @@ MM.main = function (config) {
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
-			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, ['A brilliant idea...', 'A cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise']);
+			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, 
+        ['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
+        ['Luke, I AM your father!','Who\'s your daddy?','I\'m not a doctor, but I play one on TV']);
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);

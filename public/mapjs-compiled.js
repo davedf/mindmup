@@ -123,6 +123,21 @@ var content;
         false
       );
     }
+    contentAggregate.findParent = function (subIdeaId) {
+      var parentIdea=arguments[1] || contentAggregate;
+      var childRank=parentIdea.findChildRankById(subIdeaId);
+      if (childRank){
+        return parentIdea;
+      }
+      return _.reduce(
+        parentIdea.ideas,
+        function (result, child) {
+          return result || contentAggregate.findParent(subIdeaId, child);
+        },
+        false
+      );
+    }
+
     /* intentionally not returning 0 case, to help with split sorting into 2 groups */
     var sign=function(number){
       return number<0?-1:1;
@@ -150,9 +165,9 @@ var content;
       if (newId && findIdeaById(newId)) return false;
       var parent=findIdeaById(parentId);
       if (!parent) return false;
-      var newIdea=init({title:ideaTitle,id:(newId||(contentAggregate.maxId()+1))});
-      appendSubIdea(parent,newIdea);
-      contentAggregate.dispatchEvent('changed','addSubIdea',[parentId,ideaTitle,newIdea.id]);
+      var idea= init({title:ideaTitle,id:newId});
+      appendSubIdea(parent,idea);
+      contentAggregate.dispatchEvent('changed','addSubIdea',[parentId,ideaTitle,idea.id]);
       return true;
     }
     contentAggregate.removeSubIdea = function (subIdeaId){
@@ -161,6 +176,20 @@ var content;
         contentAggregate.dispatchEvent('changed','removeSubIdea',[subIdeaId]);
       }
       return result;
+    }
+    contentAggregate.insertIntermediate= function (inFrontOfIdeaId, title, newIdeaId){
+      if (newIdeaId && findIdeaById(newIdeaId)) return false;
+      if (contentAggregate.id==inFrontOfIdeaId) return false;
+      var parentIdea=contentAggregate.findParent(inFrontOfIdeaId); 
+      if (!parentIdea) return false;
+      var childRank=parentIdea.findChildRankById(inFrontOfIdeaId);
+      if (!childRank) return false;
+      var oldIdea=parentIdea.ideas[childRank];
+      var newIdea= init({title:title,id:newIdeaId});
+      parentIdea.ideas[childRank]=newIdea;
+      newIdea.ideas={1:oldIdea}
+      contentAggregate.dispatchEvent('changed','insertIntermediate',[inFrontOfIdeaId, title,  newIdea.id]);
+      return true;
     }
     contentAggregate.changeParent = function (ideaId, newParentId){
       if (ideaId==newParentId) return false;
@@ -332,9 +361,10 @@ var MAPJS = MAPJS || {};
 /*global observable*/
 /*jslint forin: true*/
 var MAPJS = MAPJS || {};
-MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
+MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom, intermediaryTitlesToRandomlyChooseFrom) {
 	'use strict';
 	titlesToRandomlyChooseFrom = titlesToRandomlyChooseFrom || ['double click to edit'];
+	intermediaryTitlesToRandomlyChooseFrom = intermediaryTitlesToRandomlyChooseFrom || titlesToRandomlyChooseFrom;
 	var self = this,
 		analytic,
 		currentLayout = {
@@ -344,20 +374,12 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		idea,
 		isInputEnabled,
 		currentlySelectedIdeaId,
-		getRandomTitle = function () {
-			return titlesToRandomlyChooseFrom[Math.floor(titlesToRandomlyChooseFrom.length * Math.random())];
+		getRandomTitle = function (type) {
+      var titles=(type=='intermediate')?intermediaryTitlesToRandomlyChooseFrom: titlesToRandomlyChooseFrom;
+			return titles[Math.floor(titles.length * Math.random())];
 		},
 		parentNode = function (root, id) {
-			var rank, childResult;
-			for (rank in root.ideas) {
-				if (root.ideas[rank].id === id) {
-					return root;
-				}
-				childResult = parentNode(root.ideas[rank], id);
-				if (childResult) {
-					return childResult;
-				}
-			}
+      return root.findParent(id);
 		},
 		updateCurrentLayout = function (newLayout) {
 			var nodeId, newNode, oldNode, newConnector, oldConnector;
@@ -410,6 +432,11 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 				self.selectNode(newIdeaId);
 				self.editNode(false, true);
 			}
+			if (command === 'insertIntermediate') {
+				newIdeaId = args[2];
+				self.selectNode(newIdeaId);
+				self.editNode(false, true);
+			}
 		};
 	observable(this);
 	analytic = self.dispatchEvent.bind(self, 'analytic', 'mapModel');
@@ -441,6 +468,11 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom) {
 		analytic('addSubIdea', source);
 		idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle());
 	};
+  this.insertIntermediate= function( source ){
+    if (currentlySelectedIdeaId==idea.id) return false;
+    idea.insertIntermediate(currentlySelectedIdeaId, getRandomTitle('intermediate'));
+    analytic('insertIntermediate',source);
+  }
 	this.addSiblingIdea = function (source) {
 		analytic('addSiblingIdea', source);
 		var parent = parentNode(idea, currentlySelectedIdeaId) || idea;
@@ -1022,9 +1054,11 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
 			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
 			32: mapModel.editNode.bind(mapModel, 'keyboard')
-		},
+		}, shiftKeyboardEventHandlers= {
+      9: mapModel.insertIntermediate.bind(mapModel,'keyboard')
+    },
 			onKeydown = function (evt) {
-				var eventHandler = keyboardEventHandlers[evt.which];
+				var eventHandler = (evt.shiftKey ? shiftKeyboardEventHandlers: keyboardEventHandlers)[evt.which];
 				if (eventHandler) {
 					eventHandler();
 					evt.preventDefault();
@@ -1055,7 +1089,7 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this);
-		['scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
+		['insertIntermediate','scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
 				if (mapModel[methodName]) {
 					mapModel[methodName]('toolbar');
@@ -1063,7 +1097,8 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 			});
 		});
 	});
-};var MAPJS = MAPJS || {};
+};
+var MAPJS = MAPJS || {};
 
 MAPJS.freemindFormat = function (idea) {
      'use strict';

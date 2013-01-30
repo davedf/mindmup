@@ -19,6 +19,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository) {
 			html: 'true',
 			content: '<strong>Enter</strong>: Add sibling<br/>' +
 				'<strong>Tab</strong>: Add child<br/>' +
+				'<strong>Shift+Tab</strong>: Insert parent<br/>' +
 				'<strong>Space</strong>: Edit node<br/>' +
 				'<strong>Backspace</strong>: Remove node<br/>' +
 				'<strong>Delete</strong>: Remove node<br/>' +

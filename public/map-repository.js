@@ -10,7 +10,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 			return idea.id === 1;
 		},
 		isNodeRelevant = function (ideaNode) {
-			return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous/) === -1;
+			return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous|Luke|daddy/) === -1;
 		},
 		isNodeIrrelevant = function (ideaNode) {
 			return !isNodeRelevant(ideaNode);
