@@ -16,5 +16,6 @@ jQuery.fn.voteWidget = function (activityLog, alert) {
 				return false;
 			}
 		});
-	});
+	  if (document.location.hash=='#vote'){ element.modal('show');}
+  });
 };
