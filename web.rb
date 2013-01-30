@@ -2,7 +2,6 @@ require 'pp'
 require 'sinatra'
 require 'uuid'
 require 'aws-sdk'
-require 'sinatra/assetpack'
 
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require File.dirname(__FILE__)+'/lib/freemind_format.rb'
@@ -28,6 +27,7 @@ configure do
   set :s3_bucket, s3.buckets[settings.s3_bucket_name]
   set :root, File.dirname(__FILE__)
   set :cache_prevention_key, settings.key_id_generator.generate(:compact)
+  set :static, true
 end
 get '/' do
   if session['mapid'].nil?
@@ -91,26 +91,31 @@ helpers do
 
   def load_scripts script_url_array 
     script_tags=script_url_array.map do |url|
-      url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key
-      %Q{ <script>_currentScript='#{url}'</script><script src='#{url}' onload='_loadedScripts.push(this.src)' onerror='_errorScripts.push(this.src)'></script>}
+      url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key unless url.start_with? '//' 
+      %Q{ <script>ScriptHelper.currentScript='#{url}'</script><script src='#{url}' onload='ScriptHelper.loadedScripts.push(this.src)' onerror='ScriptHelper.errorScripts.push(this.src)'></script>}
     end
    %Q^<script>
-      _loadedScripts=[]
-      _errorScripts=[]
-      _jsErrorsWhileLoading=[]
-      _currentScript=null
-      window.onerror=function(message,url,line){
-        _jsErrorsWhileLoading.push({'message':message, 'url':url, 'line':line});
-      }
+      var ScriptHelper={
+        loadedScripts:[],
+        errorScripts:[],
+        jsErrors:[],
+        logError:function(message,url,line){
+          ScriptHelper.jsErrors.push({'message':message, 'url':url, 'line':line});
+        },
+        failed: function(){
+          return ScriptHelper.errorScripts.length>0 || ScriptHelper.jsErrors.length>0 || ScriptHelper.loadedScripts.length!=#{script_url_array.length}
+        }
+      };
+      window.onerror=ScriptHelper.logError;
     </script>
     #{script_tags.join('\n')}
     <script>
       window.onerror=function(){};
-      if (_errorScripts.length>0 || _jsErrorsWhileLoading.length>0 || _loadedScripts.length!=#{script_url_array.length}){
+      if (ScriptHelper.failed()){
         var d=document.createElement("div");
         var c=document.createElement('div');
         d.appendChild(document.createTextNode("Unfortunately, there was an error while loading the JavaScript files required by this page."+
-          " This might be due to a temporary network error or a firewall blocking access to required scripts. "+ 
+          " This might be due to a temporary network issue or a firewall blocking access to required scripts. "+ 
           " Please try again later. " + 
           " If the problem persists, we'd appreciate if you could contact us at contact@mindmup.com"));
         d.style.position='absolute'; d.style.top='30%'; d.style.left='40%'; d.style.width='20%'; d.style.backgroundColor='#773333'; d.style.color='white'; d.style.fontWeight='bold'; d.style.padding='20px'; d.style.border='3px solid black';
@@ -123,30 +128,3 @@ helpers do
   end
 end
 
-assets do
-  serve '/public', from: 'public'
-  serve '/offline', from: 'offline'
-  js :app, [
-    '/public/mapjs-compiled.js',
-    '/public/mm.js',
-    '/public/activity-log.js',
-    '/public/alert.js',
-    '/public/map-repository.js',
-    '/public/feedback.js',
-    '/public/vote.js',
-    '/public/welcome-message.js',
-    '/public/map-widget.js',
-    '/public/floating-toolbar.js',
-    '/public/main.js'
-  ]
-  js :offline, [
-    '/offline/jquery.min.js',
-    '/offline/underscore-min.js',
-    '/offline/bootstrap.min.js',
-    '/offline/jquery-ui-1.10.0.custom.min.js',
-    '/offline/kinetic-v4.2.0-custom-min.js'
-  ]
-  css :app, [
-    '/public/mindmap.css'
-  ]
-end
