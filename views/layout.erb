@@ -123,10 +123,9 @@
     %>
     <script id="main">
       ScriptHelper.tryToNotifyGoogleAnalytics=function(){
-        var _gaq = _gaq || [];
+        _gaq = _gaq || [];
         _gaq.push(['_setAccount', '<%= settings.google_analytics_account %>']);
         _gaq.push(['_trackEvent','Error','Script Load', ScriptHelper.failedScripts().join(';')]);
-        console.log(_gaq);
         (function() {
           var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
           ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
