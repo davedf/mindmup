@@ -122,8 +122,8 @@
      "/main.js"]
     %>
     <script id="main">
+      var _gaq = _gaq || [];
       ScriptHelper.tryToNotifyGoogleAnalytics=function(){
-        _gaq = _gaq || [];
         _gaq.push(['_setAccount', '<%= settings.google_analytics_account %>']);
         _gaq.push(['_trackEvent','Error','Script Load', ScriptHelper.failedScripts().join(';')]);
         (function() {
