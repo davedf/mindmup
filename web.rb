@@ -37,7 +37,9 @@ get '/' do
     redirect "/map/#{session['mapid']}"
   end
 end
-
+get '/trouble' do
+ erb :trouble, :layout => false
+end
 get '/default' do
   @mapid=settings.default_map
   erb :editor
