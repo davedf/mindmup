@@ -33,6 +33,7 @@ MM.main = function (config) {
         ['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
         ['Luke, I AM your father!','Who\'s your daddy?','I\'m not a doctor, but I play one on TV']);
 		setupTracking(activityLog, jotForm, mapModel);
+		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert);
@@ -40,7 +41,7 @@ MM.main = function (config) {
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
-		jQuery('#container').mapWidget(activityLog, mapModel);
+
 		mapRepository.loadMap(config.mapUrl, config.mapId, mapModel.setIdea);
 		jQuery('[rel=tooltip]').tooltip();
 	});
