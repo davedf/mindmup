@@ -40,4 +40,21 @@ describe 'Map request routing' do
       last_request.url.should=='http://example.org/map/PreviousMap'
     end
   end
+  describe "/default route" do
+    it "uses the default map, if the user had no previous map stored" do
+      get "/default"
+      last_response.should be_ok
+      last_response_config[:mapId].should=='defaultmap'
+    end
+    it "uses the default map, even if the user had a previous map" do
+      get "/default",{}, {'rack.session'=>{'mapid'=>'PreviousMap'}}
+      last_response.should be_ok
+      last_response_config[:mapId].should=='defaultmap'
+    end
+    it "does not touch the session mapid" do
+      session={"mapid"=>"PreviousMap"}
+      get "/default",{},{'rack.session'=>session}
+      session["mapid"].should=='PreviousMap'
+    end
+  end
 end

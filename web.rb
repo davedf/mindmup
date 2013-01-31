@@ -38,6 +38,10 @@ get '/' do
   end
 end
 
+get '/default' do
+  @mapid=settings.default_map
+  erb :editor
+end
 get "/s3/:mapid" do
   redirect "/map/#{params[:mapid]}"
 end
