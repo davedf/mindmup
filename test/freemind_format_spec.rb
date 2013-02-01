@@ -1,7 +1,10 @@
 require File.join(File.dirname(__FILE__),'spec_helper.rb')
 
-describe 'Freemind formatter' do  
-	it 'converts a single node map into a MAP/NODE XML element in freemind format' do
+describe FreemindFormat do  
+	def freemind_format (idea) 
+    FreemindFormat.new(idea).to_freemind
+  end
+  it 'converts a single node map into a MAP/NODE XML element in freemind format' do
     idea={'id'=>1, 'title'=>'Root Node'};
     freemind_format(idea).should=='<map version="0.7.1"><node ID="1" TEXT="Root Node"></node></map>';
   end

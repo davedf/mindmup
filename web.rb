@@ -64,7 +64,7 @@ get "/export/freemind/:mapid" do
   contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
   json=JSON.parse(contents)
   attachment (Rack::Utils.escape(json['title'])+'.mm')
-  freemind_format(json)
+  FreemindFormat.new(json).to_freemind
 end
 get "/map/:mapid" do
   @mapid = params[:mapid]
