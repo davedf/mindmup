@@ -7,6 +7,12 @@
 	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet" />
 	<link href="http://mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
 
+  <script>
+    var loaderrors=[];
+    window.onerror=function(msg,url,line){
+      loaderrors.push({m:msg,u:url,l:line});
+    }
+  </script>
 	<script src="../test-lib/bind.js"></script>
 	<script src="../test-lib/jasmine-1.2.0/jasmine.js"></script>
 	<script src="../test-lib/jasmine-1.2.0/jasmine-html.js"></script>
@@ -27,6 +33,13 @@
 	<script src="alert-spec.js"></script>
 	<script src="activity-log-spec.js"></script>
 	<script src="feedback-spec.js"></script>
+  <script>
+      describe ("script loading for testing", function(){
+        it("should have no errors loading scripts for testing", function(){
+          expect(loaderrors).toEqual([]);
+        });
+      });
+  </script>
 </head>
 <body>
 <script type="text/javascript">
