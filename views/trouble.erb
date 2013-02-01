@@ -23,6 +23,7 @@
       for (i = 0; i < failedScripts.length; i += 1) {
         showScript('failed: ', failedScripts[i]);
       }
+      document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Done!'));
     }());
     </script>
   </body>
