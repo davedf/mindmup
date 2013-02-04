@@ -40,3 +40,9 @@ html, body {
   outline: none;
 }
 .menulink {margin-left:10px; margin-top:10px;}
+#gplus-share { 
+  border:0;height:16px;background-image: url('//ssl.gstatic.com/images/icons/gplus-16.png');
+ background-position:left center;
+ background-repeat:no-repeat;
+ margin-left: 6px; margin-top:2px;
+}
