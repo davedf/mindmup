@@ -31,7 +31,8 @@ MM.main = function (config) {
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
 			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, 
         ['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
-        ['Luke, I AM your father!','Who\'s your daddy?','I\'m not a doctor, but I play one on TV']);
+        ['Luke, I AM your father!','Who\'s your daddy?','I\'m not a doctor, but I play one on TV']),
+      mapBookmarks=new MM.Bookmark(10, MM.jsonStorage(localStorage),'created-maps');
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('[data-category]').trackingWidget(activityLog);
@@ -41,7 +42,10 @@ MM.main = function (config) {
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
-
+    mapRepository.addEventListener('Before Upload',function(key, idea){
+      mapBookmarks.store({mapId:key, title: idea.title});
+    });
+    jQuery("#listBookmarks").bookmarkWidget(mapBookmarks,50,activityLog);
 		mapRepository.loadMap(config.mapUrl, config.mapId, mapModel.setIdea);
 		jQuery('[rel=tooltip]').tooltip();
 	});

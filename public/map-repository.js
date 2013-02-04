@@ -2,7 +2,7 @@
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
 	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
-	var idea,
+	var self=this,idea,
 		wasRelevantOnLoad,
 		changed,
 		saving,
@@ -18,6 +18,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 		isMapRelevant = function () {
 			return startedFromNew() && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		};
+  observable(this);
 	this.loadMap = function (map_url, mapId, load_content) {
 		activityLog.log("loading map [" + map_url + "]");
 		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
@@ -87,17 +88,18 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 				var name;
 				publishing = false;
 				if (isMapRelevant() && !wasRelevantOnLoad) {
-					activityLog.log('Map', 'Created Relevant', result.key);
+					activityLog.log('Map', 'Created Relevant', result.s3UploadIdentifier);
 				} else if (wasRelevantOnLoad) {
-					activityLog.log('Map', 'Saved Relevant', result.key);
+					activityLog.log('Map', 'Saved Relevant', result.s3UploadIdentifier);
 				} else {
-					activityLog.log('Map', 'Saved Irrelevant', result.key);
+					activityLog.log('Map', 'Saved Irrelevant', result.s3UploadIdentifier);
 				}
 				$("#s3form [name='file']").val(JSON.stringify(idea));
 				for (name in result) {
 					$('#s3form [name=' + name + ']').val(result[name]);
 				}
 				saving = true;
+        self.dispatchEvent('Before Upload',result.s3UploadIdentifier,idea);
 				$('#s3form').submit();
 			},
 			fetchPublishingConfig = function () {
