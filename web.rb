@@ -113,7 +113,6 @@ helpers do
   end
   def load_scripts script_url_array
     script_tags=script_url_array.map do |url|
-      url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key unless url.start_with? '//'
       %Q{<script>ScriptHelper.currentScript='#{url}'; ScriptHelper.expectedScripts.push('#{url}');</script>
         <script src='#{url}' onload='ScriptHelper.loadedScripts.push("#{url}")' onerror='ScriptHelper.errorScripts.push("#{url}")'></script>}
     end
