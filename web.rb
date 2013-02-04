@@ -98,7 +98,19 @@ helpers do
       "/offline/default.json"
     end
   end
-
+  def join_scripts script_url_array
+    return script_url_array if development?
+    target_file="#{settings.public_folder}/#{settings.cache_prevention_key}.js" 
+    if (!File.exists? target_file) then
+      File.open(target_file,"w") do |output_file|
+        script_url_array.each do |input_file|
+          content= File.readlines("#{settings.public_folder}/#{input_file}")
+          output_file.puts content
+        end
+      end
+    end
+    return ["/#{settings.cache_prevention_key}.js"] 
+  end
   def load_scripts script_url_array
     script_tags=script_url_array.map do |url|
       url=url+ ((url.include? '?') ? '&':'?')+ '_version='+settings.cache_prevention_key unless url.start_with? '//'
