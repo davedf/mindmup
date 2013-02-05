@@ -135,7 +135,19 @@ helpers do
           for (idx in ScriptHelper.expectedScripts) { if (ScriptHelper.loadedScripts.indexOf(ScriptHelper.expectedScripts[idx])<0) keys[ScriptHelper.expectedScripts[idx]]=true; }
           for (idx in keys) {result.push(idx)};
           return result;
-        }
+        },
+		loading: function(){
+			return ScriptHelper.errorScripts.length==0 && ScriptHelper.jsErrors.length==0 && ScriptHelper.loadedScripts.length<ScriptHelper.expectedScripts.length;
+		},
+		afterLoad: function(config){
+			ScriptHelper.loadWaitRetry=(ScriptHelper.loadWaitRetry||50)-1;
+			if (ScriptHelper.loading() && ScriptHelper.loadWaitRetry>0){
+				setTimeout( function(){ScriptHelper.afterLoad(config)},100);
+			}
+			else {
+				if (ScriptHelper.failed()) config.fail(); else config.success();
+			}
+		}	
       };
       window.onerror=ScriptHelper.logError;
     </script>

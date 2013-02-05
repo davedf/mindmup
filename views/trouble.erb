@@ -3,9 +3,10 @@
   <head></head>
   <body>
     <%= erb :scripts%>
-    <script>
-    (function () {
-      var i,
+	<script>
+
+    var showErrors=function () {
+		var i,
         errorScripts = ScriptHelper.errorScripts,
         failedScripts = ScriptHelper.failedScripts(),
         showScript = function (label, url) {
@@ -16,15 +17,19 @@
           div = document.createElement('div');
           div.appendChild(a);
           document.getElementsByTagName('body')[0].appendChild(div);
-        };
-      for (i = 0; i < errorScripts.length; i += 1) {
-        showScript('error: ', errorScripts[i]);
-      }
-      for (i = 0; i < failedScripts.length; i += 1) {
-        showScript('failed: ', failedScripts[i]);
-      }
-      document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Done!'));
-    }());
+		};
+		for (i = 0; i < errorScripts.length; i += 1) {
+		  showScript('error: ', errorScripts[i]);
+		}
+		for (i = 0; i < failedScripts.length; i += 1) {
+		  showScript('failed: ', failedScripts[i]);
+		}
+		document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Failed! (retries left='+ScriptHelper.loadWaitRetry+')'));
+	};
+	var complete=function(){
+		document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Success! (retries left='+ScriptHelper.loadWaitRetry+')'));
+	}
+	ScriptHelper.afterLoad({success: complete, fail:showErrors});
     </script>
   </body>
 </html>

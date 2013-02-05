@@ -138,20 +138,21 @@
         c.style.position='absolute'; c.style.top=0; c.style.left=0; c.style.width='100%'; c.style.height='100%'; c.style.minHeight='100%'; c.style.backgroundColor='#999999';
         c.appendChild(d);
         document.getElementsByTagName("body")[0].appendChild(c);
-      }
-      if (ScriptHelper.failed()){
+	  }
+	  showErrors=function(){
         ScriptHelper.showErrorMessage();
         ScriptHelper.tryToNotifyGoogleAnalytics();
       }
-      else {
-        MM.main({
+	  initMM=function() {
+		MM.main({
           googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
           mapUrl: '<%= map_url(@mapid) %>',
           mapId: '<%= @mapid %>',
           scriptsToLoadAsynchronously: ['//www.google-analytics.com/ga.js', '//platform.twitter.com/widgets.js', '//connect.facebook.net/en_US/all.js#xfbml=1'],
          networkTimeoutMillis: <%= settings.network_timeout_millis %>
-        });
-      }
+		});
+	  }
+	  ScriptHelper.afterLoad({success: initMM, fail:showErrors});
       var switchTo5x = true;
     </script>
     <script src="//w.sharethis.com/button/buttons.js"></script>
