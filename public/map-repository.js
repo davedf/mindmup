@@ -99,7 +99,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 					$('#s3form [name=' + name + ']').val(result[name]);
 				}
 				saving = true;
-        self.dispatchEvent('Before Upload',result.s3UploadIdentifier,idea);
+				self.dispatchEvent('Before Upload', result.s3UploadIdentifier, idea);
 				$('#s3form').submit();
 			},
 			fetchPublishingConfig = function () {

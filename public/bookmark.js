@@ -1,21 +1,23 @@
-var MM=MM || {};
 MM.jsonStorage = function (storage){
-  var self={}, internalStorage=storage;
+  var self={};
   self.setItem = function (key,value){
-    internalStorage.setItem(key, JSON.stringify(value));
+    storage.setItem(key, JSON.stringify(value));
   };
   self.getItem = function (key){
-    return JSON.parse(internalStorage.getItem(key));
+    return JSON.parse(storage.getItem(key));
   };
   return self;
 }
-MM.Bookmark = function (maxSize, storage, storageKey){
+MM.Bookmark = function (mapRepository,maxSize, storage, storageKey){
   var capacity=maxSize,
   self = this,
   list=[];
   if (storage && storageKey){
     list=storage.getItem(storageKey)||[];
   }
+  mapRepository.addEventListener('Before Upload',function(key, idea){
+    self.store({mapId:key, title: idea.title});
+  });
   self.store = function (bookmark){
     if (!(bookmark.mapId && bookmark.title)) throw new Error("Invalid bookmark");
     var existing=_.find(list, function(b) { return b.title==bookmark.title });
@@ -31,25 +33,24 @@ MM.Bookmark = function (maxSize, storage, storageKey){
   self.list = function (){
     return _.clone(list).reverse();
   }
+  self.links=function(titleLimit){
+	titleLimit = titleLimit || 30;
+    return _.map(self.list(),function (element) {
+    	return {
+			url: "/map/" + element.mapId, 
+			title: element.title.length>titleLimit ? element.title.substr(0,titleLimit)+"..." : element.title
+		};
+    });
+  }
 }
-jQuery.fn.bookmarkWidget = function (bookmarkMgr,titleLimit,activityLog){
-  titleLimit=titleLimit||30; 
+jQuery.fn.bookmarkWidget = function (list) {
 	return this.each(function () {
-		var element = jQuery(this), list= bookmarkMgr.list();
-    if (list.length==0)
-     $("<li>Save a map and it will appear in this list</li>").appendTo(element);
-    else {
-      _.each(list, function(bookmark){
-        var link=$("<a></a>").appendTo($("<li></li>").appendTo(element)), title=bookmark.title;
-        link.attr('href',"/map/"+bookmark.mapId);
-        if (title.length>titleLimit) title=title.substr(0,titleLimit)+"...";
-        link.text(title);
-        if (activityLog){
-          link.click(function(){
-            activityLog.log("Top Bar","Bookmark click");
-          });
-        }
-      });
-    }
-  }); 
-}
+		var element = jQuery(this), template = element.find('.template');
+		if (list.length) {
+			element.empty();
+			list.forEach(function (bookmark) {
+				element.append(template.clone().show().find('a').attr('href', bookmark.url).text(bookmark.title).end());
+			});
+		}
+	});
+};

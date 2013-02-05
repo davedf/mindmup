@@ -1,15 +1,9 @@
 /*jslint nomen: true*/
-/*global _gaq, document, jQuery, MM, MAPJS, window*/
+/*global _gaq, document, jQuery, MM, MAPJS, window, localStorage*/
 MM.main = function (config) {
 	'use strict';
 	var setupTracking = function (activityLog, jotForm, mapModel) {
 		activityLog.addEventListener('log', function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.call(arguments, 0, 3))); });
-		/*
-		activityLog.addEventListener('log', console.log.bind(console, '_trackEvent'));
-		window.onerror = function (errorMsg, url, lineNumber) {
-			activityLog.error(errorMsg + ' ' + url + ' ' + lineNumber);
-		};
-		*/
 		activityLog.addEventListener('error', function (message) {
 			jotForm.sendError(message, activityLog.getLog());
 		});
@@ -29,24 +23,21 @@ MM.main = function (config) {
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
-			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator, 
-        ['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
-        ['Luke, I AM your father!','Who\'s your daddy?','I\'m not a doctor, but I play one on TV']),
-      mapBookmarks=new MM.Bookmark(10, MM.jsonStorage(localStorage),'created-maps');
+			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator,
+				['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
+				['Luke, I AM your father!', 'Who\'s your daddy?', 'I\'m not a doctor, but I play one on TV']),
+			mapBookmarks = new MM.Bookmark(mapRepository, 10, MM.jsonStorage(localStorage), 'created-maps');
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
-		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert);
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
-    mapRepository.addEventListener('Before Upload',function(key, idea){
-      mapBookmarks.store({mapId:key, title: idea.title});
-    });
-    jQuery("#listBookmarks").bookmarkWidget(mapBookmarks,50,activityLog);
+		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks.links());
 		mapRepository.loadMap(config.mapUrl, config.mapId, mapModel.setIdea);
+		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('[rel=tooltip]').tooltip();
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

@@ -1,13 +1,17 @@
 describe ("Magic bookmark manager", function(){
   describe ("store", function() {
-    var bookmark,url;
+    var mapRepository,bookmark,url;
     beforeEach(function(){
-      bookmark=new MM.Bookmark(3);
+			mapRepository = observable({});
+      bookmark=new MM.Bookmark(mapRepository,3);
       url={mapId:'abcd', title:'defh'};
     });
-    it ("should store a bookmark if it is not already in the list", function(){
+	function store(bookmark){
+		mapRepository.dispatchEvent("Before Upload", bookmark.mapId, { title: bookmark.title});
+	}
+	it("should invoke store method when mapRepository dispatches Before Upload event", function(){
       bookmark.store (url);
-      expect(bookmark.list()).toEqual([url]);
+	  expect(bookmark.list()).toEqual([url]);
     });
     it ("should store a read only copy of a bookmark", function(){
       bookmark.store (url);
@@ -16,7 +20,7 @@ describe ("Magic bookmark manager", function(){
       expect(bookmark.list()[0].title).toEqual(original);
     });
     it ("should store different bookmarks ordered by recency ", function(){
-      var url2={mapId: 'xkcd', title: 'ssss' } 
+      var url2={mapId: 'xkcd', title: 'ssss' }
       bookmark.store (url);
       bookmark.store (url2);
       expect(bookmark.list()).toEqual([url2,url]);
@@ -49,7 +53,7 @@ describe ("Magic bookmark manager", function(){
     });
   });
   it ("should return a read-only copy of the list", function(){
-    var bookmark=new MM.Bookmark(3);
+    var bookmark=new MM.Bookmark(observable({}),3);
     bookmark.store ({mapId:'xx', title:'yy'});
     var original=bookmark.list();
     var modified=bookmark.list();
@@ -60,21 +64,26 @@ describe ("Magic bookmark manager", function(){
   it ("should load from storage on init if provided", function(){
     url={mapId:'abc', title:'def'}
     var storage={getItem:function(item){ if (item=='book') return [url]}};
-    var bookmark=new MM.Bookmark(3, storage, 'book');
+    var bookmark=new MM.Bookmark(observable({}), 3, storage, 'book');
     expect(bookmark.list()).toEqual([url]);
   });
   it ("should ignore storage if it does not contain a bookmark store", function(){
     var storage={getItem:function(item){ return undefined;}};
-    var bookmark=new MM.Bookmark(3, storage, 'book');
+    var bookmark=new MM.Bookmark(observable({}), 3, storage, 'book');
     expect(bookmark.list()).toEqual([]);
   });
   it ("should save bookmarks to storage on store if provided", function(){
     url={mapId:'abc', title:'def'}
     var storage={getItem:function(item){ return []}, setItem: function (key,value) {}};
     spyOn(storage,'setItem');
-    var bookmark=new MM.Bookmark(3, storage, 'book');
+    var bookmark=new MM.Bookmark(observable({}), 3, storage, 'book');
     bookmark.store(url);
     expect(storage.setItem).toHaveBeenCalledWith('book',[url]);
+  });
+  it ("converts a list of bookmarks to links by appending /map and cutting down long titles", function(){
+    var bookmark=new MM.Bookmark(observable({}), 5);
+    bookmark.store({mapId:'u1', title:'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
+    expect(bookmark.links()).toEqual([{url:'/map/u1', title:'this is a very very long title...'}]);
   });
 });
 
@@ -94,51 +103,31 @@ describe ("JSONStorage", function(){
     expect(json.getItem('bla')).toEqual({a:'b'});
     expect(storage.getItem).toHaveBeenCalledWith('bla');
   });
+
 });
 
 describe ("Bookmark widget", function(){
-  it ("appends a message about the intention of the menu if the bookmark list is empty", function(){
-    var bookmark=new MM.Bookmark(5);
-    var list=jQuery("<ul></ul>").bookmarkWidget(bookmark);
+  var ulTemplate='<ul><li>Old</li><li class="template" style="display:none"><a data-category="Top Bar" data-event-type="Bookmark click"></a></li></ul>';
+                
+  it ("does not remove previous content if the bookmark list is empty", function(){
+    var list=jQuery(ulTemplate).bookmarkWidget([]);
+    expect(list.children('li').length).toBe(2);
+    expect(list.children('li').first().text()).toBe('Old');
+  });
+  it ("removes previous content if the list is not empty", function(){
+    var list=jQuery(ulTemplate).bookmarkWidget([{url:'x',title:'y'}]);
     expect(list.children('li').length).toBe(1);
-    expect(list.text()).toBe('Save a map and it will appear in this list');
+    expect(list.children('li').first().children().first()).toBe('a');
   });
-  it ("creates links for bookmarks to /map/[mapId]", function(){
-    var bookmark=new MM.Bookmark(5);
-    bookmark.store({mapId:'u1', title:'t1'});
-    var list=jQuery("<ul></ul>").bookmarkWidget(bookmark);
-    expect(list.children('li').length).toBe(1);
-    var link=list.children('li').children().first();
-    expect(link).toBe('a');
-    expect(link.attr('href')).toBe("/map/u1");
-    expect(link.text()).toBe("t1");
-  });
-  it ("attaches activity log events to clicks if provided", function(){
-    var bookmark=new MM.Bookmark(5), mockLog={log:function(){}};
-    spyOn(mockLog,'log');
-    bookmark.store({mapId:'u1', title:'t1'});
-    var list=jQuery("<ul></ul>").bookmarkWidget(bookmark,10,mockLog);
-    expect(list.children('li').length).toBe(1);
-    var link=list.children('li').children().first();
-    link.attr('href','#'); //prevent redirection
-    link.click();
-    expect(mockLog.log).toHaveBeenCalledWith("Top Bar","Bookmark click");
-  });
-  it ("cuts down long titles", function(){
-    var bookmark=new MM.Bookmark(5);
-    bookmark.store({mapId:'u1', title:'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
-    var list=jQuery("<ul></ul>").bookmarkWidget(bookmark,30);
-    var link=list.children('li').children().first();
-    expect(link.text()).toBe("this is a very very long title...");
-  });
-  it ("links are listed in reverse order as hyperlinks", function(){
-    var bookmark=new MM.Bookmark(5);
-    bookmark.store({mapId:'u1', title:'t1'});
-    bookmark.store({mapId:'u2', title:'t2'});
-    bookmark.store({mapId:'u3', title:'t3'});
-    var list=jQuery("<ul></ul>").bookmarkWidget(bookmark);
-    expect(list.children('li').length).toBe(3);
-    expect (list.children('li').children().first().attr('href')).toBe("/map/u3");
-    expect (list.children('li').children().last().attr('href')).toBe("/map/u1");
+  it ("links are listed in same order as hyperlinks", function(){
+    var links=[{url:'u1', title:'t1'},
+		{url:'u2', title:'t2'},
+		{url:'u3', title:'t3'}];
+    var list=jQuery(ulTemplate).bookmarkWidget(links);
+    expect (list.children('li').length).toBe(3);
+    expect (list.children('li').children().first().attr('href')).toBe("u1");
+    expect (list.children('li').children().first().text()).toBe("t1");
+    expect (list.children('li').children().last().attr('href')).toBe("u3");
+    expect (list.children('li').children().last().text()).toBe("t3");
   });
 });
