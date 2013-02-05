@@ -6,9 +6,6 @@ describe ("Magic bookmark manager", function(){
       bookmark=new MM.Bookmark(mapRepository,3);
       url={mapId:'abcd', title:'defh'};
     });
-	function store(bookmark){
-		mapRepository.dispatchEvent("Before Upload", bookmark.mapId, { title: bookmark.title});
-	}
 	it("should invoke store method when mapRepository dispatches Before Upload event", function(){
       bookmark.store (url);
 	  expect(bookmark.list()).toEqual([url]);
