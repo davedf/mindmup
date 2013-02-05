@@ -1,8 +1,9 @@
-/*global $, setTimeout, jQuery, content, window, document, MM*/
+/*global $, setTimeout, jQuery, content, window, document, observable, MM*/
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
 	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
-	var self=this,idea,
+	var self = this,
+		idea,
 		wasRelevantOnLoad,
 		changed,
 		saving,
@@ -18,7 +19,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 		isMapRelevant = function () {
 			return startedFromNew() && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		};
-  observable(this);
+	observable(this);
 	this.loadMap = function (map_url, mapId, load_content) {
 		activityLog.log("loading map [" + map_url + "]");
 		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
