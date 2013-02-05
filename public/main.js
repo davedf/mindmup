@@ -36,7 +36,10 @@ MM.main = function (config) {
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
 		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks.links());
-		mapRepository.loadMap(config.mapUrl, config.mapId, mapModel.setIdea);
+		mapRepository.loadMap(config.mapUrl, config.mapId, function (idea) {
+			mapModel.setIdea(idea);
+			jQuery('#modalDownload').downloadWidget('[data-mm-role="image-export"]', idea);
+		});
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery('[rel=tooltip]').tooltip();
 	});

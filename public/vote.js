@@ -1,4 +1,4 @@
-/*global jQuery*/
+/*global document, jQuery*/
 jQuery.fn.voteWidget = function (activityLog, alert) {
 	'use strict';
 	return this.each(function () {
@@ -16,6 +16,8 @@ jQuery.fn.voteWidget = function (activityLog, alert) {
 				return false;
 			}
 		});
-	  if (document.location.hash=='#vote'){ element.modal('show');}
-  });
+		if (document.location.hash === '#vote') {
+			element.modal('show');
+		}
+	});
 };

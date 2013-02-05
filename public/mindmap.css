@@ -46,3 +46,12 @@ html, body {
  background-repeat:no-repeat;
  margin-left: 6px; margin-top:2px;
 }
+#modalDownload .modal-body {
+	text-align: center;
+}
+#modalDownload .modal-body p {
+	text-align: left;
+}
+#modalDownload img{
+	max-height:300px; max-width:450px;
+}

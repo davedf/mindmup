@@ -245,6 +245,7 @@ var content;
   }
 })();
 /*jslint forin: true*/
+/*global _*/
 var MAPJS = MAPJS || {};
 (function () {
 	'use strict';
@@ -327,7 +328,8 @@ var MAPJS = MAPJS || {};
 		margin = margin || 10;
 		var result = {
 			nodes: {},
-			connectors: {}
+			connectors: {},
+//			frame: {origin:{x:y:}, size:{height:width:}}
 		},
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
@@ -355,6 +357,16 @@ var MAPJS = MAPJS || {};
 				}
 			};
 		calculateLayoutInner(root);
+		return result;
+	};
+	MAPJS.calculateFrame = function (nodes, margin) {
+		margin = margin || 0;
+		var result = {
+			top: _.min(nodes, function (node) {return node.y; }).y - margin,
+			left: _.min(nodes, function (node) {return node.x; }).x - margin,
+		};
+		result.width = margin + _.max(_.map(nodes, function (node) { return node.x + node.width; })) - result.left;
+		result.height = margin + _.max(_.map(nodes, function (node) { return node.y + node.height; })) - result.top;
 		return result;
 	};
 }());
@@ -714,7 +726,7 @@ MAPJS.MapModel = function (layoutCalculator, titlesToRandomlyChooseFrom, interme
 	};
 	Kinetic.Connector.prototype = {
 		drawFunc: function (canvas) {
-			var context = this.getContext(),
+			var context = canvas.getContext(),
 				shapeFrom = this.shapeFrom,
 				shapeTo = this.shapeTo,
 				conn = calculateConnector(shapeFrom, shapeTo),
@@ -1094,18 +1106,61 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 		});
 	});
 };
-var MAPJS = MAPJS || {};
-
-MAPJS.freemindFormat = function (idea) {
-     'use strict';
-
-  var formatNode=function (idea) {
-    return '<node ID="'+idea.id+'" TEXT="'+idea.title.replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'">'+
-      (_.size(idea.ideas)>0? _.map(_.sortBy(idea.ideas,function(val,key){return parseFloat(key)}),formatNode).join(''):'')+
-      '</node>';
-  }
-  
-  return '<map version="0.7.1">'+
-    formatNode(idea)+
-    '</map>';
-}
+/*global _, jQuery, MAPJS, Kinetic */
+jQuery.fn.imageExportWidget = function (idea, imageCallBack) {
+	'use strict';
+	this.click(
+		function () {
+			var layout = MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider),
+				frame = MAPJS.calculateFrame(layout.nodes, 10),
+				hiddencontainer = jQuery('<div></div>').css('visibility', 'hidden')
+					.appendTo('body').width(frame.width).height(frame.height).attr('id', 'hiddencontainer'),
+				hiddenstage = new Kinetic.Stage({ container: 'hiddencontainer' }),
+				layer = new Kinetic.Layer(),
+				backgroundLayer = new Kinetic.Layer(),
+				nodeByIdeaId = {},
+				bg = new Kinetic.Rect({
+					fill: '#ffffff',
+					x: frame.left,
+					y: frame.top,
+					width: frame.width,
+					height: frame.height
+				});
+			hiddenstage.add(backgroundLayer);
+			backgroundLayer.add(bg);
+			hiddenstage.add(layer);
+			hiddenstage.setWidth(frame.width);
+			hiddenstage.setHeight(frame.height);
+			hiddenstage.attrs.x = -1 * frame.left;
+			hiddenstage.attrs.y = -1 * frame.top;
+			_.each(layout.nodes, function (n) {
+				var node = new Kinetic.Idea({
+					level: n.level,
+					x: n.x,
+					y: n.y,
+					text: n.title
+				});
+				nodeByIdeaId[n.id] = node;
+				layer.add(node);
+			});
+			_.each(layout.connectors, function (n) {
+				var connector = new Kinetic.Connector({
+					shapeFrom: nodeByIdeaId[n.from],
+					shapeTo: nodeByIdeaId[n.to],
+					stroke: '#888',
+					strokeWidth: 1,
+				});
+				layer.add(connector);
+				connector.moveToBottom();
+			});
+			hiddenstage.draw();
+			hiddenstage.toDataURL({
+				callback: function (url) {
+					imageCallBack(url);
+					hiddencontainer.remove();
+				}
+			});
+		}
+	);
+	return this;
+};
