@@ -24,7 +24,8 @@ MM.main = function (config) {
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
 			pngExporter = new MAPJS.PNGExporter(mapRepository),
-			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator,
+			mapModel = new MAPJS.MapModel(mapRepository,
+				MAPJS.KineticMediator.layoutCalculator,
 				['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
 				['Luke, I AM your father!', 'Who\'s your daddy?', 'I\'m not a doctor, but I play one on TV']),
 			mapBookmarks = new MM.Bookmark(mapRepository, 10, MM.jsonStorage(localStorage), 'created-maps');
@@ -41,7 +42,6 @@ MM.main = function (config) {
 		jQuery('[rel=tooltip]').tooltip();
 		jQuery('[data-category]').trackingWidget(activityLog);
 		mapRepository.loadMap(config.mapUrl, config.mapId);
-		mapRepository.addEventListener('mapLoaded', mapModel.setIdea);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
