@@ -817,7 +817,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				},
 				onCommit = function () {
 					updateText(ideaInput.val());
-				}, scale = self.getStage().getScale().x || 1;
+				},
+				scale = self.getStage().getScale().x || 1;
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
@@ -841,6 +842,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				.focus();
 			if (shouldSelectAll) {
 				ideaInput.select();
+			} else if (ideaInput[0].setSelectionRange) {
+				ideaInput[0].setSelectionRange(currentText.length, currentText.length);
 			}
 			self.getStage().on('xChange yChange', function () {
 				ideaInput.css({
@@ -1066,11 +1069,11 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
 			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
 			32: mapModel.editNode.bind(mapModel, 'keyboard')
-		}, shiftKeyboardEventHandlers= {
-      9: mapModel.insertIntermediate.bind(mapModel,'keyboard')
-    },
+		}, shiftKeyboardEventHandlers = {
+			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard')
+		},
 			onKeydown = function (evt) {
-				var eventHandler = (evt.shiftKey ? shiftKeyboardEventHandlers: keyboardEventHandlers)[evt.which];
+				var eventHandler = (evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers)[evt.which];
 				if (eventHandler) {
 					eventHandler();
 					evt.preventDefault();
@@ -1093,6 +1096,7 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 	};
 };
 MAPJS.KineticMediator.layoutCalculator = function (idea) {
+	'use strict';
 	return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
 };
 /*global jQuery*/
