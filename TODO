@@ -16,6 +16,7 @@
   	unformattedText = joinLines(config.text),
 	it is only required to remove embedded formatting from previously saved maps. If gojko can do awk magic on the previously saved maps
 	we can get rid of this.
+- when word wrapping, we should break up long words with hyphens
 	
 ========================
 - pure DOM renderer.
