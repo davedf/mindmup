@@ -502,7 +502,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		if (source) {
 			analytic('editNode', source);
 		}
+		var title = (idea.findSubIdeaById(currentlySelectedIdeaId) || idea).title;
+		if (intermediaryTitlesToRandomlyChooseFrom.indexOf(title) !== -1 ||
+				 titlesToRandomlyChooseFrom.indexOf(title) !== -1) {
+			shouldSelectAll = true;
+		}
 		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll);
+
 	};
 	this.scaleUp = function (source) {
 		self.dispatchEvent('mapScaleChanged', true);
@@ -767,7 +773,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		return str.match(new RegExp(regex, 'g')).join(brk);
 	}
 	function joinLines(string) {
-		return string.replace(/\s+/g, ' ');
+		return string.replace(/\n/g, ' ');
 	}
 	function breakWords(string) {
 		return wordWrap(joinLines(string), COLUMN_WORD_WRAP_LIMIT, '\n', false);
@@ -778,7 +784,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self = this,
 			setStageDraggable = function (isDraggable) {
 				self.getStage().setDraggable(isDraggable);
-			};
+			},
+			unformattedText = joinLines(config.text),
+			oldSetText;
 		config.text = breakWords(config.text);
 		this.level = config.level;
 		this.isSelected = false;
@@ -794,6 +802,11 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		config.draggable = true;
 		config.name = 'Idea';
 		Kinetic.Text.apply(this, [config]);
+		oldSetText = this.setText.bind(this);
+		this.setText = function (text) {
+			unformattedText = text;
+			oldSetText(breakWords(text));
+		};
 		this.classType = 'Idea';
 		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
 		if (config.level > 1) {
@@ -805,13 +818,12 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self.attrs.textFill = self.attrs.fill;
 			self.getLayer().draw();
 			var canvasPosition = jQuery(self.getLayer().getCanvas().getElement()).offset(),
-				currentText = self.getText(),
 				ideaInput,
 				updateText = function (newText) {
 					self.setStyle(self.attrs);
 					self.getStage().draw();
 					self.fire(':textChanged', {
-						text: breakWords(newText || currentText)
+						text: newText || unformattedText
 					});
 					ideaInput.remove();
 				},
@@ -826,13 +838,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					width: self.getWidth() * scale,
 					height: self.getHeight() * scale
 				})
-				.val(joinLines(currentText))
+				.val(unformattedText)
 				.appendTo('body')
 				.keydown(function (e) {
 					if (e.which === ENTER_KEY_CODE) {
 						onCommit();
 					} else if (e.which === ESC_KEY_CODE) {
-						updateText(currentText);
+						updateText(unformattedText);
 					} else if (e.which === 9) {
 						e.preventDefault();
 					}
@@ -843,7 +855,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			if (shouldSelectAll) {
 				ideaInput.select();
 			} else if (ideaInput[0].setSelectionRange) {
-				ideaInput[0].setSelectionRange(currentText.length, currentText.length);
+				ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
 			}
 			self.getStage().on('xChange yChange', function () {
 				ideaInput.css({

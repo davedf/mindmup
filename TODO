@@ -12,6 +12,11 @@
 - floating toolbar - move markup from javacript into .erb
 - make saving form dynamic (i.e. create it from javascript)
 
+- in kinetic.idea, we are doing this:
+  	unformattedText = joinLines(config.text),
+	it is only required to remove embedded formatting from previously saved maps. If gojko can do awk magic on the previously saved maps
+	we can get rid of this.
+	
 ========================
 - pure DOM renderer.
 - Popup on canvas map
