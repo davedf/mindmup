@@ -328,8 +328,7 @@ var MAPJS = MAPJS || {};
 		margin = margin || 10;
 		var result = {
 			nodes: {},
-			connectors: {},
-//			frame: {origin:{x:y:}, size:{height:width:}}
+			connectors: {}
 		},
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
@@ -1097,7 +1096,7 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this);
-		['insertIntermediate','scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
+		['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea'].forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
 				if (mapModel[methodName]) {
 					mapModel[methodName]('toolbar');
@@ -1106,61 +1105,64 @@ jQuery.fn.mapToolbarWidget = function (mapModel) {
 		});
 	});
 };
-/*global _, jQuery, MAPJS, Kinetic */
-jQuery.fn.imageExportWidget = function (idea, imageCallBack) {
+/*jslint nomen: true*/
+/*global _, jQuery, MAPJS, Kinetic, observable */
+MAPJS.PNGExporter = function (mapRepository) {
 	'use strict';
-	this.click(
-		function () {
-			var layout = MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider),
-				frame = MAPJS.calculateFrame(layout.nodes, 10),
-				hiddencontainer = jQuery('<div></div>').css('visibility', 'hidden')
-					.appendTo('body').width(frame.width).height(frame.height).attr('id', 'hiddencontainer'),
-				hiddenstage = new Kinetic.Stage({ container: 'hiddencontainer' }),
-				layer = new Kinetic.Layer(),
-				backgroundLayer = new Kinetic.Layer(),
-				nodeByIdeaId = {},
-				bg = new Kinetic.Rect({
-					fill: '#ffffff',
-					x: frame.left,
-					y: frame.top,
-					width: frame.width,
-					height: frame.height
-				});
-			hiddenstage.add(backgroundLayer);
-			backgroundLayer.add(bg);
-			hiddenstage.add(layer);
-			hiddenstage.setWidth(frame.width);
-			hiddenstage.setHeight(frame.height);
-			hiddenstage.attrs.x = -1 * frame.left;
-			hiddenstage.attrs.y = -1 * frame.top;
-			_.each(layout.nodes, function (n) {
-				var node = new Kinetic.Idea({
-					level: n.level,
-					x: n.x,
-					y: n.y,
-					text: n.title
-				});
-				nodeByIdeaId[n.id] = node;
-				layer.add(node);
+	var self = this, idea;
+	observable(this);
+	mapRepository.addEventListener('mapLoaded', function (anIdea) {
+		idea = anIdea;
+	});
+	this.exportMap = function () {
+		var layout = MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider),
+			frame = MAPJS.calculateFrame(layout.nodes, 10),
+			hiddencontainer = jQuery('<div></div>').css('visibility', 'hidden')
+				.appendTo('body').width(frame.width).height(frame.height).attr('id', 'hiddencontainer'),
+			hiddenstage = new Kinetic.Stage({ container: 'hiddencontainer' }),
+			layer = new Kinetic.Layer(),
+			backgroundLayer = new Kinetic.Layer(),
+			nodeByIdeaId = {},
+			bg = new Kinetic.Rect({
+				fill: '#ffffff',
+				x: frame.left,
+				y: frame.top,
+				width: frame.width,
+				height: frame.height
 			});
-			_.each(layout.connectors, function (n) {
-				var connector = new Kinetic.Connector({
-					shapeFrom: nodeByIdeaId[n.from],
-					shapeTo: nodeByIdeaId[n.to],
-					stroke: '#888',
-					strokeWidth: 1,
-				});
-				layer.add(connector);
-				connector.moveToBottom();
+		hiddenstage.add(backgroundLayer);
+		backgroundLayer.add(bg);
+		hiddenstage.add(layer);
+		hiddenstage.setWidth(frame.width);
+		hiddenstage.setHeight(frame.height);
+		hiddenstage.attrs.x = -1 * frame.left;
+		hiddenstage.attrs.y = -1 * frame.top;
+		_.each(layout.nodes, function (n) {
+			var node = new Kinetic.Idea({
+				level: n.level,
+				x: n.x,
+				y: n.y,
+				text: n.title
 			});
-			hiddenstage.draw();
-			hiddenstage.toDataURL({
-				callback: function (url) {
-					imageCallBack(url);
-					hiddencontainer.remove();
-				}
+			nodeByIdeaId[n.id] = node;
+			layer.add(node);
+		});
+		_.each(layout.connectors, function (n) {
+			var connector = new Kinetic.Connector({
+				shapeFrom: nodeByIdeaId[n.from],
+				shapeTo: nodeByIdeaId[n.to],
+				stroke: '#888',
+				strokeWidth: 1
 			});
-		}
-	);
-	return this;
+			layer.add(connector);
+			connector.moveToBottom();
+		});
+		hiddenstage.draw();
+		hiddenstage.toDataURL({
+			callback: function (url) {
+				self.dispatchEvent('mapExported', url);
+				hiddencontainer.remove();
+			}
+		});
+	};
 };

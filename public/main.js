@@ -23,6 +23,7 @@ MM.main = function (config) {
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
+			pngExporter = new MAPJS.PNGExporter(mapRepository),
 			mapModel = new MAPJS.MapModel(MAPJS.KineticMediator.layoutCalculator,
 				['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
 				['Luke, I AM your father!', 'Who\'s your daddy?', 'I\'m not a doctor, but I play one on TV']),
@@ -34,14 +35,13 @@ MM.main = function (config) {
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
-		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository);
+		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
 		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks.links());
-		mapRepository.loadMap(config.mapUrl, config.mapId, function (idea) {
-			mapModel.setIdea(idea);
-			jQuery('#modalDownload').downloadWidget('[data-mm-role="image-export"]', idea);
-		});
-		jQuery('[data-category]').trackingWidget(activityLog);
+		jQuery('#modalDownload').downloadWidget(pngExporter);
 		jQuery('[rel=tooltip]').tooltip();
+		jQuery('[data-category]').trackingWidget(activityLog);
+		mapRepository.loadMap(config.mapUrl, config.mapId);
+		mapRepository.addEventListener('mapLoaded', mapModel.setIdea);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };

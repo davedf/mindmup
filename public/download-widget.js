@@ -1,10 +1,10 @@
 /*global jQuery, MM */
-jQuery.fn.downloadWidget = function (jQueryClickableActivation, anIdea) {
+jQuery.fn.downloadWidget = function (pngExporter) {
 	'use strict';
-	var element = this,
-		activate = function (url) {
-			element.find('img').attr('src', url);
-			element.modal('show');
-		};
-	jQuery(jQueryClickableActivation).imageExportWidget(anIdea, activate);
+	return this.each(function () {
+		var element = jQuery(this);
+		pngExporter.addEventListener('mapExported', function (url) {
+			element.modal('show').find('img').attr('src', url);
+		});
+	});
 };

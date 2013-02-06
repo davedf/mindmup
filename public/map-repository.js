@@ -20,7 +20,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 			return startedFromNew() && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		};
 	observable(this);
-	this.loadMap = function (map_url, mapId, load_content) {
+	this.loadMap = function (map_url, mapId) {
 		activityLog.log("loading map [" + map_url + "]");
 		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
 			jsonLoadSuccess = function (result) {
@@ -48,7 +48,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 				activityLog.log('Map', 'View', mapId);
 				document.title = idea.title;
 				$('.st_btn').attr('st_title', idea.title);
-				load_content(idea);
+				self.dispatchEvent('mapLoaded', idea);
 			},
 			jsonFail = function (xhr, textStatus, errorMsg) {
 				activityLog.error("Error loading map document [" + map_url + "] status=" + textStatus + " error msg= " + errorMsg);

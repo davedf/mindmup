@@ -1,5 +1,5 @@
 /*global jQuery*/
-jQuery.fn.floatingToolbarWidget = function (mapRepository) {
+jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -10,7 +10,8 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository) {
 			.find('button.close').click(function () {
 				element.find('.toolbar-inner').toggle();
 				toggleButton.toggleClass('icon-resize-small').toggleClass('icon-resize-full');
-			});
+			}).end()
+			.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		keyboardShortcuts.popover({
 			placement: function () {
 				return keyboardShortcuts.offset().left < 250 ? 'right' : 'left';
