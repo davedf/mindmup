@@ -113,6 +113,9 @@ var content;
 				//TODO: changing the line below to use === breaks some tests, need to work out why
                 return contentAggregate.id == ideaId ? contentAggregate : contentAggregate.findSubIdeaById(ideaId);
             },
+			sameSideSiblingRanks = function (parentIdea, ideaRank) {
+				return _(_.map(_.keys(parentIdea.ideas), parseFloat)).reject(function (k) {return k * ideaRank < 0; });
+			},
 			traverseAndRemoveIdea = function (parentIdea, subIdeaId) {
                 var deleted, childRank = parentIdea.findChildRankById(subIdeaId);
                 if (childRank) {
@@ -131,7 +134,7 @@ var content;
 			sign = function (number) {
 				/* intentionally not returning 0 case, to help with split sorting into 2 groups */
 				return number < 0 ? -1 : 1;
-			}
+			};
 		contentAggregate.maxId = function maxId(idea) {
             idea = idea || contentAggregate;
             if (!idea.ideas) {
@@ -145,6 +148,30 @@ var content;
 				idea.id || 0
 			);
         };
+		contentAggregate.nextSiblingId = function (subIdeaId) {
+			var parentIdea = contentAggregate.findParent(subIdeaId),
+				currentRank,
+				candidateSiblingRanks,
+				siblingsAfter;
+			if (!parentIdea) { return false; }
+			currentRank = parentIdea.findChildRankById(subIdeaId);
+			candidateSiblingRanks = sameSideSiblingRanks(parentIdea, currentRank);
+			siblingsAfter = _.reject(candidateSiblingRanks, function (k) { return Math.abs(k) <= Math.abs(currentRank); });
+			if (siblingsAfter.length === 0) { return false; }
+			return parentIdea.ideas[_.min(siblingsAfter, Math.abs)].id;
+		};
+		contentAggregate.previousSiblingId = function (subIdeaId) {
+		    var parentIdea = contentAggregate.findParent(subIdeaId),
+		        currentRank,
+				candidateSiblingRanks,
+				siblingsBefore;
+		    if (!parentIdea) { return false; }
+		    currentRank = parentIdea.findChildRankById(subIdeaId);
+		    candidateSiblingRanks = sameSideSiblingRanks(parentIdea, currentRank);
+		    siblingsBefore = _.reject(candidateSiblingRanks, function (k) { return Math.abs(k) >= Math.abs(currentRank); });
+		    if (siblingsBefore.length === 0) { return false; }
+		    return parentIdea.ideas[_.max(siblingsBefore, Math.abs)].id;
+		};
 
 
         /*** private utility methods ***/
@@ -262,9 +289,7 @@ var content;
             if (positionBeforeIdeaId) {
                 var after_rank = parentIdea.findChildRankById(positionBeforeIdeaId);
                 if (!after_rank) return false;
-                var sibling_ranks = _(_.map(_.keys(parentIdea.ideas), parseFloat)).reject(function (k) {
-                    return k * current_rank < 0
-                });
+                var sibling_ranks = sameSideSiblingRanks(parentIdea,current_rank);
                 var candidate_siblings = _.reject(_.sortBy(sibling_ranks, Math.abs), function (k) {
                     return Math.abs(k) >= Math.abs(after_rank)
                 });
@@ -425,6 +450,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		getRandomTitle = function (titles) {
 			return titles[Math.floor(titles.length * Math.random())];
 		},
+		horizontalSelectionThreshold = 300,
 		updateCurrentLayout = function (newLayout) {
 			var nodeId, newNode, oldNode, newConnector, oldConnector;
 			for (nodeId in currentLayout.connectors) {
@@ -586,14 +612,11 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			isRootOrLeftHalf = function (id) {
 				return currentLayout.nodes[id].x <= currentLayout.nodes[idea.id].x;
 			},
-			currentlySelectedIdeaRank = function (parent) {
-				var rank;
-				for (rank in parent.ideas) {
-					rank = parseFloat(rank);
-					if (parent.ideas[rank].id === currentlySelectedIdeaId) {
-						return rank;
-					}
-				}
+			nodesWithIDs = function () {
+				return _.map(currentLayout.nodes,
+					function (n, nodeId) {
+						return _.extend({ id: parseInt(nodeId, 10)}, n);
+					});
 			};
 		self.selectNodeLeft = function (source) {
 			var node,
@@ -637,43 +660,51 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				self.selectNode(idea.findParent(currentlySelectedIdeaId).id);
 			}
 		};
+
 		self.selectNodeUp = function (source) {
-			var parent = idea.findParent(currentlySelectedIdeaId), myRank, previousSiblingRank, rank, isPreviousSiblingWithNegativeRank, isPreviousSiblingWithPositiveRank;
+			var previousSibling = idea.previousSiblingId(currentlySelectedIdeaId),
+				nodesAbove,
+				closestNode,
+				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
 			analytic('selectNodeUp', source);
-			if (parent) {
-				myRank = currentlySelectedIdeaRank(parent);
-				previousSiblingRank = myRank > 0 ? -Infinity : Infinity;
-				for (rank in parent.ideas) {
-					rank = parseFloat(rank);
-					isPreviousSiblingWithNegativeRank = myRank < 0 && rank < 0 && rank > myRank && rank < previousSiblingRank;
-					isPreviousSiblingWithPositiveRank = myRank > 0 && rank > 0 && rank < myRank && rank > previousSiblingRank;
-					if (isPreviousSiblingWithNegativeRank || isPreviousSiblingWithPositiveRank) {
-						previousSiblingRank = rank;
-					}
+			if (previousSibling) {
+				self.selectNode(previousSibling);
+			} else {
+				if (!currentNode) { return; }
+				nodesAbove = _.reject(nodesWithIDs(), function (node) {
+					return node.y >= currentNode.y || Math.abs(node.x - currentNode.x) > horizontalSelectionThreshold;
+				});
+				if (_.size(nodesAbove) === 0) {
+					return;
 				}
-				if (previousSiblingRank !== Infinity && previousSiblingRank !== -Infinity) {
-					self.selectNode(parent.ideas[previousSiblingRank].id);
-				}
+				closestNode = _.min(nodesAbove, function (node) {
+					return Math.pow(node.x - currentNode.x, 2) + Math.pow(node.y - currentNode.y, 2);
+				});
+				self.selectNode(closestNode.id);
 			}
 		};
 		self.selectNodeDown = function (source) {
-			var parent = idea.findParent(currentlySelectedIdeaId), myRank, nextSiblingRank, rank, isNextSiblingWithNegativeRank, isNextSiblingWithPositiveRank;
+			var nextSibling = idea.nextSiblingId(currentlySelectedIdeaId),
+				nodesBelow,
+				closestNode,
+				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
 			analytic('selectNodeDown', source);
-			if (parent) {
-				myRank = currentlySelectedIdeaRank(parent);
-				nextSiblingRank = myRank > 0 ? Infinity : -Infinity;
-				for (rank in parent.ideas) {
-					rank = parseFloat(rank);
-					isNextSiblingWithNegativeRank = myRank < 0 && rank < 0 && rank < myRank && rank > nextSiblingRank;
-					isNextSiblingWithPositiveRank = myRank > 0 && rank > 0 && rank > myRank && rank < nextSiblingRank;
-					if (isNextSiblingWithNegativeRank || isNextSiblingWithPositiveRank) {
-						nextSiblingRank = rank;
-					}
+			if (nextSibling) {
+				self.selectNode(nextSibling);
+			} else {
+				if (!currentNode) { return; }
+				nodesBelow = _.reject(nodesWithIDs(), function (node) {
+					return node.y <= currentNode.y || Math.abs(node.x - currentNode.x) > horizontalSelectionThreshold;
+				});
+				if (_.size(nodesBelow) === 0) {
+					return;
 				}
-				if (nextSiblingRank !== Infinity && nextSiblingRank !== -Infinity) {
-					self.selectNode(parent.ideas[nextSiblingRank].id);
-				}
+				closestNode = _.min(nodesBelow, function (node) {
+					return Math.pow(node.x - currentNode.x, 2) + Math.pow(node.y - currentNode.y, 2);
+				});
+				self.selectNode(closestNode.id);
 			}
+
 		};
 	}());
 	//Todo - clean up this shit below
