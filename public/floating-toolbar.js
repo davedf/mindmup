@@ -24,7 +24,8 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Space</strong>: Edit node<br/>' +
 				'<strong>Backspace</strong>: Remove node<br/>' +
 				'<strong>Delete</strong>: Remove node<br/>' +
-				'<strong>Arrow keys</strong>: Move selection<br/>'
+				'<strong>Arrow keys</strong>: Move selection<br/>'  + 
+				'<strong>&#47; key</strong>: Expand or collapse an idea<br/>' 
 		});
 		jQuery('#menuPublish').click(function () {
 			jQuery('#menuPublish')
