@@ -1080,7 +1080,7 @@ Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (con
 	animation.start();
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
-/*global console, document, jQuery, Kinetic*/
+/*global console, window, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
 MAPJS.KineticMediator = function (mapModel, stage) {
 	'use strict';
@@ -1262,6 +1262,19 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		jQuery(document).keydown(onKeydown);
 		mapModel.addEventListener('inputEnabledChanged', function (isInputEnabled) {
 			jQuery(document)[isInputEnabled ? 'bind' : 'unbind']('keydown', onKeydown);
+		});
+		jQuery(window).mousewheel(function (event, delta, deltaX, deltaY) {
+			if (stage) {
+				if (deltaY !== 0) { stage.attrs.y += (deltaY < 0 ? -5 : 5); }
+				if (deltaX !== 0) { stage.attrs.x += (deltaX < 0 ? 5 : -5); }
+				stage.draw();
+			}
+			if (deltaX < 0) { /* stop the back button */
+				event.preventDefault();
+			}
+			if (deltaY < 0) { /*stop scrolling down */
+				event.preventDefault();
+			}
 		});
 	}());
 };
