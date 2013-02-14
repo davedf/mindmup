@@ -33,7 +33,7 @@ var observable = function (base) {
 	};
 	return base;
 };
-/*jslint forin: true*/
+/*jslint forin: true, nomen: true*/
 /*global _, observable*/
 var content = function (contentAggregate) {
 	'use strict';
@@ -97,7 +97,9 @@ var content = function (contentAggregate) {
 				counts = _.countBy(parentIdea.ideas, function (v, k) {
 					return k < 0;
 				});
-				if ((counts.true || 0) < counts.false) {childRankSign = -1; }
+				if ((counts['true'] || 0) < counts['false']) {
+					childRankSign = -1;
+				}
 			}
 			new_rank = maxKey(parentIdea.ideas, childRankSign) + childRankSign;
 			return new_rank;
@@ -344,7 +346,7 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
-/*jslint forin: true*/
+/*jslint forin: true, nomen: true*/
 /*global _*/
 var MAPJS = MAPJS || {};
 (function () {
@@ -432,7 +434,6 @@ var MAPJS = MAPJS || {};
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
 				var subIdeaRank, from, to;
-				level = level || 1;
 				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title', 'style']), {
 					x: positions.x - root.x - 0.5 * root.width + margin,
 					y: positions.y - root.y - 0.5 * root.height + margin,
@@ -450,22 +451,153 @@ var MAPJS = MAPJS || {};
 					}
 				}
 			};
-		calculateLayoutInner(root);
+		//MAPJS.LayoutCompressor.compress(root);
+		calculateLayoutInner(root, 1);
 		return result;
 	};
 	MAPJS.calculateFrame = function (nodes, margin) {
 		margin = margin || 0;
 		var result = {
 			top: _.min(nodes, function (node) {return node.y; }).y - margin,
-			left: _.min(nodes, function (node) {return node.x; }).x - margin,
+			left: _.min(nodes, function (node) {return node.x; }).x - margin
 		};
 		result.width = margin + _.max(_.map(nodes, function (node) { return node.x + node.width; })) - result.left;
 		result.height = margin + _.max(_.map(nodes, function (node) { return node.y + node.height; })) - result.top;
 		return result;
 	};
 }());
-/*global _, observable*/
 /*jslint forin: true*/
+/*global MAPJS*/
+MAPJS.LayoutCompressor = {};
+MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodes = function (firstNode, secondNode) {
+	'use strict';
+	var isFirstSecond, isSecondFirst, result = Infinity;
+	isFirstSecond = firstNode.x + firstNode.width <= secondNode.x;
+	isSecondFirst = secondNode.x + secondNode.width <= firstNode.x;
+	if (!(isFirstSecond || isSecondFirst)) {
+		result = firstNode.y < secondNode.y ? secondNode.y - (firstNode.y + firstNode.height) : firstNode.y - (secondNode.y + secondNode.height);
+	}
+	return result;
+};
+MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodeLists = function (firstNodeList, secondNodeList) {
+	'use strict';
+	var result = Infinity, i, j;
+	for (i = firstNodeList.length - 1; i >= 0; i -= 1) {
+		for (j = secondNodeList.length - 1; j >= 0; j -= 1) {
+			result = Math.min(result, MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodes(firstNodeList[i], secondNodeList[j]));
+		}
+	}
+	return result;
+};
+MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result) {
+	'use strict';
+	var subIdeaRank;
+	result = result || [];
+	result.push({
+		id: positions.id,
+		x: positions.x,
+		y: positions.y,
+		width: positions.width,
+		height: positions.height
+	});
+	for (subIdeaRank in positions.ideas) {
+		getSubTreeNodeList(positions.ideas[subIdeaRank], result);
+	}
+	return result;
+};
+MAPJS.LayoutCompressor.moveSubTreeVertically = function moveSubTreeVertically(positions, delta) {
+	'use strict';
+	var subIdeaRank;
+	positions.y += delta;
+	for (subIdeaRank in positions.ideas) {
+		moveSubTreeVertically(positions.ideas[subIdeaRank], delta);
+	}
+};
+MAPJS.centerSubTrees = function (positions) {
+	'use strict';
+	var subIdeaRank, ranksInOrder = [], i, allLowerNodes = [], lowerSubtree, upperSubtree, verticalDistance;
+	for (subIdeaRank in positions.ideas) {
+		subIdeaRank = parseFloat(subIdeaRank);
+		if (subIdeaRank > 0) {
+			ranksInOrder.push(subIdeaRank);
+		}
+	}
+	if (ranksInOrder.length > 2) {
+		ranksInOrder.sort(function ascending(first, second) {
+			return second - first;
+		});
+		for (i = 1; i < ranksInOrder.length - 1; i += 1) {
+			lowerSubtree = positions.ideas[ranksInOrder[i - 1]];
+			upperSubtree = positions.ideas[ranksInOrder[i]];
+			allLowerNodes = allLowerNodes.concat(MAPJS.LayoutCompressor.getSubTreeNodeList(lowerSubtree));
+			verticalDistance = MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodeLists(
+				allLowerNodes,
+				MAPJS.LayoutCompressor.getSubTreeNodeList(upperSubtree)
+			);
+			if (verticalDistance > 0 && verticalDistance < Infinity) {
+				MAPJS.LayoutCompressor.moveSubTreeVertically(upperSubtree, 0.5 * verticalDistance);
+			}
+		}
+	}
+};
+MAPJS.LayoutCompressor.compress = function compress(positions) {
+	'use strict';
+	var subIdeaRank,
+		ranksInOrder = [],
+		negativeRanksInOrder = [],
+		middle,
+		delta,
+		compressOneSide = function (ranks) {
+			var i,
+				upperSubtree,
+				lowerSubtree,
+				verticalDistance,
+				allUpperNodes = [];
+			for (i = 0; i < ranks.length - 1; i += 1) {
+				upperSubtree = positions.ideas[ranks[i]];
+				lowerSubtree = positions.ideas[ranks[i + 1]];
+				allUpperNodes = allUpperNodes.concat(MAPJS.LayoutCompressor.getSubTreeNodeList(upperSubtree));
+				verticalDistance = MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodeLists(
+					allUpperNodes,
+					MAPJS.LayoutCompressor.getSubTreeNodeList(lowerSubtree)
+				);
+				if (verticalDistance > 0 && verticalDistance < Infinity) {
+					MAPJS.LayoutCompressor.moveSubTreeVertically(lowerSubtree, -verticalDistance);
+				}
+			}
+		};
+	for (subIdeaRank in positions.ideas) {
+		subIdeaRank = parseFloat(subIdeaRank);
+		compress(positions.ideas[subIdeaRank]);
+		(subIdeaRank >= 0 ? ranksInOrder : negativeRanksInOrder).push(subIdeaRank);
+	}
+	ranksInOrder.sort(function ascending(first, second) {
+		return first - second;
+	});
+	negativeRanksInOrder.sort(function ascending(first, second) {
+		return second - first;
+	});
+	compressOneSide(ranksInOrder);
+	compressOneSide(negativeRanksInOrder);
+	if (ranksInOrder.length) {
+		middle = 0.5 * (positions.ideas[ranksInOrder[0]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].height);
+		delta = positions.y - middle + 0.5 * positions.height;
+		ranksInOrder.forEach(function (rank) {
+			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
+		});
+	}
+	if (negativeRanksInOrder.length) {
+		middle = 0.5 * (positions.ideas[negativeRanksInOrder[0]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].height);
+		delta = positions.y - middle + 0.5 * positions.height;
+		negativeRanksInOrder.forEach(function (rank) {
+			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
+		});
+	}
+	MAPJS.centerSubTrees(positions);
+	return positions;
+};
+/*jslint forin: true, nomen: true*/
+/*global _, observable*/
 var MAPJS = MAPJS || {};
 MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChooseFrom, intermediaryTitlesToRandomlyChooseFrom) {
 	'use strict';
@@ -974,6 +1106,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
             canvas.fillStroke(this);
         };
 		this.editNode = function (shouldSelectAll) {
+			self.fire(':editing');
 			//this only works for solid color nodes
 			self.attrs.textFill = self.attrs.fill;
 			self.getLayer().draw();
@@ -1129,8 +1262,13 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		});
 		node.on(':textChanged', function (event) {
 			mapModel.updateTitle(n.id, event.text);
+			mapModel.dispatchEvent('inputEnabledChanged', true);
+		});
+		node.on(':editing', function(event){
+			mapModel.dispatchEvent('inputEnabledChanged', false);
 		});
 		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
+
 		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
 		nodeByIdeaId[n.id] = node;
 		layer.add(node);
@@ -1258,24 +1396,27 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 					eventHandler();
 					evt.preventDefault();
 				}
+			},
+			onScroll = function (event, delta, deltaX, deltaY) {
+				if (stage) {
+					if (deltaY !== 0) { stage.attrs.y += (deltaY < 0 ? -5 : 5); }
+					if (deltaX !== 0) { stage.attrs.x += (deltaX < 0 ? 5 : -5); }
+					stage.draw();
+				}
+				if (deltaX < 0) { /* stop the back button */
+					event.preventDefault();
+				}
+				if (deltaY < 0) { /*stop scrolling down */
+					event.preventDefault();
+				}
 			};
 		jQuery(document).keydown(onKeydown);
+		jQuery(window).mousewheel(onScroll);
 		mapModel.addEventListener('inputEnabledChanged', function (isInputEnabled) {
 			jQuery(document)[isInputEnabled ? 'bind' : 'unbind']('keydown', onKeydown);
+			jQuery(window)[isInputEnabled ? 'mousewheel' : 'unmousewheel'](onScroll);
 		});
-		jQuery(window).mousewheel(function (event, delta, deltaX, deltaY) {
-			if (stage) {
-				if (deltaY !== 0) { stage.attrs.y += (deltaY < 0 ? -5 : 5); }
-				if (deltaX !== 0) { stage.attrs.x += (deltaX < 0 ? 5 : -5); }
-				stage.draw();
-			}
-			if (deltaX < 0) { /* stop the back button */
-				event.preventDefault();
-			}
-			if (deltaY < 0) { /*stop scrolling down */
-				event.preventDefault();
-			}
-		});
+
 	}());
 };
 MAPJS.KineticMediator.dimensionProvider = function (title) {
@@ -1296,9 +1437,10 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 /*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
+	var methodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse'];
 	return this.each(function () {
 		var element = jQuery(this);
-		['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea','toggleCollapse'].forEach(function (methodName) {
+		methodNames.forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
 				if (mapModel[methodName]) {
 					mapModel[methodName]('toolbar');
