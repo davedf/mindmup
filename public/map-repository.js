@@ -46,8 +46,6 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 					activityLog.log(['Map', command].concat(args));
 				});
 				activityLog.log('Map', 'View', mapId);
-				document.title = idea.title;
-				$('.st_btn').attr('st_title', idea.title);
 				self.dispatchEvent('mapLoaded', idea);
 			},
 			jsonFail = function (xhr, textStatus, errorMsg) {

@@ -41,6 +41,8 @@ MM.main = function (config) {
 		jQuery('#modalDownload').downloadWidget(pngExporter);
 		jQuery('[rel=tooltip]').tooltip();
 		jQuery('[data-category]').trackingWidget(activityLog);
+		jQuery(document).titleUpdateWidget(mapRepository);
+		jQuery('.st_btn').titleUpdateWidget(mapRepository);
 		mapRepository.loadMap(config.mapUrl, config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
