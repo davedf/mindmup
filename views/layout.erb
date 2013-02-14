@@ -99,14 +99,9 @@
         </div>
         <div class="toolbar" id="toolbarShare">
           <h5>Share this map</h5>
-          <span class="st_email_large st_btn" displayText="Email"></span>
-          <span class="st_twitter_large st_btn" displayText="Tweet"></span>
-          <span class="st_facebook_large st_btn" displayText="Facebook"></span>
-          <span class="st_googleplus_large st_btn" displayText="Google +"></span>
-          <span class="st_reddit_large st_btn" displayText="Reddit"></span>
-          <span class="st_evernote_large st_btn" displayText="Evernote"></span>
-          <span class="st_linkedin_large st_btn" displayText="LinkedIn"></span>
-          <span class="st_pinterest_large st_btn" displayText="Pinterest"></span>
+		  <a data-mm-role="share" data-mm-target="email" class="share shareEmail" data-category='Map' data-event-type='Share Email' rel='tooltip' data-title='Send by Email' ></a>
+		  <a data-mm-role="share" data-mm-target="twitter" class="share shareTwitter" data-category='Map' data-event-type='Share Twitter' rel='tooltip' data-title='Share on Twitter' ></a>
+		  <a data-mm-role="share" data-mm-target="facebook" class="share shareFacebook" data-category='Map' data-event-type='Share Facebook' rel='tooltip' data-title='Share on Facebook' ></a>
           <p>... or just copy the URL</p>
         </div>
       </div>
@@ -115,7 +110,8 @@
     <%= erb :vote %>
     <%= erb :display_download %>
     <%= erb :feedback %>
-    <%= erb :terms_and_conditions %>
+	<%= erb :terms_and_conditions %>
+	<%= erb :shareemail %>
     <%= yield %>
     <div id="fb-root"></div>
     <%= erb :scripts %>
@@ -158,7 +154,5 @@
 	  ScriptHelper.afterLoad({success: initMM, fail:showErrors});
       var switchTo5x = true;
     </script>
-    <script src="//w.sharethis.com/button/buttons.js"></script>
-    <script>stLight.options({ tracking: 'google', publisher: '<%= ENV["SHARETHIS_PUB"] %>' });</script>
   </body>
 </html>

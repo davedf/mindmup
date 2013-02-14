@@ -55,3 +55,20 @@ html, body {
 #modalDownload img{
 	max-height:300px; max-width:450px;
 }
+.share {
+	width:32px;
+	height:32px;
+	display:inline-block;
+	margin: 5px 5px 5px 5px;
+	cursor: pointer;
+}
+
+.shareFacebook {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/facebook_32.png');
+}
+.shareEmail {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/email_32.png');
+}
+.shareTwitter {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/twitter_32.png');
+}
