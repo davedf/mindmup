@@ -19,7 +19,6 @@ single-file version of that project as /public/mapjs-compiled.js
 - It uses Amazon S3 AWS service to store maps
 - It uses Google analytics to track feature votes, usage patterns and report error rates
 - It uses JotForm to send e-mails and submit user feedback
-- It uses ShareThis to enable easy map sharing and URL shortening
   
 Configuration
 -------------
@@ -34,7 +33,7 @@ The server depends on the following environment variables:
 - S3_WEBSITE _website domain name where user files are publicly accessible. Don't specify protocol or slashes (eg mindmup.s3.amazonaws.com)_
 - SITE_URL _public URL for the web site instance, used to get S3 to redirect back to us. Include protocol and slashes (eg http://localhost:5000/)_
 - JOTFORM_CONTACT _ID of the form that will receive feedback on JotForm_
-- SHARETHIS_PUB _ShareThis publisher ID for share links_
+- JOTFORM_SHARE _ID of the form that will receive share by email requests on JotForm_
 - DEFAULT_MAP _name or key of the map to be shown on homepage (eg default)_
 - RACK_SESSION_SECRET _hashing key for rack sessions (should be relatively random, alphanumeric)_
 - MAX_UPLOAD_SIZE _in KB, maximum size allowed for the users to upload. If not defined, 100 is the default value_
@@ -45,7 +44,7 @@ Running standalone
 ------------------
 
 To run the application in standalone mode (without Heroku), create a .env configuration file (_don't commit this to git_) and put your S3 account info
-and other stuff mentioned above into that. You don't need ShareThis or JotForm to run the site (but sharing and feedback won't work without it). Then
+and other stuff mentioned above into that. You don't need a JotForm account to run the site (but sharing and feedback won't work without it). Then
 execute:
 
 
