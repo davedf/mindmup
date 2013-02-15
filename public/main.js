@@ -43,7 +43,7 @@ MM.main = function (config) {
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('.st_btn').titleUpdateWidget(mapRepository);
-		jQuery('[data-mm-role="share"]').shareWidget(jQuery('#modalShareEmail'));
+		jQuery('#toolbarShare').shareWidget();
 		mapRepository.loadMap(config.mapUrl, config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

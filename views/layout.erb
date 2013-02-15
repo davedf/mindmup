@@ -97,13 +97,7 @@
             </li>
           </ul>
         </div>
-        <div class="toolbar" id="toolbarShare">
-          <h5>Share this map</h5>
-		  <a data-mm-role="share" data-mm-target="email" class="share shareEmail" data-category='Map' data-event-type='Share Email' rel='tooltip' data-title='Send by Email' ></a>
-		  <a data-mm-role="share" data-mm-target="twitter" class="share shareTwitter" data-category='Map' data-event-type='Share Twitter' rel='tooltip' data-title='Share on Twitter' ></a>
-		  <a data-mm-role="share" data-mm-target="facebook" class="share shareFacebook" data-category='Map' data-event-type='Share Facebook' rel='tooltip' data-title='Share on Facebook' ></a>
-          <p>... or just copy the URL</p>
-        </div>
+		<%= erb :share %>
       </div>
     </div>
     <%= erb :about %>
@@ -111,7 +105,6 @@
     <%= erb :display_download %>
     <%= erb :feedback %>
 	<%= erb :terms_and_conditions %>
-	<%= erb :shareemail %>
     <%= yield %>
     <div id="fb-root"></div>
     <%= erb :scripts %>
