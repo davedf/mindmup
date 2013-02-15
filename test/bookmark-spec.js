@@ -5,7 +5,7 @@ describe("Magic bookmark manager", function () {
 		var mapRepository, bookmark, url;
 		beforeEach(function () {
 			mapRepository  =  observable({});
-			bookmark  =  new MM.Bookmark(mapRepository, 3);
+			bookmark  =  new MM.Bookmark(mapRepository);
 			url = {mapId: 'abcd', title: 'defh'};
 		});
 		it("should invoke store method when mapRepository dispatches Before Upload event", function () {
@@ -40,19 +40,9 @@ describe("Magic bookmark manager", function () {
 			expect(_.size(bookmark.list())).toBe(1);
 			expect(bookmark.list()[0]).toEqual(url);
 		});
-		it("should kick items off the list if over capacity, by age", function () {
-			var url1 = {mapId: 'abcd1', title: 'defh1'},
-				url2 = {mapId: 'abcd2', title: 'defh2'},
-				url3 = {mapId: 'abcd3', title: 'defh3'};
-			bookmark.store(url);
-			bookmark.store(url1);
-			bookmark.store(url2);
-			bookmark.store(url3);
-			expect(bookmark.list()).toEqual([url3, url2, url1]);
-		});
 	});
 	it("should return a read-only copy of the list", function () {
-		var bookmark = new MM.Bookmark(observable({}), 3), original, modified;
+		var bookmark = new MM.Bookmark(observable({})), original, modified;
 		bookmark.store({mapId: 'xx', title: 'yy'});
 		original = bookmark.list();
 		modified = bookmark.list();
@@ -69,12 +59,12 @@ describe("Magic bookmark manager", function () {
 					}
 				}
 			},
-			bookmark = new MM.Bookmark(observable({}), 3, storage, 'book');
+			bookmark = new MM.Bookmark(observable({}), storage, 'book');
 		expect(bookmark.list()).toEqual([url]);
 	});
 	it("should ignore storage if it does not contain a bookmark store", function () {
 		var storage = {getItem: function (item) { return undefined; }},
-			bookmark = new MM.Bookmark(observable({}), 3, storage, 'book');
+			bookmark = new MM.Bookmark(observable({}), storage, 'book');
 		expect(bookmark.list()).toEqual([]);
 	});
 
@@ -82,12 +72,12 @@ describe("Magic bookmark manager", function () {
 		var url = {mapId: 'abc', title: 'def'}, bookmark,
 			storage = {getItem: function (item) { return []; }, setItem:  function (key, value) {}};
 		spyOn(storage, 'setItem');
-		bookmark = new MM.Bookmark(observable({}), 3, storage, 'book');
+		bookmark = new MM.Bookmark(observable({}), storage, 'book');
 		bookmark.store(url);
 		expect(storage.setItem).toHaveBeenCalledWith('book', [url]);
 	});
 	it("converts a list of bookmarks to links by appending /map and cutting down long titles", function () {
-		var bookmark = new MM.Bookmark(observable({}), 5);
+		var bookmark = new MM.Bookmark(observable({}));
 		bookmark.store({mapId: 'u1', title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
 		expect(bookmark.links()).toEqual([{url: '/map/u1', title: 'this is a very very long title...'}]);
 	});
@@ -140,5 +130,15 @@ describe("Bookmark widget", function () {
 		expect(list.children('li').children().first().text()).toBe("t1");
 		expect(list.children('li').children().last().attr('href')).toBe("u3");
 		expect(list.children('li').children().last().text()).toBe("t3");
+	});
+	it("displays only first 10 links", function () {
+		var links = [], list, idx;
+		for (idx = 0; idx < 12; idx++) {
+			links.push({url: 'u' + idx, title: 't' + idx});
+		}
+		list = jQuery(ulTemplate).bookmarkWidget(links);
+		expect(list.children('li').length).toBe(10);
+		expect(list.children('li').children().first().attr('href')).toBe("u0");
+		expect(list.children('li').children().last().attr('href')).toBe("u9");
 	});
 });

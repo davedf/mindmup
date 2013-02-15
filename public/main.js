@@ -28,7 +28,7 @@ MM.main = function (config) {
 				MAPJS.KineticMediator.layoutCalculator,
 				['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
 				['Luke, I AM your father!', 'Who\'s your daddy?', 'I\'m not a doctor, but I play one on TV']),
-			mapBookmarks = new MM.Bookmark(mapRepository, 10, MM.jsonStorage(localStorage), 'created-maps');
+			mapBookmarks = new MM.Bookmark(mapRepository, MM.jsonStorage(localStorage), 'created-maps');
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);

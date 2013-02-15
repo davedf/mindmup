@@ -14,10 +14,9 @@ MM.jsonStorage = function (storage) {
 	};
 	return self;
 };
-MM.Bookmark = function (mapRepository, maxSize, storage, storageKey) {
+MM.Bookmark = function (mapRepository, storage, storageKey) {
 	'use strict';
-	var capacity = maxSize,
-		self = this,
+	var self = this,
 		list = [];
 	if (storage && storageKey) {
 		list = storage.getItem(storageKey) || [];
@@ -38,7 +37,6 @@ MM.Bookmark = function (mapRepository, maxSize, storage, storageKey) {
 		if (existing) {
 			existing.mapId = bookmark.mapId;
 		} else {
-			if (list.length >= capacity) { list.shift(); }
 			list.push(_.clone(bookmark));
 		}
 		if (storage && storageKey) {
@@ -65,7 +63,7 @@ jQuery.fn.bookmarkWidget = function (list) {
 			template = element.find('.template');
 		if (list.length) {
 			element.empty();
-			list.forEach(function (bookmark) {
+			list.slice(0, 10).forEach(function (bookmark) {
 				element.append(template.clone().show().find('a').attr('href', bookmark.url).text(bookmark.title).end());
 			});
 		}
