@@ -38,7 +38,7 @@ jQuery.fn.shareWidget = function () {
 			self.attr('target', '_blank');
 			self.attr('href', 'https://twitter.com/intent/tweet?text=' + title +
 				'&url=' + url +
-				'&source=mindmup.com&hashtags=mindmup&related=mindmup&via=mindmup');
+				'&source=mindmup.com&related=mindmup&via=mindmup');
 			return true;
 		}
 		if (target === 'facebook') {
