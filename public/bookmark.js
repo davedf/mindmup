@@ -45,8 +45,7 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 			list.push(_.clone(bookmark));
 		}
 		pushToStorage();
-
-
+		self.dispatchEvent('added', bookmark);
 	};
 	self.remove = function (mapId) {
 		var idx, removed;
@@ -58,8 +57,6 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 				return;
 			}
 		}
-
-
 	};
 	self.list = function () {
 		return _.clone(list).reverse();
@@ -75,18 +72,19 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		});
 	};
 };
-jQuery.fn.bookmarkWidget = function (bookmarks) {
+jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
 			template = element.find('.template').clone(),
+		    originalContent = element.children().clone(),
 			updateLinks = function () {
 				var list = bookmarks.links(),
 					link,
 					children,
 					addition;
+				element.empty();
 				if (list.length) {
-					element.empty();
 					list.slice(0, 10).forEach(function (bookmark) {
 						addition = template.clone().show().appendTo(element);
 						link = addition.find('a');
@@ -95,13 +93,27 @@ jQuery.fn.bookmarkWidget = function (bookmarks) {
 						children.appendTo(link);
 						addition.find('[data-mm-role=bookmark-delete]').click(function () {
 							bookmarks.remove(bookmark.mapId);
+							element.parents('.dropdown').find('.dropdown-toggle').dropdown('toggle');
 							return false;
 						});
 					});
+				} else {
+					originalContent.clone().appendTo(element);
 				}
 			};
-		bookmarks.addEventListener('deleted', function () {
+		bookmarks.addEventListener('added', function (mark) {
 			updateLinks();
+		});
+		bookmarks.addEventListener('deleted', function (mark) {
+			var alertId;
+			updateLinks();
+			if (alert) {
+				alertId = alert.show("Bookmark Removed.", mark.title + " was removed from the list of your maps. <a href='#'> Undo </a> ", "success");
+				jQuery('.alert-no-' + alertId).find('a').click(function () {
+					bookmarks.store(mark);
+					alert.hide(alertId);
+				});
+			}
 		});
 		updateLinks();
 	});
