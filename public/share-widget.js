@@ -49,7 +49,7 @@ jQuery.fn.shareWidget = function () {
 				'caption=' + encodeURIComponent('Mind map from mindmup.com') + '&' +
 				'picture=' + encodeURIComponent('http://mindmup.s3.amazonaws.com/lib/img/logo_256.png') + '&' +
 				'description=' + title + '&' +
-				'redirect_uri=' + encodeURIComponent('http://facebook.com/mindmupapp'));
+				'redirect_uri=' + encodeURIComponent('http://www.mindmup.com/fb'));
 			return true;
 		}
 		if (target === 'email') {

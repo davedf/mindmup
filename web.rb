@@ -37,6 +37,9 @@ get '/' do
     redirect "/map/#{session['mapid']}"
   end
 end
+get '/fb' do
+	redirect "http://facebook.com/mindmupapp"
+end
 get '/trouble' do
  erb :trouble, :layout => false
 end
