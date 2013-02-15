@@ -37,7 +37,7 @@ MM.main = function (config) {
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
-		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks.links());
+		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks);
 		jQuery('#modalDownload').downloadWidget(pngExporter);
 		jQuery('[rel=tooltip]').tooltip();
 		jQuery('[data-category]').trackingWidget(activityLog);

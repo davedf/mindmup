@@ -1,4 +1,4 @@
-/*global _, jQuery, beforeEach, MM*/
+/*global _, jQuery, beforeEach, MM, observable*/
 MM.jsonStorage = function (storage) {
 	'use strict';
 	var self = {};
@@ -16,8 +16,13 @@ MM.jsonStorage = function (storage) {
 };
 MM.Bookmark = function (mapRepository, storage, storageKey) {
 	'use strict';
-	var self = this,
-		list = [];
+	var self = observable(this),
+		list = [],
+		pushToStorage = function () {
+			if (storage && storageKey) {
+				storage.setItem(storageKey, list);
+			}
+		};
 	if (storage && storageKey) {
 		list = storage.getItem(storageKey) || [];
 	}
@@ -39,9 +44,22 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		} else {
 			list.push(_.clone(bookmark));
 		}
-		if (storage && storageKey) {
-			storage.setItem(storageKey, list);
+		pushToStorage();
+
+
+	};
+	self.remove = function (mapId) {
+		var idx, removed;
+		for (idx = 0; idx < list.length; idx++) {
+			if (list[idx].mapId === mapId) {
+				removed = list.splice(idx, 1)[0];
+				pushToStorage();
+				self.dispatchEvent('deleted', removed);
+				return;
+			}
 		}
+
+
 	};
 	self.list = function () {
 		return _.clone(list).reverse();
@@ -51,21 +69,40 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		return _.map(self.list(), function (element) {
 			return {
 				url: "/map/" + element.mapId,
-				title: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + "..." : element.title
+				title: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + "..." : element.title,
+				mapId: element.mapId
 			};
 		});
 	};
 };
-jQuery.fn.bookmarkWidget = function (list) {
+jQuery.fn.bookmarkWidget = function (bookmarks) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
-			template = element.find('.template');
-		if (list.length) {
-			element.empty();
-			list.slice(0, 10).forEach(function (bookmark) {
-				element.append(template.clone().show().find('a').attr('href', bookmark.url).text(bookmark.title).end());
-			});
-		}
+			template = element.find('.template').clone(),
+			updateLinks = function () {
+				var list = bookmarks.links(),
+					link,
+					children,
+					addition;
+				if (list.length) {
+					element.empty();
+					list.slice(0, 10).forEach(function (bookmark) {
+						addition = template.clone().show().appendTo(element);
+						link = addition.find('a');
+						children = link.children().detach();
+						link.attr('href', bookmark.url).text(bookmark.title);
+						children.appendTo(link);
+						addition.find('[data-mm-role=bookmark-delete]').click(function () {
+							bookmarks.remove(bookmark.mapId);
+							return false;
+						});
+					});
+				}
+			};
+		bookmarks.addEventListener('deleted', function () {
+			updateLinks();
+		});
+		updateLinks();
 	});
 };

@@ -72,3 +72,9 @@ html, body {
 .shareTwitter {
 	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/twitter_32.png');
 }
+.btn-inline {
+	border: 0px;
+	background: transparent;
+	margin-left:5px;
+	margin-right:5px;
+}
