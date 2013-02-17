@@ -43,7 +43,7 @@ MM.main = function (config) {
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('.st_btn').titleUpdateWidget(mapRepository);
-		jQuery('#toolbarShare').shareWidget();
+		jQuery('#toolbarShare').shareWidget(config.googleShortenerApiKey, activityLog);
 		mapRepository.loadMap(config.mapUrl, config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

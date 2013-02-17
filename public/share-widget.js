@@ -1,5 +1,5 @@
 /*global MM,jQuery,document*/
-jQuery.fn.shareWidget = function () {
+jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 	'use strict';
 	var shareToolbar = this,
 		shareModal = shareToolbar.find('.modal').detach().appendTo('body'),
@@ -21,19 +21,37 @@ jQuery.fn.shareWidget = function () {
 				pathElement = formElement.find('[name=q4_path]'),
 				titleElement = formElement.find('[name=q7_title]');
 			if (validate(emailElement) && validate(nameElement) && validate(messageElement)) {
-				pathElement.val(document.location.pathname);
+				pathElement.val(shareToolbar.data('mm-url'));
 				titleElement.val(document.title);
 				formElement.submit();
 				messageElement.val('');
 				emailElement.val('');
 				shareModal.modal('hide');
 			}
+		},
+		fireShortener = function () {
+			jQuery.ajax({
+				type: 'post',
+				url: 'https://www.googleapis.com/urlshortener/v1/url?key=' + googleShortenerApiKey,
+				dataType: 'json',
+				contentType: 'application/json',
+				data: '{"longUrl": "' + document.location.href + '"}',
+				success: function (result) {
+					activityLog.log('shortened url is', result.id);
+					shareToolbar.data('mm-url', result.id);
+					shareToolbar.find('[data-mm-role=short-url]').show().val(result.id);
+				},
+				error: function (xhr, err, msg) {
+					activityLog.error('URL shortener failed', err + " " + msg);
+				}
+			});
 		};
+	shareToolbar.data('mm-url', document.location.href);
 	formElement.find('input').blur(function () { validate(jQuery(this)); });
 	shareModal.find('[data-mm-role=submit]').click(submitForm);
 	links.click(function () {
 		var self = jQuery(this), target = self.attr('data-mm-target'),
-			title = encodeURIComponent(document.title), url = encodeURIComponent(document.location.href);
+			title = encodeURIComponent(document.title), url = encodeURIComponent(shareToolbar.data('mm-url'));
 		if (target === 'twitter') {
 			self.attr('target', '_blank');
 			self.attr('href', 'https://twitter.com/intent/tweet?text=' + title +
@@ -57,4 +75,5 @@ jQuery.fn.shareWidget = function () {
 		}
 		return false;
 	});
+	fireShortener();
 };
