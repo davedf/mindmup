@@ -14,6 +14,7 @@
       <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
       <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <% end %>
+    <link href="//mindmup.s3.amazonaws.com/lib/colorPicker.css" rel="stylesheet" />
     <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
@@ -88,6 +89,11 @@
                 <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit idea" data-category="Toolbar Click" data-event-type="Edit idea" class="btn editNode"><i class="icon-pencil"></i></button>
                 <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse idea " data-category="Toolbar Click" data-event-type="Collapse idea" class="btn toggleCollapse"><i class="icon-leaf"></i></button>
                 <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete idea" data-category="Toolbar Click" data-event-type="Delete idea" class="btn removeSubIdea"><i class="icon-remove"></i></button>
+              </div>
+              </li>
+              <li>
+              <div>
+                <input data-mm-target-property='background' class='updateStyle' type="text" value="" />
               </div>
             </li>
             <li>

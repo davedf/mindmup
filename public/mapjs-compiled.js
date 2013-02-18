@@ -40,7 +40,7 @@ var content = function (contentAggregate) {
 	var init = function (contentIdea) {
 		if (contentIdea.ideas) {
 			_.each(contentIdea.ideas, function (value, key) {
-				contentIdea.ideas[key] = init(value);
+				contentIdea.ideas[parseFloat(key)] = init(value);
 			});
 		}
 		contentIdea.id = contentIdea.id || (contentAggregate.maxId() + 1);
@@ -285,11 +285,18 @@ var content = function (contentAggregate) {
 		if (!idea) {
 			return false;
 		}
-		idea.style = idea.style || {};
-		if (styleValue) {
-			idea.style[styleName] = styleValue;
-		} else {
+		idea.style = _.extend({}, idea.style);
+		if (!styleValue || styleValue === "false") {
+			if (!idea.style[styleName]) {
+				return false;
+			}
 			delete idea.style[styleName];
+		} else {
+			/* leave ==, if it's a number and someone sends the equal string, it's still the same */
+			if (idea.style[styleName] == styleValue) {
+				return false;
+			}
+			idea.style[styleName] = styleValue;
 		}
 		if (_.size(idea.style) === 0) {
 			delete idea.style;
@@ -323,7 +330,7 @@ var content = function (contentAggregate) {
 			candidate_siblings = _.reject(_.sortBy(sibling_ranks, Math.abs), function (k) {
 				return Math.abs(k) >= Math.abs(after_rank);
 			});
-			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings) : 0;
+			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings, Math.abs) : 0;
 			if (before_rank === current_rank) {
 				return false;
 			}
@@ -712,6 +719,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self.dispatchEvent('nodeSelectionChanged', id, true);
 		}
 	};
+	this.getSelectedStyle = function (prop) {
+		return currentlySelectedIdea().getStyle(prop);
+	};
 	this.toggleCollapse = function (source) {
 		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
 		this.collapse(source, !isCollapsed);
@@ -722,6 +732,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		if (node.ideas && _.size(node.ideas) > 0) {
 			idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
 		}
+	};
+	this.updateStyle = function (source, prop, value) {
+		analytic('updateStyle:' + prop, source);
+		idea.updateStyle(currentlySelectedIdeaId, prop, value);
 	};
 	this.addSubIdea = function (source) {
 		analytic('addSubIdea', source);
@@ -1015,7 +1029,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
-/*global console, jQuery, Kinetic*/
+/*global Color, _, console, jQuery, Kinetic*/
 /*jslint nomen: true*/
 (function () {
 	'use strict';
@@ -1051,14 +1065,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		this.mmStyle = config.mmStyle;
 		this.isSelected = false;
 		this.setStyle(config);
-		config.align = 'center';
-		config.shadow = {
-			color: 'black',
-			blur: 10,
-			offset: [4, 4],
-			opacity: 0.4
-		};
-		config.cornerRadius = 10;
+
 		config.draggable = true;
 		config.name = 'Idea';
 		Kinetic.Text.apply(this, [config]);
@@ -1159,11 +1166,26 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	};
 }());
+
 Kinetic.Idea.prototype.setStyle = function (config) {
 	'use strict';
 	var isDroppable = this.isDroppable,
 		isSelected = this.isSelected,
-		isRoot = this.level === 1;
+		isRoot = this.level === 1,
+		background = (this.mmStyle && this.mmStyle.background) ||  (isRoot ? '#30C0FF' : '#E0E0E0'),
+		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 : 4,
+		normalShadow = {
+			color: 'black',
+			blur: 10,
+			offset: [offset, offset],
+			opacity: 0.4
+		},
+		selectedShadow = {
+			color: 'black',
+			blur: 0,
+			offset: [offset, offset],
+			opacity: 1
+		};
 	config.strokeWidth = 1;
 	config.padding = 8;
 	config.fontSize = 10;
@@ -1179,17 +1201,29 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 		};
 		config.textFill = '#FFFFFF';
 	} else if (isSelected) {
-		config.fill = '#5FBF5F';
-		config.textFill = '#FFFFFF';
+		config.fill = background;
 	} else {
 		config.stroke = isRoot ? '#88F' : '#888';
 		config.fill = {
 			start: { x: 0, y: 0 },
-			end: {x: 50, y: 100 },
-			colorStops: isRoot ? [0, '#4FDFFF', 1, '#30C0FF'] : [0, '#FFFFFF', 1, '#E0E0E0']
+			end: {x: 100, y: 100 },
+			colorStops: [0, Color(background).mix(Color('white')).hexString(), 1, background]
 		};
-		config.textFill = isRoot ? '#FFFFFF' : '#5F5F5F';
 	}
+	config.align = 'center';
+	if (this.attrs && this.attrs.shadow) {
+		this.setShadow(isSelected ? selectedShadow : normalShadow);
+	} else {
+		config.shadow = isSelected ? selectedShadow : normalShadow;
+	}
+	config.cornerRadius = 10;
+	config.textFill = (Color(background).luminosity()>0.6) ? '#5F5F5F' : '#FFFFFF';
+};
+Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
+	'use strict';
+	this.mmStyle = newMMStyle;
+	this.setStyle(this.attrs);
+	this.getLayer().draw();
 };
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	'use strict';
@@ -1305,8 +1339,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	mapModel.addEventListener('nodeStyleChanged', function (n) {
 		var node = nodeByIdeaId[n.id];
-		node.mmStyle = n.style;
-		layer.draw();
+		node.setMMStyle(n.style);
 	});
 	mapModel.addEventListener('nodeDroppableChanged', function (ideaId, isDroppable) {
 		var node = nodeByIdeaId[ideaId];
@@ -1437,13 +1470,27 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 /*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
-	var methodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea'];
+	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea'],
+		changeMethodNames = ['updateStyle'];
 	return this.each(function () {
 		var element = jQuery(this);
-		methodNames.forEach(function (methodName) {
+		mapModel.addEventListener('nodeSelectionChanged', function () {
+			element.find('.updateStyle[data-mm-target-property]').val(function () {
+				return mapModel.getSelectedStyle(jQuery(this).data('mm-target-property'));
+			}).change();
+		});
+		clickMethodNames.forEach(function (methodName) {
 			element.find('.' + methodName).click(function () {
 				if (mapModel[methodName]) {
 					mapModel[methodName]('toolbar');
+				}
+			});
+		});
+		changeMethodNames.forEach(function (methodName) {
+			element.find('.' + methodName).change(function () {
+				var tool = jQuery(this);
+				if (tool.data('mm-target-property')) {
+					mapModel[methodName]('toolbar', tool.data('mm-target-property'), tool.val());
 				}
 			});
 		});
