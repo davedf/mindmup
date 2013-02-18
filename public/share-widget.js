@@ -29,6 +29,7 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 				shareModal.modal('hide');
 			}
 		},
+		shortenerRetriesLeft = 5,
 		fireShortener = function () {
 			jQuery.ajax({
 				type: 'post',
@@ -42,7 +43,12 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 					shareToolbar.find('[data-mm-role=short-url]').show().val(result.id);
 				},
 				error: function (xhr, err, msg) {
-					activityLog.error('URL shortener failed', err + " " + msg);
+					if (shortenerRetriesLeft > 0) {
+						shortenerRetriesLeft--;
+						setTimeout(fireShortener, 1000);
+					} else {
+						activityLog.error('URL shortener failed', err + " " + msg);
+					}
 				}
 			});
 		};
