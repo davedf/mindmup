@@ -1,77 +1,54 @@
-/*global $, setTimeout, jQuery, content, window, document, observable, MM*/
+/*global content, jQuery, MM, observable, setTimeout, window */
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
-	var self = this, idea, changed, saving;
+	var dispatchEvent, idea;
 	observable(this);
-	MM.relevantMapTracker(this, activityLog);
-	MM.todoAlertManagement(this, alert);
-	this.loadMap = function (map_url, mapId) {
-		self.dispatchEvent('mapLoading', map_url, mapId);
-		activityLog.log("loading map [" + map_url + "]");
-		var jsonLoadSuccess = function (result) {
+	dispatchEvent = this.dispatchEvent;
+	MM.MapRepository.activityTracking(this, activityLog);
+	MM.MapRepository.alerts(this, alert);
+	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
+	this.loadMap = function (mapUrl, mapId) {
+		dispatchEvent('mapLoading', mapUrl, mapId);
+		var onMapLoaded = function (result) {
 				idea = content(result);
-				activityLog.log("loaded JSON map document");
-				$(window).bind('beforeunload', function () {
-					if (changed && !saving) {
-						return 'There are unsaved changes.';
-					}
-				});
-				idea.addEventListener('changed', function (command, args) {
-					saving = false;
-					if (!changed) {
-						$("#toolbarShare").hide();
-						$("#toolbarSave").show();
-						$("#menuExport").hide();
-						$('#menuPublish').effect('highlight');
-						activityLog.log('Map', 'Edit');
-						changed = true;
-					}
-					activityLog.log(['Map', command].concat(args));
-				});
-				activityLog.log('Map', 'View', mapId);
-				self.dispatchEvent('mapLoaded', idea);
+				dispatchEvent('mapLoaded', idea, mapId);
 			},
-			jsonFail = function (xhr, textStatus, errorMsg) {
-				self.dispatchEvent('mapLoadingFailed');
-				activityLog.error("Error loading map document [" + map_url + "] status=" + textStatus + " error msg= " + errorMsg);
+			onMapLoadingFailed = function (xhr, textStatus, errorMsg) {
+				dispatchEvent('mapLoadingFailed', mapUrl, 'status=' + textStatus + ' error msg=' + errorMsg);
 			},
-			jsonTryProxy = function (map_url) {
+			loadMapUsingProxy = function () {
 				activityLog.log('Map', 'ProxyLoad', mapId);
-				$.ajax(
+				jQuery.ajax(
 					'/s3proxy/' + mapId,
-					{ dataType: 'json', success: jsonLoadSuccess, error: jsonFail }
+					{ dataType: 'json', success: onMapLoaded, error: onMapLoadingFailed }
 				);
 			};
-		$.ajax(
-			map_url,
-			{ dataType: 'json', success: jsonLoadSuccess, error: jsonTryProxy }
+		jQuery.ajax(
+			mapUrl,
+			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
 		);
 	};
 	this.publishMap = function () {
-		saving = true;
+		dispatchEvent('mapSaving');
 		var publishing = true,
 			saveTimeoutOccurred = function () {
 				publishing = false;
-				$('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
-				$('#toolbarSave p').show();
-				self.dispatchEvent('mapSavingFailed');
-				activityLog.error('Map save failed');
+				dispatchEvent('mapSavingFailed');
 			},
 			submitS3Form = function (result) {
 				var name;
 				publishing = false;
-				$("#s3form [name='file']").val(JSON.stringify(idea));
+				jQuery('#s3form [name="file"]').val(JSON.stringify(idea));
 				for (name in result) {
-					$('#s3form [name=' + name + ']').val(result[name]);
+					jQuery('#s3form [name=' + name + ']').val(result[name]);
 				}
-				saving = true;
-				self.dispatchEvent('Before Upload', result.s3UploadIdentifier, idea);
-				$('#s3form').submit();
+				dispatchEvent('Before Upload', result.s3UploadIdentifier, idea);
+				jQuery('#s3form').submit();
 			},
 			fetchPublishingConfig = function () {
 				activityLog.log('Fetching publishing config');
-				$.ajax(
-					"/publishingConfig",
+				jQuery.ajax(
+					'/publishingConfig',
 					{
 						dataType: 'json',
 						cache: false,
@@ -88,7 +65,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 		fetchPublishingConfig();
 	};
 };
-MM.relevantMapTracker = function (mapRepository, activityLog) {
+MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 	'use strict';
 	var startedFromNew = function (idea) {
 		return idea.id === 1;
@@ -103,8 +80,15 @@ MM.relevantMapTracker = function (mapRepository, activityLog) {
 			return startedFromNew(idea) && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		},
 		wasRelevantOnLoad;
-	mapRepository.addEventListener('mapLoaded', function (idea) {
+	mapRepository.addEventListener('mapLoading', function (mapUrl, mapId) {
+		activityLog.log('loading map [' + mapUrl + ']');
+	});
+	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
+		activityLog.log('Map', 'View', mapId);
 		wasRelevantOnLoad = isMapRelevant(idea);
+	});
+	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
+		activityLog.error('Error loading map document [' + mapUrl + '] ' + reason);
 	});
 	mapRepository.addEventListener('Before Upload', function (id, idea) {
 		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
@@ -115,8 +99,11 @@ MM.relevantMapTracker = function (mapRepository, activityLog) {
 			activityLog.log('Map', 'Saved Irrelevant', id);
 		}
 	});
+	mapRepository.addEventListener('mapSavingFailed', function () {
+		activityLog.error('Map save failed');
+	});
 };
-MM.todoAlertManagement = function (mapRepository, alert) {
+MM.MapRepository.alerts = function (mapRepository, alert) {
 	'use strict';
 	var alertId;
 	mapRepository.addEventListener('mapLoading', function () {
@@ -139,5 +126,38 @@ MM.todoAlertManagement = function (mapRepository, alert) {
 			'Please try again later. We have sent an error report and we will look into this as soon as possible',
 			'error'
 		);
+	});
+};
+MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {
+	'use strict';
+	var changed, saving;
+	mapRepository.addEventListener('mapLoaded', function (idea) {
+		jQuery(window).bind('beforeunload', function () {
+			if (changed && !saving) {
+				return 'There are unsaved changes.';
+			}
+		});
+		idea.addEventListener('changed', function (command, args) {
+			saving = false;
+			if (!changed) {
+				jQuery('#toolbarShare').hide();
+				jQuery('#toolbarSave').show();
+				jQuery('#menuExport').hide();
+				jQuery('#menuPublish').effect('highlight');
+				activityLog.log('Map', 'Edit');
+				changed = true;
+			}
+			activityLog.log(['Map', command].concat(args));
+		});
+	});
+	mapRepository.addEventListener('Before Upload', function () {
+		saving = true;
+	});
+	mapRepository.addEventListener('mapSaving', function () {
+		saving = true;
+	});
+	mapRepository.addEventListener('mapSavingFailed', function () {
+		jQuery('#menuPublish').text('Save').addClass('btn-primary').attr('disabled', false);
+		jQuery('#toolbarSave p').show();
 	});
 };
