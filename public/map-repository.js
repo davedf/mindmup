@@ -4,11 +4,11 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	var self = this, idea, changed, saving;
 	observable(this);
 	MM.relevantMapTracker(this, activityLog);
+	MM.todoAlertManagement(this, alert);
 	this.loadMap = function (map_url, mapId) {
+		self.dispatchEvent('mapLoading', map_url, mapId);
 		activityLog.log("loading map [" + map_url + "]");
-		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
-			jsonLoadSuccess = function (result) {
-				alert.hide(alertId);
+		var jsonLoadSuccess = function (result) {
 				idea = content(result);
 				activityLog.log("loaded JSON map document");
 				$(window).bind('beforeunload', function () {
@@ -32,13 +32,8 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 				self.dispatchEvent('mapLoaded', idea);
 			},
 			jsonFail = function (xhr, textStatus, errorMsg) {
+				self.dispatchEvent('mapLoadingFailed');
 				activityLog.error("Error loading map document [" + map_url + "] status=" + textStatus + " error msg= " + errorMsg);
-				alert.hide(alertId);
-				alert.show(
-					'Unfortunately, there was a problem loading the map.',
-					'An automated error report was sent and we will look into this as soon as possible',
-					'error'
-				);
 			},
 			jsonTryProxy = function (map_url) {
 				activityLog.log('Map', 'ProxyLoad', mapId);
@@ -59,11 +54,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 				publishing = false;
 				$('#menuPublish').text('Save').addClass('btn-primary').attr("disabled", false);
 				$('#toolbarSave p').show();
-				alert.show(
-					'Unfortunately, there was a problem saving the map.',
-					'Please try again later. We have sent an error report and we will look into this as soon as possible',
-					'error'
-				);
+				self.dispatchEvent('mapSavingFailed');
 				activityLog.error('Map save failed');
 			},
 			submitS3Form = function (result) {
@@ -123,5 +114,30 @@ MM.relevantMapTracker = function (mapRepository, activityLog) {
 		} else {
 			activityLog.log('Map', 'Saved Irrelevant', id);
 		}
+	});
+};
+MM.todoAlertManagement = function (mapRepository, alert) {
+	'use strict';
+	var alertId;
+	mapRepository.addEventListener('mapLoading', function () {
+		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
+	});
+	mapRepository.addEventListener('mapLoaded', function () {
+		alert.hide(alertId);
+	});
+	mapRepository.addEventListener('mapLoadingFailed', function () {
+		alert.hide(alertId);
+		alert.show(
+			'Unfortunately, there was a problem loading the map.',
+			'An automated error report was sent and we will look into this as soon as possible',
+			'error'
+		);
+	});
+	mapRepository.addEventListener('mapSavingFailed', function () {
+		alert.show(
+			'Unfortunately, there was a problem saving the map.',
+			'Please try again later. We have sent an error report and we will look into this as soon as possible',
+			'error'
+		);
 	});
 };
