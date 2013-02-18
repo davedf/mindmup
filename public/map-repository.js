@@ -1,9 +1,8 @@
 /*global content, jQuery, MM, observable, setTimeout, window */
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
-	var dispatchEvent, idea;
 	observable(this);
-	dispatchEvent = this.dispatchEvent;
+	var dispatchEvent = this.dispatchEvent, idea;
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
