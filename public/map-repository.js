@@ -1,32 +1,15 @@
 /*global $, setTimeout, jQuery, content, window, document, observable, MM*/
 MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	'use strict';
-	/* documentation map doesn't have ID=1, so anything with ID=1 was created as a new map */
-	var self = this,
-		idea,
-		wasRelevantOnLoad,
-		changed,
-		saving,
-		startedFromNew = function () {
-			return idea.id === 1;
-		},
-		isNodeRelevant = function (ideaNode) {
-			return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous|Luke|daddy/) === -1;
-		},
-		isNodeIrrelevant = function (ideaNode) {
-			return !isNodeRelevant(ideaNode);
-		},
-		isMapRelevant = function () {
-			return startedFromNew() && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
-		};
+	var self = this, idea, changed, saving;
 	observable(this);
+	MM.relevantMapTracker(this, activityLog);
 	this.loadMap = function (map_url, mapId) {
 		activityLog.log("loading map [" + map_url + "]");
 		var alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>'),
 			jsonLoadSuccess = function (result) {
 				alert.hide(alertId);
 				idea = content(result);
-				wasRelevantOnLoad = isMapRelevant();
 				activityLog.log("loaded JSON map document");
 				$(window).bind('beforeunload', function () {
 					if (changed && !saving) {
@@ -86,13 +69,6 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 			submitS3Form = function (result) {
 				var name;
 				publishing = false;
-				if (isMapRelevant() && !wasRelevantOnLoad) {
-					activityLog.log('Map', 'Created Relevant', result.s3UploadIdentifier);
-				} else if (wasRelevantOnLoad) {
-					activityLog.log('Map', 'Saved Relevant', result.s3UploadIdentifier);
-				} else {
-					activityLog.log('Map', 'Saved Irrelevant', result.s3UploadIdentifier);
-				}
 				$("#s3form [name='file']").val(JSON.stringify(idea));
 				for (name in result) {
 					$('#s3form [name=' + name + ']').val(result[name]);
@@ -120,4 +96,32 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 		setTimeout(saveTimeoutOccurred, networkTimeoutMillis);
 		fetchPublishingConfig();
 	};
+};
+MM.relevantMapTracker = function (mapRepository, activityLog) {
+	'use strict';
+	var startedFromNew = function (idea) {
+		return idea.id === 1;
+	},
+		isNodeRelevant = function (ideaNode) {
+			return ideaNode.title && ideaNode.title.search(/MindMup|Lancelot|cunning|brilliant|Press Space|famous|Luke|daddy/) === -1;
+		},
+		isNodeIrrelevant = function (ideaNode) {
+			return !isNodeRelevant(ideaNode);
+		},
+		isMapRelevant = function (idea) {
+			return startedFromNew(idea) && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
+		},
+		wasRelevantOnLoad;
+	mapRepository.addEventListener('mapLoaded', function (idea) {
+		wasRelevantOnLoad = isMapRelevant(idea);
+	});
+	mapRepository.addEventListener('Before Upload', function (id, idea) {
+		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
+			activityLog.log('Map', 'Created Relevant', id);
+		} else if (wasRelevantOnLoad) {
+			activityLog.log('Map', 'Saved Relevant', id);
+		} else {
+			activityLog.log('Map', 'Saved Irrelevant', id);
+		}
+	});
 };
