@@ -78,4 +78,7 @@ html, body {
 	margin-left:5px;
 	margin-right:5px;
 }
+.color-picker-container {padding: 10px 2px}
+.colorPickerLabel {display:inline; float:right}
 .colorPicker_hexWrap { display: none }
+.colorPicker-picker { display: inline; float: left }
