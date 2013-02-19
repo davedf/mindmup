@@ -353,6 +353,7 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
+/*global _*/
 var MAPJS = MAPJS || {};
 
 (function () {
@@ -439,11 +440,13 @@ var MAPJS = MAPJS || {};
 		},
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
-				var subIdeaRank, from, to;
-				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title', 'style']), {
+				var subIdeaRank, from, to, isRoot = level === 1,
+					defaultStyle = { background: (isRoot ? '#30C0FF' : '#E0E0E0')};
+				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title']), {
 					x: positions.x - root.x - 0.5 * root.width + margin,
 					y: positions.y - root.y - 0.5 * root.height + margin,
-					level: level
+					level: level,
+					style: _.extend({}, defaultStyle, positions.style)
 				});
 				if (positions.ideas) {
 					for (subIdeaRank in positions.ideas) {
@@ -723,7 +726,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.getSelectedStyle = function (prop) {
-		return currentlySelectedIdea().getStyle(prop);
+		var style = currentLayout.nodes[currentlySelectedIdeaId].style;
+		return style && style[prop];
 	};
 	this.toggleCollapse = function (source) {
 		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
@@ -1033,7 +1037,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
 /*global Color, _, console, jQuery, Kinetic*/
-/*jslint nomen: true*/
+/*jslint nomen: true, newcap: true*/
 (function () {
 	'use strict';
 	/*shamelessly copied from http://james.padolsey.com/javascript/wordwrap-for-javascript */
@@ -1175,7 +1179,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 	var isDroppable = this.isDroppable,
 		isSelected = this.isSelected,
 		isRoot = this.level === 1,
-		background = (this.mmStyle && this.mmStyle.background) ||  (isRoot ? '#30C0FF' : '#E0E0E0'),
+		defaultBg =  (isRoot ? '#30C0FF' : '#E0E0E0'),
 		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 : 4,
 		normalShadow = {
 			color: 'black',
@@ -1188,7 +1192,15 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 			blur: 0,
 			offset: [offset, offset],
 			opacity: 1
-		};
+		},
+		validColor = function (color, defaultColor) {
+			if (!color) {
+				return defaultColor;
+			}
+			var parsed = Color(color).hexString();
+			return color.toUpperCase() === parsed.toUpperCase() ? color : defaultColor;
+		},
+		background = validColor(this.mmStyle && this.mmStyle.background, defaultBg);
 	config.strokeWidth = 1;
 	config.padding = 8;
 	config.fontSize = 10;
@@ -1220,7 +1232,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 		config.shadow = isSelected ? selectedShadow : normalShadow;
 	}
 	config.cornerRadius = 10;
-	config.textFill = (Color(background).luminosity()>0.6) ? '#5F5F5F' : '#FFFFFF';
+	config.textFill = (Color(background).luminosity() > 0.6) ? '#5F5F5F' : '#FFFFFF';
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
