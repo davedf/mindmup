@@ -346,8 +346,9 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
+/*jslint nomen: true*/
+/*global _*/
 var MAPJS = MAPJS || {};
-
 (function () {
 	'use strict';
 	MAPJS.calculateDimensions = function calculateDimensions(idea, dimensionProvider, margin) {
@@ -501,10 +502,9 @@ MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(position
 	'use strict';
 	var subIdeaRank;
 	result = result || [];
+	result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
 	if (parent) {
 		result.push(MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox(positions, parent));
-	} else {
-		result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
 	}
 	for (subIdeaRank in positions.ideas) {
 		getSubTreeNodeList(positions.ideas[subIdeaRank], result, positions);
@@ -567,7 +567,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 					allUpperNodes,
 					MAPJS.LayoutCompressor.getSubTreeNodeList(lowerSubtree)
 				);
-				if (verticalDistance > 0 && verticalDistance < Infinity) {
+				if (verticalDistance < Infinity) {
 					MAPJS.LayoutCompressor.moveSubTreeVertically(lowerSubtree, -verticalDistance);
 				}
 			}
