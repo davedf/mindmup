@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      div {
+        width: 200px;
+        margin: 5px;
+      }
+      .unknown {
+        background-color: orange;
+      }
+      .success {
+        background-color: green;
+      }
+      .failure {
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="//mindmup.s3.amazonaws.com/lib/jquery.min.js"></script>
+    <script src="http://mindmup.s3.amazonaws.com/lib/underscore-min.js"></script>
+    <script src="/mm.js"></script>
+    Legend:<br></br>
+    <div class="unknown">unknown</div>
+    <div class="success">success</div>
+    <div class="failure">failure</div>
+    Results:<br></br>
+    <div id="s3-scheme-less" class="unknown"><a href="//mindmup.s3.amazonaws.com/lib/jquery.min.js">S3 scheme-less</a></div>
+    <div id="s3-with-scheme" class="unknown"><a href="http://mindmup.s3.amazonaws.com/lib/underscore-min.js">S3 with scheme</a></div>
+    <div id="local" class="unknown"><a href="/mm.js">Local</a></div>
+    <script>
+      (function () {
+        var showStatus = function (elementId, expectedObjectType) {
+          document.getElementById(elementId).className = expectedObjectType === 'undefined' ? 'failure' : 'success';
+        };
+        showStatus('s3-scheme-less', typeof(jQuery));
+        showStatus('s3-with-scheme', typeof(_));
+        showStatus('local', typeof(MM));
+      }());
+    </script>
+  </body>
+</html>

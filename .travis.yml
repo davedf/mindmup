@@ -1,4 +1,4 @@
 language: ruby
 rvm:
     - "1.9.2"
-script: bundle exec rspec test 
+script: bundle exec rspec test &&  phantomjs test-lib/run_jasmine_test.coffee test/SpecRunner.html 

@@ -1,0 +1,44 @@
+<div data-mm-role="share" class="toolbar" id="toolbarShare">
+	<h5>Share this map</h5>
+	<a data-mm-role="share" data-mm-target="email" class="share shareEmail" data-category='Map' data-event-type='Share Email' rel='tooltip' data-title='Send by Email' ></a>
+	<a data-mm-role="share" data-mm-target="twitter" class="share shareTwitter" data-category='Map' data-event-type='Share Twitter' rel='tooltip' data-title='Share on Twitter' ></a>
+	<a data-mm-role="share" data-mm-target="facebook" class="share shareFacebook" data-category='Map' data-event-type='Share Facebook' rel='tooltip' data-title='Share on Facebook' ></a>
+	<p>... or just copy the URL</p>
+	<input type='text' class='hide span2' style="cursor:pointer" disabled data-mm-role='short-url' ></input>
+	<div class="modal hide fade">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			<h3>Share map by e-mail</h3>
+		</div>
+		<div class="modal-body">
+			<form class="form-horizontal" action="http://submit.jotformpro.com/submit/<%=ENV['JOTFORM_SHARE']%>/" method="post" name="form_<%=ENV['JOTFORM_SHARE']%>" id="<%=ENV['JOTFORM_SHARE']%>" accept-charset="utf-8" novalidate="true" target="jotForm">
+				<input type="hidden" name="formID" value="<%=ENV['JOTFORM_SHARE']%>">
+				<input type="hidden" name="q4_path" />
+				<input type="hidden" name="q7_title"/>
+				<div class="control-group">
+					<label class="control-label" for="shareEmail" >Recipient email</label>
+					<div class="controls">
+						<input type="text" id="shareEmail" name="q3_recipientEmail" placeholder="Recipient e-mail" />
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="shareName">Your Name</label>
+					<div class="controls">
+						<input type="text" name="q6_yourName" id="shareName" placeholder="Name" />
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="shareMessage">Message to the recipient</label>
+					<div class="controls">
+						<textarea rows="5" name="q5_message" id="shareMessage"></textarea>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<a href="#" class="btn" data-dismiss="modal">Cancel</a>
+			<a href="#" data-mm-role='submit' class="btn btn-primary" data-category="Map" data-event-type="Share Email Send">Send</a>
+		</div>
+	</div>
+
+</div>

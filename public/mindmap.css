@@ -40,3 +40,41 @@ html, body {
   outline: none;
 }
 .menulink {margin-left:10px; margin-top:10px;}
+#gplus-share { 
+  border:0;height:16px;background-image: url('//ssl.gstatic.com/images/icons/gplus-16.png');
+ background-position:left center;
+ background-repeat:no-repeat;
+ margin-left: 6px; margin-top:2px;
+}
+#modalDownload .modal-body {
+	text-align: center;
+}
+#modalDownload .modal-body p {
+	text-align: left;
+}
+#modalDownload img{
+	max-height:300px; max-width:450px;
+}
+.share {
+	width:32px;
+	height:32px;
+	display:inline-block;
+	margin: 5px 5px 5px 5px;
+	cursor: pointer;
+}
+
+.shareFacebook {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/facebook_32.png');
+}
+.shareEmail {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/email_32.png');
+}
+.shareTwitter {
+	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/twitter_32.png');
+}
+.btn-inline {
+	border: 0px;
+	background: transparent;
+	margin-left:5px;
+	margin-right:5px;
+}
