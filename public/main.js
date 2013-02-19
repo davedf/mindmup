@@ -35,6 +35,7 @@ MM.main = function (config) {
 		jQuery('#topbar').alertWidget(alert);
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
+		jQuery('#toolbarEdit [data-mm-target-property=background]').colorPicker();
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
 		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks, alert);
