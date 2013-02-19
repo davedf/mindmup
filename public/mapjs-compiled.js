@@ -40,7 +40,7 @@ var content = function (contentAggregate) {
 	var init = function (contentIdea) {
 		if (contentIdea.ideas) {
 			_.each(contentIdea.ideas, function (value, key) {
-				contentIdea.ideas[key] = init(value);
+				contentIdea.ideas[parseFloat(key)] = init(value);
 			});
 		}
 		contentIdea.id = contentIdea.id || (contentAggregate.maxId() + 1);
@@ -323,7 +323,7 @@ var content = function (contentAggregate) {
 			candidate_siblings = _.reject(_.sortBy(sibling_ranks, Math.abs), function (k) {
 				return Math.abs(k) >= Math.abs(after_rank);
 			});
-			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings) : 0;
+			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings, Math.abs) : 0;
 			if (before_rank === current_rank) {
 				return false;
 			}
@@ -346,9 +346,8 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
-/*jslint forin: true, nomen: true*/
-/*global _*/
 var MAPJS = MAPJS || {};
+
 (function () {
 	'use strict';
 	MAPJS.calculateDimensions = function calculateDimensions(idea, dimensionProvider, margin) {
@@ -451,7 +450,7 @@ var MAPJS = MAPJS || {};
 					}
 				}
 			};
-		//MAPJS.LayoutCompressor.compress(root);
+		MAPJS.LayoutCompressor.compress(root);
 		calculateLayoutInner(root, 1);
 		return result;
 	};
@@ -466,8 +465,8 @@ var MAPJS = MAPJS || {};
 		return result;
 	};
 }());
-/*jslint forin: true*/
-/*global MAPJS*/
+/*jslint forin: true, nomen: true*/
+/*global MAPJS, _*/
 MAPJS.LayoutCompressor = {};
 MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodes = function (firstNode, secondNode) {
 	'use strict';
@@ -489,19 +488,26 @@ MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodeLists = function (firstNode
 	}
 	return result;
 };
-MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result) {
+MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox = function (node, parent) {
+	'use strict';
+	return {
+		x: Math.min(node.x, parent.x + 0.5 * parent.width),
+		y: Math.min(node.y, parent.y),
+		width: node.width + 0.5 * parent.width,
+		height: Math.max(node.y + node.height, parent.y + parent.height) - Math.min(node.y, parent.y)
+	};
+};
+MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result, parent) {
 	'use strict';
 	var subIdeaRank;
 	result = result || [];
-	result.push({
-		id: positions.id,
-		x: positions.x,
-		y: positions.y,
-		width: positions.width,
-		height: positions.height
-	});
+	if (parent) {
+		result.push(MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox(positions, parent));
+	} else {
+		result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
+	}
 	for (subIdeaRank in positions.ideas) {
-		getSubTreeNodeList(positions.ideas[subIdeaRank], result);
+		getSubTreeNodeList(positions.ideas[subIdeaRank], result, positions);
 	}
 	return result;
 };
@@ -513,7 +519,7 @@ MAPJS.LayoutCompressor.moveSubTreeVertically = function moveSubTreeVertically(po
 		moveSubTreeVertically(positions.ideas[subIdeaRank], delta);
 	}
 };
-MAPJS.centerSubTrees = function (positions) {
+MAPJS.LayoutCompressor.centerSubTrees = function (positions) {
 	'use strict';
 	var subIdeaRank, ranksInOrder = [], i, allLowerNodes = [], lowerSubtree, upperSubtree, verticalDistance;
 	for (subIdeaRank in positions.ideas) {
@@ -574,17 +580,14 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 	ranksInOrder.sort(function ascending(first, second) {
 		return first - second;
 	});
-	negativeRanksInOrder.sort(function ascending(first, second) {
+	negativeRanksInOrder.sort(function descending(first, second) {
 		return second - first;
 	});
 	compressOneSide(ranksInOrder);
 	compressOneSide(negativeRanksInOrder);
 	if (ranksInOrder.length) {
 		middle = 0.5 * (positions.ideas[ranksInOrder[0]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].height);
-		delta = positions.y - middle + 0.5 * positions.height;
-		ranksInOrder.forEach(function (rank) {
-			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
-		});
+		positions.y = middle - 0.5 * positions.height;
 	}
 	if (negativeRanksInOrder.length) {
 		middle = 0.5 * (positions.ideas[negativeRanksInOrder[0]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].height);
@@ -593,7 +596,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
 		});
 	}
-	MAPJS.centerSubTrees(positions);
+	MAPJS.LayoutCompressor.centerSubTrees(positions);
 	return positions;
 };
 /*jslint forin: true, nomen: true*/
