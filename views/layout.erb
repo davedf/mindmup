@@ -79,22 +79,19 @@
             </li>
             <li>
               <div class="btn-group">
-                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add idea" data-category="Toolbar Click" data-event-type="Add idea" class="btn addSubIdea"><i class="icon-signout" ></i></button>
-                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert Sibling" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn addSiblingIdea"><i class="icon-download-alt" ></i></button>
-                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert intermediate parent" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn insertIntermediate"><i class="icon-signin" ></i></button>
+                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add idea" data-category="Toolbar Click" data-event-type="Add idea" class="btn btn-small addSubIdea"><i class="icon-signout" ></i></button>
+                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert Sibling" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn btn-small addSiblingIdea"><i class="icon-download-alt" ></i></button>
+                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert intermediate parent" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn btn-small insertIntermediate"><i class="icon-signin" ></i></button>
               </div>
             </li>
             <li>
               <div class="btn-group">
-                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit idea" data-category="Toolbar Click" data-event-type="Edit idea" class="btn editNode"><i class="icon-pencil"></i></button>
-                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse idea " data-category="Toolbar Click" data-event-type="Collapse idea" class="btn toggleCollapse"><i class="icon-leaf"></i></button>
-                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete idea" data-category="Toolbar Click" data-event-type="Delete idea" class="btn removeSubIdea"><i class="icon-remove"></i></button>
-              </div>
-              </li>
-              <li>
-                <div class="color-picker-container" >
-                  <label for="bg-color-picker" class="colorPickerLabel">&nbsp;node color</label>
-                  <input id="bg-color-picker" data-mm-target-property='background' class='updateStyle' type="text" value="" />
+                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit idea" data-category="Toolbar Click" data-event-type="Edit idea" class="btn btn-small editNode"><i class="icon-pencil"></i></button>
+                <button class="btn btn-small" rel="tooltip" data-title="Node Color" data-category="Toolbar Click" data-event-type="Node Color">
+                  <input data-mm-target-property='background' class='updateStyle hide' type="text" value="" />&nbsp;
+                </button>
+                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse idea " data-category="Toolbar Click" data-event-type="Collapse idea" class="btn btn-small toggleCollapse"><i class="icon-leaf"></i></button>
+                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete idea" data-category="Toolbar Click" data-event-type="Delete idea" class="btn btn-small removeSubIdea"><i class="icon-remove"></i></button>
               </div>
               </li>
               <li>
@@ -158,7 +155,6 @@
 		});
 	  }
 	  ScriptHelper.afterLoad({success: initMM, fail:showErrors});
-      var switchTo5x = true;
     </script>
   </body>
 </html>
