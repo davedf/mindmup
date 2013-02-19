@@ -353,9 +353,9 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
+/*jslint nomen: true*/
 /*global _*/
 var MAPJS = MAPJS || {};
-
 (function () {
 	'use strict';
 	MAPJS.calculateDimensions = function calculateDimensions(idea, dimensionProvider, margin) {
@@ -432,6 +432,11 @@ var MAPJS = MAPJS || {};
 		}
 		return result;
 	};
+	MAPJS.defaultStyles = {
+		root: {background: '#30C0FF'},
+		nonRoot: {background: '#E0E0E0'}
+	};
+
 	MAPJS.calculateLayout = function (idea, dimensionProvider, margin) {
 		margin = margin || 10;
 		var result = {
@@ -441,7 +446,7 @@ var MAPJS = MAPJS || {};
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
 				var subIdeaRank, from, to, isRoot = level === 1,
-					defaultStyle = { background: (isRoot ? '#30C0FF' : '#E0E0E0')};
+					defaultStyle = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'];
 				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title']), {
 					x: positions.x - root.x - 0.5 * root.width + margin,
 					y: positions.y - root.y - 0.5 * root.height + margin,
@@ -511,10 +516,9 @@ MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(position
 	'use strict';
 	var subIdeaRank;
 	result = result || [];
+	result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
 	if (parent) {
 		result.push(MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox(positions, parent));
-	} else {
-		result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
 	}
 	for (subIdeaRank in positions.ideas) {
 		getSubTreeNodeList(positions.ideas[subIdeaRank], result, positions);
@@ -577,7 +581,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 					allUpperNodes,
 					MAPJS.LayoutCompressor.getSubTreeNodeList(lowerSubtree)
 				);
-				if (verticalDistance > 0 && verticalDistance < Infinity) {
+				if (verticalDistance < Infinity) {
 					MAPJS.LayoutCompressor.moveSubTreeVertically(lowerSubtree, -verticalDistance);
 				}
 			}
@@ -742,7 +746,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.updateStyle = function (source, prop, value) {
 		analytic('updateStyle:' + prop, source);
-		idea.updateStyle(currentlySelectedIdeaId, prop, value);
+		if (this.getSelectedStyle(prop) != value) {
+			idea.updateStyle(currentlySelectedIdeaId, prop, value);
+		}
 	};
 	this.addSubIdea = function (source) {
 		analytic('addSubIdea', source);
