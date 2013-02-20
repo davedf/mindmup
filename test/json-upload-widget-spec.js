@@ -56,4 +56,10 @@ describe("Json Upload Widget", function () {
 		fakeUpload('ab');
 		expect(spy).toHaveBeenCalledWith('invalid server response', 'ab');
 	});
+	it("executes the fail callback with the returned body is JSON containing an error message", function () {
+		var spy = jasmine.createSpy('called');
+		input.json_upload('#', null, null, spy);
+		fakeUpload('{"error":"fake error"}');
+		expect(spy).toHaveBeenCalledWith('fake error');
+	});
 });
