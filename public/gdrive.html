@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<script src="https://apis.google.com/js/client.js?onload=OnLoadCallback"></script>
+		<script>
+			function createNewFile(title, description, mimeType) {
+				var request = gapi.client.request({
+					'path': '/upload/drive/v2/files',
+					'method': 'POST',
+					'body':{
+						"title" : title,
+						"mimeType" : mimeType,
+						"description" : description
+					}
+				});
+
+				request.execute(function(resp) { console.log(resp); });
+			}
+			function checkAuth(immediate) {
+				gapi.auth.authorize(
+				{'client_id': '399581875395.apps.googleusercontent.com', 'scope': 'https://www.googleapis.com/auth/drive.file', 'immediate': immediate},
+				handleAuthResult);
+			}
+			function handleAuthResult(authResult) {
+				if (authResult) {
+					// Access token has been successfully retrieved, requests can be sent to the API
+					console.log(authResult);
+					} else {
+					console.log('fail');
+					// No access token could be retrieved, force the authorization flow.
+					checkAuth(false);
+				}
+			}
+			function loadDrive() {
+				gapi.client.setApiKey('AIzaSyA5pHcTopVkQW-cC6z2FNvB3dQ7luM28uc');
+				gapi.client.load('drive', 'v2', function() {console.log('loaded');})
+			}
+			function retrieveAllFiles(callback) {
+				var retrievePageOfFiles = function(request, result) {
+					request.execute(function(resp) {
+						result = result.concat(resp.items);
+						var nextPageToken = resp.nextPageToken;
+						if (nextPageToken) {
+							request = gapi.client.drive.files.list({
+								'pageToken': nextPageToken
+							});
+							retrievePageOfFiles(request, result);
+							} else {
+							callback(result);
+						}
+					});
+				}
+				var initialRequest = gapi.client.drive.files.list();
+				retrievePageOfFiles(initialRequest, []);
+			}
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
