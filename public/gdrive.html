@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<script src="https://apis.google.com/js/client.js?onload=OnLoadCallback"></script>
+		<script src="https://apis.google.com/js/client.js?onload=loadDrive"></script>
 		<script>
 			function createNewFile(title, description, mimeType) {
 				var request = gapi.client.request({
@@ -16,9 +16,10 @@
 
 				request.execute(function(resp) { console.log(resp); });
 			}
-			function checkAuth(immediate) {
+      function checkAuth(immediate) {
+        console.log('authorising');
 				gapi.auth.authorize(
-				{'client_id': '399581875395.apps.googleusercontent.com', 'scope': 'https://www.googleapis.com/auth/drive.file', 'immediate': immediate},
+				{'client_id': '399581875395.apps.googleusercontent.com', 'scope': 'https://www.googleapis.com/auth/drive', 'immediate': immediate},
 				handleAuthResult);
 			}
 			function handleAuthResult(authResult) {
