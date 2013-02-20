@@ -2,7 +2,15 @@
 <html lang="en">
 	<head>
 		<script src="https://apis.google.com/js/client.js?onload=loadDrive"></script>
-		<script>
+    <script>
+
+      // saveFile (
+      //    createNewFile( ) -> file id
+      //    uploadFile (file id)
+      // listAllMupFiles( )
+      // loadFile (file id)
+
+
 			function createNewFile(title, description, mimeType) {
 				var request = gapi.client.request({
 					'path': '/upload/drive/v2/files',
@@ -51,11 +59,51 @@
 						}
 					});
 				}
-				var initialRequest = gapi.client.drive.files.list();
-				retrievePageOfFiles(initialRequest, []);
-			}
-		</script>
-	</head>
-	<body>
-	</body>
+
+        var initialRequest = gapi.client.drive.files.list();
+        retrievePageOfFiles(initialRequest, []);
+      }
+      function insertFile(fileData, callback) {
+        const boundary = '-------314159265358979323846';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+          var contentType = fileData.type || 'application/octet-stream';
+          var metadata = {
+            'title': fileData.name,
+            'mimeType': contentType
+          };
+
+          var base64Data = btoa(fileData.body);
+          var multipartRequestBody =
+              delimiter +
+              'Content-Type: application/json\r\n\r\n' +
+              JSON.stringify(metadata) +
+              delimiter +
+              'Content-Type: ' + contentType + '\r\n' +
+              'Content-Transfer-Encoding: base64\r\n' +
+              '\r\n' +
+              base64Data +
+              close_delim;
+
+          var request = gapi.client.request({
+              'path': '/upload/drive/v2/files',
+              'method': 'POST',
+              'params': {'uploadType': 'multipart'},
+              'headers': {
+                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+              },
+              'body': multipartRequestBody});
+          if (!callback) {
+            callback = function(file) {
+              console.log(file)
+            };
+          }
+          request.execute(callback);
+      }
+
+    </script>
+  </head>
+  <body>
+  </body>
 </html>
