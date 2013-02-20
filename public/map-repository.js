@@ -29,7 +29,7 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	};
 	this.currentIdea = function () {
 		return idea;
-	}
+	};
 	this.publishMap = function () {
 		dispatchEvent('mapSaving');
 		var publishing = true,
