@@ -148,8 +148,9 @@
 		MM.main({
           googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
           mapUrl: '<%= map_url(@mapid) %>',
-		  mapId: '<%= @mapid %>',
-		  googleShortenerApiKey: '<%= ENV['GOOGLE_SHORTENER_API_KEY'] %>',
+          mapId: '<%= @mapid %>',
+          googleClientId: '<%= ENV['GOOGLE_CLIENT_ID'] %>',
+		      googleShortenerApiKey: '<%= ENV['GOOGLE_SHORTENER_API_KEY'] %>',
           scriptsToLoadAsynchronously: ['//www.google-analytics.com/ga.js', '//platform.twitter.com/widgets.js', '//connect.facebook.net/en_US/all.js#xfbml=1'],
          networkTimeoutMillis: <%= settings.network_timeout_millis %>
 		});

@@ -27,6 +27,9 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
 		);
 	};
+	this.currentIdea = function () {
+		return idea;
+	}
 	this.publishMap = function () {
 		dispatchEvent('mapSaving');
 		var publishing = true,

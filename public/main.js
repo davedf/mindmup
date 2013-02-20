@@ -23,6 +23,7 @@ MM.main = function (config) {
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
+			googleRepository = new MM.GoogleDriveRepository(config.googleClientId, config.googleShortenerApiKey, activityLog, alert,  config.networkTimeoutMillis, "mapplication/mindmup"),
 			pngExporter = new MAPJS.PNGExporter(mapRepository),
 			mapModel = new MAPJS.MapModel(mapRepository,
 				MAPJS.KineticMediator.layoutCalculator,
@@ -47,6 +48,8 @@ MM.main = function (config) {
 		jQuery('.st_btn').titleUpdateWidget(mapRepository);
 		jQuery('#toolbarShare').shareWidget(config.googleShortenerApiKey, activityLog);
 		mapRepository.loadMap(config.mapUrl, config.mapId);
+		window.googleRepo = googleRepository;
+		window.mapRepo = mapRepository;
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };

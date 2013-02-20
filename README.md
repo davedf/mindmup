@@ -26,6 +26,7 @@ Configuration
 
 The server depends on the following environment variables:
 - GOOGLE_SHORTENER_API_KEY _Google shortener API key_
+- GOOGLE_CLIENT_ID _Google drive Client Id_
 - GOOGLE_ANALYTICS_ACCOUNT _Google analytics ID to use for tracking. Don't use the production IDs in staging. Not used in dev and testing_
 - S3_BUCKET_NAME _Only the name of S3 Bucket where files are located (eg mindmup)_
 - S3_KEY_ID _AWS Access key ID that has write access for the bucket_
