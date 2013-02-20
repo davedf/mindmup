@@ -17,6 +17,7 @@ configure do
   set :s3_upload_folder, ENV['S3_UPLOAD_FOLDER']
   set :default_map, ENV['DEFAULT_MAP']|| "map/default"
   set :s3_max_upload_size, ENV['MAX_UPLOAD_SIZE']||100
+  set :max_upload_size, ENV['MAX_UPLOAD_SIZE']||100
   set :key_id_generator, UUID.new
   set :current_map_data_version, ENV['CURRENT_MAP_DATA_VERSION'] || "a1"
   set :network_timeout_millis, ENV['NETWORK_TIMEOUT_MILLIS']||10000
@@ -90,7 +91,25 @@ get '/trouble' do
   erb :trouble, :layout => false
 end
 
+post '/import' do
+  file = params['file']
+  json_fail('No file uploaded') unless file 
+  uploaded_size=request.env['CONTENT_LENGTH']
+  json_fail('Browser did not provide content length for upload') unless uploaded_size
+  json_fail("File too big. Maximum size is #{settings.max_upload_size}kb") if uploaded_size.to_i>settings.max_upload_size*1024
+  allowed_types=[".mm", ".mup"]
+  uploaded_type= File.extname file[:filename]
+  json_fail "unsupported file type #{uploaded_type}" unless allowed_types.include? uploaded_type
+  result=File.readlines(file[:tempfile]).join '\n'
+  if uploaded_type=='.mm'
+    result=JSON.fast_generate(FreemindFormat.new().from_freemind(result))
+  end
+end
+
 helpers do
+  def json_fail message
+    halt %Q!{"error":"#{message}"}!
+  end
   def map_key mapid
     (mapid.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapid + ".json"
   end
