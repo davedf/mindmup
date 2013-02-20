@@ -18,7 +18,7 @@ describe("Json Upload Widget", function () {
 		expect(parentForm.prop('action')).toBe('http://fakeaction/a');
 	});
 	it("adds a hidden iframe to be the target of the form", function () {
-		input.json_upload('#');
+		input.json_upload('/');
 		readDeps();
 		expect(hiddenFrame.length).toBe(1);
 		expect(hiddenFrame.css('display')).toBe('none');
@@ -30,7 +30,7 @@ describe("Json Upload Widget", function () {
 	}
 	it("submits the form when the value is changed", function () {
 		var called = false;
-		input.prop('type', 'hidden').json_upload('#');
+		input.prop('type', 'hidden').json_upload('/');
 		readDeps();
 		parentForm.submit(function () { called = true; });
 		input.change();
@@ -38,7 +38,7 @@ describe("Json Upload Widget", function () {
 	});
 	it("executes the start callback with the selected file name when the form is submitted", function () {
 		var spy = jasmine.createSpy('called');
-		input.json_upload('#', spy);
+		input.json_upload('/', spy);
 		readDeps();
 		input.prop('type', 'hidden').val('/testpath/abc.def');
 		parentForm.submit();
@@ -46,19 +46,19 @@ describe("Json Upload Widget", function () {
 	});
 	it("executes the success callback with the parsed JSON body if the result is JSON", function () {
 		var spy = jasmine.createSpy('called');
-		input.json_upload('#', null, spy);
+		input.json_upload('/', null, spy);
 		fakeUpload('{"a":"b"}');
 		expect(spy).toHaveBeenCalledWith({'a' : 'b'});
 	});
 	it("executes the fail callback with the returned body is not JSON", function () {
 		var spy = jasmine.createSpy('called');
-		input.json_upload('#', null, null, spy);
+		input.json_upload('/', null, null, spy);
 		fakeUpload('ab');
 		expect(spy).toHaveBeenCalledWith('invalid server response', 'ab');
 	});
 	it("executes the fail callback with the returned body is JSON containing an error message", function () {
 		var spy = jasmine.createSpy('called');
-		input.json_upload('#', null, null, spy);
+		input.json_upload('/', null, null, spy);
 		fakeUpload('{"error":"fake error"}');
 		expect(spy).toHaveBeenCalledWith('fake error');
 	});
