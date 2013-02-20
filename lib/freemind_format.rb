@@ -6,7 +6,7 @@ class FreemindFormat
   def xml_to_json (node)
 
     result = {"id" => node.attr("ID"), "title" => node.attr("TEXT") }
-    children= node.children().map {|child| xml_to_json child}
+    children= node.children().filter('node').map {|child| xml_to_json child}
     if (children.length>0) 
       child_obj={}
       index=1;
@@ -16,7 +16,7 @@ class FreemindFormat
     result
   end
   def from_freemind (xml)
-    root=Nokogiri::XML(xml).xpath('//map').children[0]
+    root=Nokogiri::XML(xml).xpath('//map').children().filter('node')[0]
     xml_to_json root
   end
   def children (idea_node)

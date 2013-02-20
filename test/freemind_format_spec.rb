@@ -7,6 +7,11 @@ describe FreemindFormat do
     '<node ID="2" TEXT="B"></node>'+
     '<node ID="3" TEXT="C"></node>'+
     '</node></map>'
+  complex_xml_with_other_stuff= '<map version="0.7.1">
+     <node ID="1" TEXT="A"><!-- comment -->'+
+    '<node ID="2" TEXT="B"><ignore/></node>'+
+    '<node ID="3" TEXT="C"></node>'+
+    '</node></map>'
   
   complex_json = {'id'=>'1', 'title'=>'A', 'ideas'=>{ 1 =>{'id'=>'2', 'title'=>'B'}, 2 =>{'id'=>'3', 'title'=>'C'}}}
   
@@ -35,5 +40,11 @@ describe FreemindFormat do
   end
   it 'converts complex freemind xml into mindmup json' do
     json_format(complex_xml).should  == complex_json 
+  end
+  it 'ignores any non-node tags in XML' do
+    json_format(complex_xml_with_other_stuff).should  == complex_json 
+  end
+  it 'converts xml entities into string equivalents while parsing xml' do
+    json_format('<map version="0.7.1"><node ID="1" TEXT="Text&quot;&lt;&gt;&quot;&lt;&gt;More"></node></map>').should=={'id'=>'1', 'title'=>'Text"<>"<>More'};
   end
 end
