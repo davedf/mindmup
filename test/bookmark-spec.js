@@ -210,4 +210,9 @@ describe("Bookmark widget", function () {
 		var list = jQuery(ulTemplate).bookmarkWidget(wrap([{mapId: 'x', title: 'y'}]));
 		expect(list.children('li').first().children().first().children()).toBe('span');
 	});
+	it("preserves any elements with data-mm-role=bookmark-keep and appends after active links", function () {
+		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li>");
+		list.bookmarkWidget(wrap([{mapId: 'x', title: 'y'}]));
+		expect(list.children('li').last().text()).toBe('Keep me');
+	});
 });
