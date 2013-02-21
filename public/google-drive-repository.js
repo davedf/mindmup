@@ -1,4 +1,4 @@
-/*global content, jQuery, MM, observable, setTimeout, window, gapi, btoa, XMLHttpRequest */
+/*global content, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi, btoa, XMLHttpRequest */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	observable(this);
@@ -49,14 +49,15 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		},
 		downloadFile = function (file, complete, fail) {
 			if (file.downloadUrl) {
-				var accessToken = gapi.auth.getToken().access_token,
-					xhr = new XMLHttpRequest();
+				var xhr = new XMLHttpRequest();
 				xhr.open('GET', file.downloadUrl);
-				xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+				if (file.title) {
+					xhr.setRequestHeader('Authorization', 'Bearer ' + gapi.auth.getToken().access_token);
+				}
 				xhr.onload = function () {
 					if (complete) {
 						complete({
-							title: file.title,
+							title: file.title || 'unknown',
 							body: JSON.parse(xhr.responseText)
 						});
 					}
@@ -89,7 +90,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.recognises = function (mapId) {
-		return mapId.substr(0, 2) === "gd";
+		return mapId.substr(0, 2) === "g1";
 	};
 
 	this.checkAuth = function (showDialog, complete, failure) {
@@ -114,10 +115,23 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		);
 	};
 
-	this.loadDrive = function (complete, failure) {
-		var checkAuth = this.checkAuth;
+	this.makeReady = function (complete, failure, recusionCount, self) {
+		recusionCount = recusionCount || 0;
+		self = self || this;
+		var checkAuth = self.checkAuth,
+			makeReady = self.makeReady;
 		if (driveLoaded) {
 			checkAuth(false, complete, failure);
+			return;
+		}
+		if (!gapi.client) {
+			if (recusionCount > 10) {
+				failure();
+				return;
+			}
+			setTimeout(function () {
+				makeReady(complete, failure, recusionCount + 1, self);
+			}, 100);
 			return;
 		}
 		gapi.client.setApiKey(apiKey);
@@ -149,6 +163,26 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			});
 		retrievePageOfFiles(initialRequest, []);
 	};
+	this.loadPublicMap = function (mapId) {
+		var googleId = mapId.substr(2),
+			success = function (result) {
+				var idea = content(result.body),
+					mapInfo = {
+						mapId: mapId,
+						googleId: googleId,
+						idea: idea,
+						title: idea.title
+					};
+				dispatchEvent('mapLoaded', mapInfo);
+			},
+			fail = function (xhr, textStatus, errorMsg) {
+				dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
+			};
+		dispatchEvent('mapLoading', mapId);
+		downloadFile({downloadUrl: 'https://docs.google.com/file/d/' + googleId + '/edit?usp=sharing&pli=1'}, success, fail);
+		loadFile(googleId, success, fail);
+
+	};
 
 	this.loadMap = function (mapId) {
 		var googleId = mapId.substr(2),
@@ -172,9 +206,16 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		dispatchEvent('mapSaving');
 		var saveFailed = function () {
 				dispatchEvent('mapSavingFailed');
-			};
-		setTimeout(saveFailed, networkTimeoutMillis);
-		saveFile(mapInfo, function (savedMapInfo) { dispatchEvent('mapSaved', savedMapInfo); }, saveFailed);
+			},
+			timeout = setTimeout(saveFailed, networkTimeoutMillis);
+		saveFile(
+			mapInfo,
+			function (savedMapInfo) {
+				clearTimeout(timeout);
+				dispatchEvent('mapSaved', savedMapInfo);
+			},
+			saveFailed
+		);
 	};
 };
 

@@ -6,10 +6,7 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	var dispatchEvent = this.dispatchEvent;
 
 	this.recognises = function (mapId) {
-		var isNumber = function (n) {
-			return !isNaN(parseFloat(n)) && isFinite(n);
-		};
-		return mapId.substr(0, 1) === "a" && isNumber(mapId.substr(1, 1));
+		return mapId.substr(0, 2) === "a1";
 	};
 
 	this.loadMap = function (mapId) {

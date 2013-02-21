@@ -1,47 +1,85 @@
 /*jslint forin: true*/
-/*global content, jQuery, MM, observable, setTimeout, window */
+/*global content, jQuery, MM, observable, setTimeout, window, document*/
 MM.MapRepository = function (activityLog, alert, publicrepository, privateRepository) {
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent,
-		mapInfo,
-		onMapLoaded = function (newMapInfo) {
-			mapInfo = newMapInfo;
-			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
+		mapInfo = {},
+		listenType,
+		listeners = {
+			'mapLoaded': function (newMapInfo) {
+				mapInfo = newMapInfo;
+				dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
+			},
+			'Before Upload': function (id, idea) {
+				dispatchEvent('Before Upload', id, idea);
+			},
+			'mapSaved': function (savedMapInfo) {
+				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
+				if (mapInfo.mapId !== savedMapInfo.mapId) {
+					document.location = "/map/" + savedMapInfo.mapId;
+				}
+				mapInfo = savedMapInfo;
+			},
+			'mapLoading': function (mapUrl, mapId) {
+				dispatchEvent('mapLoading', mapUrl, mapId);
+			},
+			'mapLoadingFailed': function (mapUrl, reason) {
+				dispatchEvent('mapLoadingFailed', mapUrl, reason);
+			},
+			'mapSavingFailed': function () {
+				dispatchEvent('mapSavingFailed');
+			},
+			'mapSaving': function () {
+				dispatchEvent('mapSaving');
+			}
 		},
-		onBeforeUpload = function (id, idea) {
-			dispatchEvent('Before Upload', id, idea);
-		},
-		onMapSaved = function (savedMapInfo) {
-			mapInfo = savedMapInfo;
-		},
-		onMapLoading = function (mapUrl, mapId) {
-			dispatchEvent('mapLoading', mapUrl, mapId);
-		},
-		onMapLoadFailed = function (mapUrl, reason) {
-			dispatchEvent('mapLoadingFailed', mapUrl, reason);
-		},
-		onMapSavingFailed = function () {
-			dispatchEvent('mapSavingFailed');
-		},
-		onMapSaving = function () {
-			dispatchEvent('mapSaving');
+		usePrivateRepository = function (doThis, fail) {
+			if (privateRepository.ready()) {
+				doThis();
+			} else {
+				privateRepository.makeReady(doThis, fail);
+			}
 		};
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
-	publicrepository.addEventListener('mapLoading', onMapLoading);
-	publicrepository.addEventListener('mapLoaded', onMapLoaded);
-	publicrepository.addEventListener('mapSaving', onMapSaving);
-	publicrepository.addEventListener('mapLoadingFailed', onMapLoadFailed);
-	publicrepository.addEventListener('mapSavingFailed', onMapSavingFailed);
-	publicrepository.addEventListener('Before Upload', onBeforeUpload);
+	for (listenType in listeners) {
+		publicrepository.addEventListener(listenType, listeners[listenType]);
+		privateRepository.addEventListener(listenType, listeners[listenType]);
+	}
 	this.loadMap = function (mapId) {
-		publicrepository.loadMap(mapId);
+		if (privateRepository.recognises && privateRepository.recognises(mapId)) {
+			usePrivateRepository(
+				function () {
+					privateRepository.loadMap(mapId);
+				},
+				function () {
+					privateRepository.loadPublicMap(mapId);
+				}
+			);
+		} else {
+			publicrepository.loadMap(mapId);
+		}
 	};
 
 	this.publishMap = function () {
-		publicrepository.saveMap(mapInfo);
+		if (privateRepository.recognises && privateRepository.recognises(mapInfo.mapId)) {
+			privateRepository.saveMap(mapInfo);
+		} else {
+			publicrepository.saveMap(mapInfo);
+		}
+	};
+
+	this.saveAs = function (title) {
+		usePrivateRepository(
+			function () {
+				privateRepository.saveMap({idea: mapInfo.idea, title: title});
+			},
+			function () {
+				dispatchEvent('saveAsFailed', 'private repository not ready');
+			}
+		);
 	};
 };
 
@@ -139,5 +177,14 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 	mapRepository.addEventListener('mapSavingFailed', function () {
 		jQuery('#menuPublish').text('Save').addClass('btn-primary').attr('disabled', false);
 		jQuery('#toolbarSave p').show();
+	});
+
+	mapRepository.addEventListener('mapSaved', function () {
+		saving = false;
+		changed = false;
+		jQuery('#toolbarShare').show();
+		jQuery('#toolbarSave').hide();
+		jQuery('#menuExport').show();
+		jQuery('#menuPublish').hide();
 	});
 };
