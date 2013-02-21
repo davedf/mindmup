@@ -180,7 +180,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			};
 		dispatchEvent('mapLoading', mapId);
 		downloadFile({downloadUrl: 'https://docs.google.com/file/d/' + googleId + '/edit?usp=sharing&pli=1'}, success, fail);
-		loadFile(googleId, success, fail);
 
 	};
 
