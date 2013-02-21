@@ -35,6 +35,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			jQuery('#toolbarSave p').hide();
 			mapRepository.publishMap($(this).attr('data-mm-repository'));
 		});
+		element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=a] img').prop('src'));
 		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 			var repository = (mapId && mapId[0]) || 'a';
 			element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=' + repository + '] img').prop('src'));
