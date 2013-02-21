@@ -32,6 +32,12 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 			title: idea.title
 		});
 	});
+	mapRepository.addEventListener('mapSaved', function (key, idea) {
+		self.store({
+			mapId: key,
+			title: idea.title
+		});
+	});
 	self.store = function (bookmark) {
 		if (!(bookmark.mapId && bookmark.title)) {
 			throw new Error("Invalid bookmark");
