@@ -1,5 +1,5 @@
 /*jslint forin: true*/
-/*global content, jQuery, MM, observable, setTimeout, window, document*/
+/*global _, content, jQuery, MM, observable, setTimeout, window, document*/
 MM.MapRepository = function (activityLog, alert, publicrepository, privateRepository) {
 	'use strict';
 	observable(this);
@@ -8,7 +8,7 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 		listenType,
 		listeners = {
 			'mapLoaded': function (newMapInfo) {
-				mapInfo = newMapInfo;
+				mapInfo = _.clone(newMapInfo);
 				dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
 			},
 			'Before Upload': function (id, idea) {
@@ -72,9 +72,11 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 				||
 				privateRepository.recognises(repository)
 			)) {
-			privateRepository.saveMap(mapInfo);
+			usePrivateRepository(function () {
+				privateRepository.saveMap(_.clone(mapInfo));
+			});
 		} else {
-			publicrepository.saveMap(mapInfo);
+			publicrepository.saveMap(_.clone(mapInfo));
 		}
 	};
 
@@ -189,10 +191,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 	mapRepository.addEventListener('mapSaving', function () {
 		saving = true;
 	});
-	mapRepository.addEventListener('mapSavingFailed', function () {
-		jQuery('#menuPublish').text('Save').addClass('btn-primary').attr('disabled', false);
-		jQuery('#toolbarSave p').show();
-	});
+
 
 	mapRepository.addEventListener('mapSaved', function () {
 		saving = false;

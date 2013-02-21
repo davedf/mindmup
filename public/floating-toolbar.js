@@ -39,5 +39,13 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			var repository = (mapId && mapId[0]) || 'a';
 			element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=' + repository + '] img').prop('src'));
 		});
+		mapRepository.addEventListener('mapSavingFailed', function () {
+			jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
+			jQuery('#toolbarSave p').show();
+		});
+		mapRepository.addEventListener('mapSaved', function () {
+			jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
+			jQuery('#toolbarSave p').show();
+		});
 	});
 };
