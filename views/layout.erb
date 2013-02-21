@@ -35,6 +35,10 @@
               <ul class="dropdown-menu" role="menu" id="listBookmarks">
 				  <li><a href="#">Save a map and it will appear in this list</a></li>
 				  <li class="template" style="display:none"><a data-category="Top Bar" data-event-type="Bookmark click"><button data-mm-role='bookmark-delete' class='btn-inline pull-right icon-remove' rel='tooltip' data-title='Remove bookmark'></button></a></li>
+				  <li class="divider" data-mm-role="bookmark-keep" />
+				  <li data-mm-role="bookmark-keep">
+				  <a href="#" data-event-type="Top Bar" data-category="Import" data-target="#modalImport" data-toggle="modal">Import a Freemind or MindMup file</a>
+				  </li>
               </ul>
             </li>
           </ul>
@@ -110,6 +114,7 @@
       </div>
     </div>
     <%= erb :about %>
+    <%= erb :import %>
     <%= erb :vote %>
     <%= erb :display_download %>
     <%= erb :feedback %>
