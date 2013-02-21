@@ -90,7 +90,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.recognises = function (mapId) {
-		return mapId.substr(0, 2) === "g1";
+		return mapId && mapId.substr(0, 2) === "g1";
 	};
 
 	this.checkAuth = function (showDialog, complete, failure) {
@@ -115,8 +115,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		);
 	};
 
-	this.makeReady = function (complete, failure, recusionCount, self) {
-		recusionCount = recusionCount || 0;
+	this.makeReady = function (complete, failure, recursionCount, self) {
+		recursionCount = recursionCount || 0;
 		self = self || this;
 		var checkAuth = self.checkAuth,
 			makeReady = self.makeReady;
@@ -125,12 +125,12 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			return;
 		}
 		if (!gapi.client) {
-			if (recusionCount > 10) {
+			if (recursionCount > 10) {
 				failure();
 				return;
 			}
 			setTimeout(function () {
-				makeReady(complete, failure, recusionCount + 1, self);
+				makeReady(complete, failure, recursionCount + 1, self);
 			}, 100);
 			return;
 		}
