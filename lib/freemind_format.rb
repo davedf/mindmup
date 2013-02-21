@@ -5,7 +5,7 @@ class FreemindFormat
   end
   def xml_to_json (node)
 
-    result = {"id" => node.attr("ID"), "title" => node.attr("TEXT") }
+    result = {"title" => node.attr("TEXT") }
     children= node.children().filter('node').map {|child| xml_to_json child}
     if (children.length>0) 
       child_obj={}

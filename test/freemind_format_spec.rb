@@ -14,6 +14,7 @@ describe FreemindFormat do
     '</node></map>'
   
   complex_json = {'id'=>'1', 'title'=>'A', 'ideas'=>{ 1 =>{'id'=>'2', 'title'=>'B'}, 2 =>{'id'=>'3', 'title'=>'C'}}}
+  complex_json_without_ids = {'title'=>'A', 'ideas'=>{ 1 =>{'title'=>'B'}, 2 =>{'title'=>'C'}}}
   
   def freemind_format (idea) 
     FreemindFormat.new(idea).to_freemind
@@ -35,16 +36,16 @@ describe FreemindFormat do
     idea=complex_json
     freemind_format(idea).should== complex_xml
   end
-  it 'converts single freemind xml into mindmup json' do
-    json_format('<map version="0.7.1"><node ID="1" TEXT="A"></node></map>').should  == {'id' => "1", 'title' => "A"} 
+  it 'converts single freemind xml into mindmup json, removing IDs' do
+    json_format('<map version="0.7.1"><node ID="1" TEXT="A"></node></map>').should  == {'title' => "A"} 
   end
   it 'converts complex freemind xml into mindmup json' do
-    json_format(complex_xml).should  == complex_json 
+    json_format(complex_xml).should  == complex_json_without_ids 
   end
   it 'ignores any non-node tags in XML' do
-    json_format(complex_xml_with_other_stuff).should  == complex_json 
+    json_format(complex_xml_with_other_stuff).should  == complex_json_without_ids 
   end
   it 'converts xml entities into string equivalents while parsing xml' do
-    json_format('<map version="0.7.1"><node ID="1" TEXT="Text&quot;&lt;&gt;&quot;&lt;&gt;More"></node></map>').should=={'id'=>'1', 'title'=>'Text"<>"<>More'};
+    json_format('<map version="0.7.1"><node ID="1" TEXT="Text&quot;&lt;&gt;&quot;&lt;&gt;More"></node></map>').should=={'title'=>'Text"<>"<>More'};
   end
 end
