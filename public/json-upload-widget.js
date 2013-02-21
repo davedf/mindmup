@@ -25,6 +25,7 @@ $.fn.json_upload = function (action, start, complete, fail) {
 					complete(result);
 				}
 			} catch (err2) {
+				console.log(err2, err2.stack);
 				fail("invalid server response", result);
 			}
 		}
