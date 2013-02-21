@@ -1,72 +1,50 @@
+/*jslint forin: true*/
 /*global content, jQuery, MM, observable, setTimeout, window */
-MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
+MM.MapRepository = function (activityLog, alert, publicrepository, privateRepository) {
 	'use strict';
 	observable(this);
-	var dispatchEvent = this.dispatchEvent, idea;
+	var dispatchEvent = this.dispatchEvent,
+		mapInfo,
+		onMapLoaded = function (newMapInfo) {
+			mapInfo = newMapInfo;
+			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
+		},
+		onBeforeUpload = function (id, idea) {
+			dispatchEvent('Before Upload', id, idea);
+		},
+		onMapSaved = function (savedMapInfo) {
+			mapInfo = savedMapInfo;
+		},
+		onMapLoading = function (mapUrl, mapId) {
+			dispatchEvent('mapLoading', mapUrl, mapId);
+		},
+		onMapLoadFailed = function (mapUrl, reason) {
+			dispatchEvent('mapLoadingFailed', mapUrl, reason);
+		},
+		onMapSavingFailed = function () {
+			dispatchEvent('mapSavingFailed');
+		},
+		onMapSaving = function () {
+			dispatchEvent('mapSaving');
+		};
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
-	this.loadMap = function (mapUrl, mapId) {
-		dispatchEvent('mapLoading', mapUrl, mapId);
-		var onMapLoaded = function (result) {
-				idea = content(result);
-				dispatchEvent('mapLoaded', idea, mapId);
-			},
-			onMapLoadingFailed = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', mapUrl, 'status=' + textStatus + ' error msg=' + errorMsg);
-			},
-			loadMapUsingProxy = function () {
-				activityLog.log('Map', 'ProxyLoad', mapId);
-				jQuery.ajax(
-					'/s3proxy/' + mapId,
-					{ dataType: 'json', success: onMapLoaded, error: onMapLoadingFailed }
-				);
-			};
-		jQuery.ajax(
-			mapUrl,
-			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
-		);
+	publicrepository.addEventListener('mapLoading', onMapLoading);
+	publicrepository.addEventListener('mapLoaded', onMapLoaded);
+	publicrepository.addEventListener('mapSaving', onMapSaving);
+	publicrepository.addEventListener('mapLoadingFailed', onMapLoadFailed);
+	publicrepository.addEventListener('mapSavingFailed', onMapSavingFailed);
+	publicrepository.addEventListener('Before Upload', onBeforeUpload);
+	this.loadMap = function (mapId) {
+		publicrepository.loadMap(mapId);
 	};
-	this.currentIdea = function () {
-		return idea;
-	};
+
 	this.publishMap = function () {
-		dispatchEvent('mapSaving');
-		var publishing = true,
-			saveTimeoutOccurred = function () {
-				publishing = false;
-				dispatchEvent('mapSavingFailed');
-			},
-			submitS3Form = function (result) {
-				var name;
-				publishing = false;
-				jQuery('#s3form [name="file"]').val(JSON.stringify(idea));
-				for (name in result) {
-					jQuery('#s3form [name=' + name + ']').val(result[name]);
-				}
-				dispatchEvent('Before Upload', result.s3UploadIdentifier, idea);
-				jQuery('#s3form').submit();
-			},
-			fetchPublishingConfig = function () {
-				activityLog.log('Fetching publishing config');
-				jQuery.ajax(
-					'/publishingConfig',
-					{
-						dataType: 'json',
-						cache: false,
-						success: submitS3Form,
-						error: function (result) {
-							if (publishing) {
-								setTimeout(fetchPublishingConfig, 1000);
-							}
-						}
-					}
-				);
-			};
-		setTimeout(saveTimeoutOccurred, networkTimeoutMillis);
-		fetchPublishingConfig();
+		publicrepository.saveMap(mapInfo);
 	};
 };
+
 MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 	'use strict';
 	var startedFromNew = function (idea) {

@@ -16,13 +16,14 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 		dispatchEvent('mapLoading', s3Url, mapId);
 		var onMapLoaded = function (result) {
 				var mapInfo = {
-					id: mapId,
+					mapId: mapId,
 					idea: content(result)
 				};
 				dispatchEvent('mapLoaded', mapInfo);
 			},
+			mapUrl = s3Url + mapId + ".json",
 			onMapLoadingFailed = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', s3Url, 'status=' + textStatus + ' error msg=' + errorMsg);
+				dispatchEvent('mapLoadingFailed', mapUrl, 'status=' + textStatus + ' error msg=' + errorMsg);
 			},
 			loadMapUsingProxy = function () {
 				activityLog.log('Map', 'ProxyLoad', mapId);
@@ -32,7 +33,7 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 				);
 			};
 		jQuery.ajax(
-			s3Url,
+			mapUrl,
 			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
 		);
 	};

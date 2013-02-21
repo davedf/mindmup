@@ -25,8 +25,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					base64Data +
 					close_delim,
 				request = gapi.client.request({
-					'path': '/upload/drive/v2/files' + (mapInfo.id ? "/" + mapInfo.id : ""),
-					'method': (mapInfo.id ? 'PUT' : 'POST'),
+					'path': '/upload/drive/v2/files' + (mapInfo.googleId ? "/" + mapInfo.googleId : ""),
+					'method': (mapInfo.googleId ? 'PUT' : 'POST'),
 					'params': {'uploadType': 'multipart'},
 					'headers': {
 						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
@@ -39,7 +39,11 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						fail(resp.error);
 					}
 				} else if (complete) {
-					complete(resp.id);
+					if (!mapInfo.googleId) {
+						mapInfo.mapId = "g1" + resp.id;
+						mapInfo.googleId = resp.id;
+					}
+					complete(mapInfo);
 				}
 			});
 		},
@@ -147,10 +151,11 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.loadMap = function (mapId) {
-		var fileId = mapId.substr(2),
+		var googleId = mapId.substr(2),
 			success = function (result) {
 				var mapInfo = {
-					id: fileId,
+					mapId: mapId,
+					googleId: googleId,
 					idea: content(result.body),
 					title: result.title
 				};
@@ -160,7 +165,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
 			};
 		dispatchEvent('mapLoading', mapId);
-		loadFile(fileId, success, fail);
+		loadFile(googleId, success, fail);
 	};
 
 	this.saveMap = function (mapInfo) {
