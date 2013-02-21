@@ -23,7 +23,7 @@ MM.main = function (config) {
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			mapRepository = new MM.MapRepository(activityLog, alert, config.networkTimeoutMillis),
-			googleRepository = new MM.GoogleDriveRepository(config.googleClientId, config.googleShortenerApiKey, activityLog, alert,  config.networkTimeoutMillis, "mapplication/mindmup"),
+			googleRepository = new MM.GoogleDriveRepository(config.googleClientId, config.googleShortenerApiKey, config.networkTimeoutMillis, "application/mindmup"),
 			pngExporter = new MAPJS.PNGExporter(mapRepository),
 			mapModel = new MAPJS.MapModel(mapRepository,
 				MAPJS.KineticMediator.layoutCalculator,

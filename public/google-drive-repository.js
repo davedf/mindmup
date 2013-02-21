@@ -1,18 +1,19 @@
 /*global content, jQuery, MM, observable, setTimeout, window, gapi, btoa, XMLHttpRequest */
-MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, networkTimeoutMillis, contentType) {
+MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	observable(this);
-	var dispatchEvent = this.dispatchEvent,
-		loadedFile = {},
-		saveFile = function (complete, fail) {
+	var driveLoaded,
+		isAuthorised,
+		dispatchEvent = this.dispatchEvent,
+		saveFile = function (mapInfo, complete, fail) {
 			var	boundary = '-------314159265358979323846',
 				delimiter = "\r\n--" + boundary + "\r\n",
 				close_delim = "\r\n--" + boundary + "--",
 				metadata = {
-					'title': loadedFile.title,
+					'title': mapInfo.title,
 					'mimeType': contentType
 				},
-				base64Data = btoa(JSON.stringify(loadedFile.idea)),
+				base64Data = btoa(JSON.stringify(mapInfo.idea)),
 				multipartRequestBody =
 					delimiter +
 					'Content-Type: application/json\r\n\r\n' +
@@ -24,8 +25,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, netwo
 					base64Data +
 					close_delim,
 				request = gapi.client.request({
-					'path': '/upload/drive/v2/files' + (loadedFile.id ? "/" + loadedFile.id : ""),
-					'method': (loadedFile.id ? 'PUT' : 'POST'),
+					'path': '/upload/drive/v2/files' + (mapInfo.id ? "/" + mapInfo.id : ""),
+					'method': (mapInfo.id ? 'PUT' : 'POST'),
 					'params': {'uploadType': 'multipart'},
 					'headers': {
 						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
@@ -79,11 +80,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, netwo
 			});
 		};
 
-/*
-	MM.MapRepository.activityTracking(this, activityLog);
-	MM.MapRepository.alerts(this, alert);
-	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
-*/
+	this.ready = function () {
+		return driveLoaded && isAuthorised;
+	};
+
+	this.recognises = function (mapId) {
+		return mapId.substr(0, 2) === "gd";
+	};
+
 	this.checkAuth = function (showDialog, complete, failure) {
 		gapi.auth.authorize(
 			{
@@ -93,10 +97,12 @@ MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, netwo
 			},
 			function (authResult) {
 				if (authResult) {
+					isAuthorised = true;
 					if (complete) {
 						complete();
 					}
 				} else if (failure) {
+					isAuthorised = false;
 					failure();
 				}
 
@@ -106,8 +112,13 @@ MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, netwo
 
 	this.loadDrive = function (complete, failure) {
 		var checkAuth = this.checkAuth;
+		if (driveLoaded) {
+			checkAuth(false, complete, failure);
+			return;
+		}
 		gapi.client.setApiKey(apiKey);
 		gapi.client.load('drive', 'v2', function () {
+			driveLoaded = true;
 			checkAuth(false, complete, failure);
 		});
 	};
@@ -136,35 +147,29 @@ MM.GoogleDriveRepository = function (clientId, apiKey, activityLog, alert, netwo
 	};
 
 	this.loadMap = function (mapId) {
-		dispatchEvent('mapLoading', mapId);
-		loadFile(mapId, function (result) {
-			console.log('result.body', result.body);
-			loadedFile = {
-				idea: content(result.body),
-				id: mapId,
-				title: result.title
+		var fileId = mapId.substr(2),
+			success = function (result) {
+				var mapInfo = {
+					id: fileId,
+					idea: content(result.body),
+					title: result.title
+				};
+				dispatchEvent('mapLoaded', mapInfo);
+			},
+			fail = function (xhr, textStatus, errorMsg) {
+				dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
 			};
-			dispatchEvent('mapLoaded', loadedFile.idea, mapId);
-		}, function (xhr, textStatus, errorMsg) {
-			dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
-		});
+		dispatchEvent('mapLoading', mapId);
+		loadFile(fileId, success, fail);
 	};
 
-	this.saveAs = function (title, newIdea) {
-		loadedFile = {
-			idea: newIdea || loadedFile.idea,
-			title: title
-		};
-		this.publishMap();
-	};
-
-	this.publishMap = function () {
+	this.saveMap = function (mapInfo) {
 		dispatchEvent('mapSaving');
 		var saveFailed = function () {
 				dispatchEvent('mapSavingFailed');
 			};
 		setTimeout(saveFailed, networkTimeoutMillis);
-		saveFile(function (id) { console.log('saved', id); loadedFile.id = id; dispatchEvent('mapSaved', id); }, saveFailed);
+		saveFile(mapInfo, function (savedMapInfo) { dispatchEvent('mapSaved', savedMapInfo); }, saveFailed);
 	};
 };
 
