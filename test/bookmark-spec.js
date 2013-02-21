@@ -159,6 +159,11 @@ describe("Bookmark widget", function () {
 		expect(list.children('li').length).toBe(1);
 		expect(list.children('li').first().children().first()).toBe('a');
 	});
+	it("adds repository class to hyperlinks based on map ID", function () {
+		var list = jQuery(ulTemplate).bookmarkWidget(wrap([{mapId: 'xabc', title: 'y'}]));
+		expect(list.children('li').length).toBe(1);
+		expect(list.children('li').first().children().first().hasClass('repo-x')).toBeTruthy();
+	});
 	it("links are listed in reverse order as hyperlinks", function () {
 		var links = [{mapId: 'u1', title: 't1'},
 			{mapId: 'u2', title: 't2'},

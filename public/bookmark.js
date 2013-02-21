@@ -97,6 +97,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 						link = addition.find('a');
 						children = link.children().detach();
 						link.attr('href', bookmark.url).text(bookmark.title);
+						link.addClass('repo-' + bookmark.mapId[0]);
 						children.appendTo(link);
 						addition.find('[data-mm-role=bookmark-delete]').click(function () {
 							bookmarks.remove(bookmark.mapId);
