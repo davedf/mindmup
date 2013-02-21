@@ -48,6 +48,9 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 		publicrepository.addEventListener(listenType, listeners[listenType]);
 		privateRepository.addEventListener(listenType, listeners[listenType]);
 	}
+	this.setMap = function (mapInfo) {
+		listeners.mapLoaded(mapInfo);
+	};
 	this.loadMap = function (mapId) {
 		if (privateRepository.recognises && privateRepository.recognises(mapId)) {
 			usePrivateRepository(
@@ -148,14 +151,8 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 };
 MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {
 	'use strict';
-	var changed, saving;
-	mapRepository.addEventListener('mapLoaded', function (idea) {
-		jQuery(window).bind('beforeunload', function () {
-			if (changed && !saving) {
-				return 'There are unsaved changes.';
-			}
-		});
-		idea.addEventListener('changed', function (command, args) {
+	var changed, saving, mapLoaded,
+		toggleChange = function () {
 			saving = false;
 			if (!changed) {
 				jQuery('#toolbarShare').hide();
@@ -165,6 +162,20 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 				activityLog.log('Map', 'Edit');
 				changed = true;
 			}
+		};
+	mapRepository.addEventListener('mapLoaded', function (idea) {
+		if (!mapLoaded) {
+			jQuery(window).bind('beforeunload', function () {
+				if (changed && !saving) {
+					return 'There are unsaved changes.';
+				}
+			});
+			mapLoaded = true;
+		} else {
+			toggleChange();
+		}
+		idea.addEventListener('changed', function (command, args) {
+			toggleChange();
 			activityLog.log(['Map', command].concat(args));
 		});
 	});

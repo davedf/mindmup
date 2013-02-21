@@ -1,4 +1,4 @@
-/*global $*/
+/*global $, content*/
 $.fn.importWidget = function (activityLog, mapRepository) {
 	'use strict';
 	var element = this,
@@ -9,11 +9,12 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			activityLog.log('Map', 'import:start', filename);
 			statusDiv.html("<i class='icon-spinner'/> Uploading " + filename);
 		},
-		success = function (content) {
+		success = function (json_content) {
+			var idea = content(json_content);
 			activityLog.log('Map', 'import:complete');
-			console.log('uploaded', content);
 			statusDiv.empty();
 			element.modal('hide');
+			mapRepository.setMap({ idea: idea, title: idea.title });
 		},
 		fail = function (error, detail) {
 			activityLog.log('Map', 'import:fail', error);
