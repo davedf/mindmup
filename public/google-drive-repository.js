@@ -90,7 +90,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.recognises = function (mapId) {
-		return mapId && mapId.substr(0, 2) === "g1";
+		return mapId && mapId[0] === "g";
 	};
 
 	this.checkAuth = function (showDialog, complete, failure) {

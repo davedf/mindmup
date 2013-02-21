@@ -1,4 +1,4 @@
-/*global jQuery*/
+/*global $, jQuery*/
 jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	'use strict';
 	return this.each(function () {
@@ -27,13 +27,17 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
 				'<strong>Shift + Up Arrow</strong>: Expand or collapse an idea<br/>'
 		});
-		jQuery('#menuPublish').click(function () {
+		jQuery('#menuPublish').add('#toolbarSave a').click(function () {
 			jQuery('#menuPublish')
 				.html('<i class="icon-spinner icon-spin"></i>Saving...')
 				.removeClass('btn-primary')
 				.attr('disabled', true);
 			jQuery('#toolbarSave p').hide();
-			mapRepository.publishMap();
+			mapRepository.publishMap($(this).attr('data-mm-repository'));
+		});
+		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
+			var repository = (mapId && mapId[0]) || 'a';
+			element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=' + repository + '] img').prop('src'));
 		});
 	});
 };

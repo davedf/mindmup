@@ -86,3 +86,6 @@ div.colorPicker-picker { display: inline; float: left; background: none }
 	width:0px;
 	height:0px;
 }
+#toolbarSave img {
+	height: 16px;
+}

@@ -66,8 +66,12 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 		}
 	};
 
-	this.publishMap = function () {
-		if (privateRepository.recognises && privateRepository.recognises(mapInfo.mapId)) {
+	this.publishMap = function (repository) {
+		if (privateRepository.recognises && (
+				(!repository && privateRepository.recognises(mapInfo.mapId))
+				||
+				privateRepository.recognises(repository)
+			)) {
 			privateRepository.saveMap(mapInfo);
 		} else {
 			publicrepository.saveMap(mapInfo);
