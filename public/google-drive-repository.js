@@ -10,7 +10,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				delimiter = "\r\n--" + boundary + "\r\n",
 				close_delim = "\r\n--" + boundary + "--",
 				metadata = {
-					'title': mapInfo.title,
+					'title': mapInfo.idea.title + ".mup",
 					'mimeType': contentType
 				},
 				base64Data = btoa(JSON.stringify(mapInfo.idea)),
@@ -171,7 +171,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						mapId: mapId,
 						googleId: googleId,
 						idea: idea,
-						title: idea.title
 					};
 				dispatchEvent('mapLoaded', mapInfo);
 			},
@@ -190,7 +189,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					mapId: mapId,
 					googleId: googleId,
 					idea: content(result.body),
-					title: result.title
 				};
 				dispatchEvent('mapLoaded', mapInfo);
 			},

@@ -65,7 +65,6 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 			publicrepository.loadMap(mapId);
 		}
 	};
-
 	this.publishMap = function (repository) {
 		if (privateRepository.recognises && (
 				(!repository && privateRepository.recognises(mapInfo.mapId))
@@ -78,17 +77,6 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 		} else {
 			publicrepository.saveMap(_.clone(mapInfo));
 		}
-	};
-
-	this.saveAs = function (title) {
-		usePrivateRepository(
-			function () {
-				privateRepository.saveMap({idea: mapInfo.idea, title: title});
-			},
-			function () {
-				dispatchEvent('saveAsFailed', 'private repository not ready');
-			}
-		);
 	};
 };
 
