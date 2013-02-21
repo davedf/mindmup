@@ -78,6 +78,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 		var element = jQuery(this),
 			template = element.find('.template').clone(),
 		    originalContent = element.children().clone(),
+			keep = element.children().filter('[data-mm-role=bookmark-keep]').clone(),
 			updateLinks = function () {
 				var list = bookmarks.links(),
 					link,
@@ -97,6 +98,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 							return false;
 						});
 					});
+					keep.clone().appendTo(element);
 				} else {
 					originalContent.clone().appendTo(element);
 				}
