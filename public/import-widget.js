@@ -26,11 +26,8 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 		};
 	fileInput.json_upload('/import', start, success, fail);
 	element.on('shown', function () {
-		fileInput.css('position', 'absolute');
-		fileInput.offset(selectButton.offset());
-		fileInput.width(selectButton.outerWidth());
-		fileInput.height(selectButton.outerHeight());
-		fileInput.css('opacity', 0);
+		fileInput.css('opacity', 0).css('position', 'absolute').offset(selectButton.offset()).width(selectButton.outerWidth())
+			.height(selectButton.outerHeight());
 	});
 	return element;
 }
