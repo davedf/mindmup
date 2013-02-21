@@ -104,6 +104,7 @@ post '/import' do
   if uploaded_type=='.mm'
     result=JSON.fast_generate(FreemindFormat.new().from_freemind(result))
   end
+  result
 end
 
 helpers do

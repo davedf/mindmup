@@ -21,6 +21,7 @@ $.fn.json_upload = function (action, start, complete, fail) {
 				result = JSON.parse(result);
 			} catch (err2) {
 				fail("invalid server response", result);
+				return;
 			}
 			if (result.error) {
 				fail(result.error);
