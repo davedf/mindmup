@@ -11,9 +11,9 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 		},
 		success = function (content) {
 			activityLog.log('Map', 'import:complete');
+			console.log('uploaded', content);
 			statusDiv.empty();
 			element.modal('hide');
-			mapRepository.setMap(content);
 		},
 		fail = function (error, detail) {
 			activityLog.log('Map', 'import:fail', error);

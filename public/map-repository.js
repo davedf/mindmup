@@ -6,14 +6,11 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
-	this.setMap = function (jsonContent) {
-		idea = content(jsonContent);
-		dispatchEvent('mapLoaded', idea, idea.id);
-	};
 	this.loadMap = function (mapUrl, mapId) {
-		var repository = this,
-			onMapLoaded = function (result) {
-				repository.setMap(result);
+		dispatchEvent('mapLoading', mapUrl, mapId);
+		var onMapLoaded = function (result) {
+				idea = content(result);
+				dispatchEvent('mapLoaded', idea, mapId);
 			},
 			onMapLoadingFailed = function (xhr, textStatus, errorMsg) {
 				dispatchEvent('mapLoadingFailed', mapUrl, 'status=' + textStatus + ' error msg=' + errorMsg);
@@ -25,7 +22,6 @@ MM.MapRepository = function (activityLog, alert, networkTimeoutMillis) {
 					{ dataType: 'json', success: onMapLoaded, error: onMapLoadingFailed }
 				);
 			};
-		dispatchEvent('mapLoading', mapUrl, mapId);
 		jQuery.ajax(
 			mapUrl,
 			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
@@ -133,8 +129,14 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 };
 MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {
 	'use strict';
-	var changed, saving, boundToMap,
-		toggleChange = function () {
+	var changed, saving;
+	mapRepository.addEventListener('mapLoaded', function (idea) {
+		jQuery(window).bind('beforeunload', function () {
+			if (changed && !saving) {
+				return 'There are unsaved changes.';
+			}
+		});
+		idea.addEventListener('changed', function (command, args) {
 			saving = false;
 			if (!changed) {
 				jQuery('#toolbarShare').hide();
@@ -144,20 +146,6 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 				activityLog.log('Map', 'Edit');
 				changed = true;
 			}
-		};
-	mapRepository.addEventListener('mapLoaded', function (idea) {
-		if (!boundToMap) {
-			jQuery(window).bind('beforeunload', function () {
-				if (changed && !saving) {
-					return 'There are unsaved changes.';
-				}
-			});
-			boundToMap = true;
-		} else {
-			toggleChange();
-		}
-		idea.addEventListener('changed', function (command, args) {
-			toggleChange();
 			activityLog.log(['Map', command].concat(args));
 		});
 	});
