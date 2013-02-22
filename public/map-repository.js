@@ -62,7 +62,6 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		listeners.mapLoaded(mapInfo);
 	};
 
-
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]);
 		repository.use(
@@ -80,6 +79,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		repository.use(
 			function () {
 				repository.saveMap(_.clone(mapInfo));
+			},
+			function () {
+				dispatchEvent('mapSavingFailed');
 			}
 		);
 	};

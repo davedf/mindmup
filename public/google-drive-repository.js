@@ -134,7 +134,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		}
 		if (!gapi.client) {
 			if (recursionCount > 10) {
-				failure();
+				if (failure) {
+					failure();
+				}
 				return;
 			}
 			setTimeout(function () {
