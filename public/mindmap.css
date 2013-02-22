@@ -93,11 +93,15 @@ div.colorPicker-picker { display: inline; float: left; background: none }
 	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/google_drive.png');
 	background-repeat: no-repeat;
 	background-position:left center;
-	margin-left: 16px;
 }
 .repo-a {
 	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/logo_16.png');
 	background-repeat: no-repeat;
 	background-position:left center;
-	margin-left: 16px;
+}
+a.repo-g, a.repo-a {
+	margin-left: 5px;
+}
+span.repo-g, span.repo-a {
+	padding-left:16px;
 }

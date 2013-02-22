@@ -35,10 +35,13 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			jQuery('#toolbarSave p').hide();
 			mapRepository.publishMap($(this).attr('data-mm-repository'));
 		});
-		element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=a] img').prop('src'));
+		$('#toolbarSave a[data-mm-repository]').addClass(function () {
+			return 'repo-' + $(this).data('mm-repository');
+		});
 		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
-			var repository = (mapId && mapId[0]) || 'a';
-			element.find('[data-mm-role=currentrepo]').prop('src', element.find('[data-mm-repository=' + repository + '] img').prop('src'));
+			var repository = (mapId && mapId[0]);
+			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
+			element.find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
 		});
 		mapRepository.addEventListener('mapSavingFailed', function () {
 			jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
