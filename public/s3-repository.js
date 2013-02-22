@@ -6,7 +6,11 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	var dispatchEvent = this.dispatchEvent;
 
 	this.recognises = function (mapId) {
-		return mapId.substr(0, 2) === "a1";
+		return mapId && mapId[0] === "a";
+	};
+
+	this.use = function (doThis) {
+		doThis();
 	};
 
 	this.loadMap = function (mapId) {
@@ -34,6 +38,7 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
 		);
 	};
+
 	this.saveMap = function (mapInfo) {
 		dispatchEvent('mapSaving');
 		var publishing = true,

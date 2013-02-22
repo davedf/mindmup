@@ -1,11 +1,11 @@
-/*jslint forin: true nomen: true*/
+/*jslint forin: true nomen: true, plusplus: true*/
 /*global _, content, jQuery, MM, observable, setTimeout, window, document*/
-MM.MapRepository = function (activityLog, alert, publicrepository, privateRepository) {
+MM.MapRepository = function (activityLog, alert, repositories) {
+	// order of repositories is important, the first repository is default
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
-		listenType,
 		listeners = {
 			'mapLoaded': function (newMapInfo) {
 				mapInfo = _.clone(newMapInfo);
@@ -33,43 +33,55 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 			'mapSaving': function () {
 				dispatchEvent('mapSaving');
 			}
+		},
+		addListeners = function (repository) {
+			var listenType;
+			for (listenType in listeners) {
+				repository.addEventListener(listenType, listeners[listenType]);
+			}
+		},
+		chooseRepository = function (identifiers) {
+			// order of identifiers is important, the first identifier takes precedence
+			var idIndex, repoIndex;
+			for (idIndex = 0; idIndex < identifiers.length; idIndex++) {
+				for (repoIndex = 0; repoIndex < repositories.length; repoIndex++) {
+					if (repositories[repoIndex].recognises(identifiers[idIndex])) {
+						return repositories[repoIndex];
+					}
+				}
+			}
+			return repositories[0];
 		};
+
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
-	for (listenType in listeners) {
-		publicrepository.addEventListener(listenType, listeners[listenType]);
-		privateRepository.addEventListener(listenType, listeners[listenType]);
-	}
+	_.each(repositories, addListeners);
+
 	this.setMap = function (mapInfo) {
 		listeners.mapLoaded(mapInfo);
 	};
+
+
 	this.loadMap = function (mapId) {
-		if (privateRepository.recognises && privateRepository.recognises(mapId)) {
-			privateRepository.use(
-				function () {
-					privateRepository.loadMap(mapId);
-				},
-				function () {
-					privateRepository.loadPublicMap(mapId);
-				}
-			);
-		} else {
-			publicrepository.loadMap(mapId);
-		}
+		var repository = chooseRepository([mapId]);
+		repository.use(
+			function () {
+				repository.loadMap(mapId);
+			},
+			function () {
+				repository.loadPublicMap(mapId);
+			}
+		);
 	};
-	this.publishMap = function (repository) {
-		if (privateRepository.recognises && (
-				(!repository && privateRepository.recognises(mapInfo.mapId))
-				||
-				privateRepository.recognises(repository)
-			)) {
-			privateRepository.use(function () {
-				privateRepository.saveMap(_.clone(mapInfo));
-			});
-		} else {
-			publicrepository.saveMap(_.clone(mapInfo));
-		}
+
+	this.publishMap = function (repositoryType) {
+		var repository = chooseRepository([repositoryType, mapInfo.mapId]);
+		repository.use(
+			function () {
+				repository.saveMap(_.clone(mapInfo));
+			}
+		);
 	};
 };
 
