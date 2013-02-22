@@ -84,6 +84,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				}
 			});
 		};
+	this.use = function (doThis, fail) {
+		var self = this;
+		if (self.ready()) {
+			doThis();
+		} else {
+			self.makeReady(doThis, fail);
+		}
+	};
 
 	this.ready = function () {
 		return driveLoaded && isAuthorised;
@@ -170,7 +178,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					mapInfo = {
 						mapId: mapId,
 						googleId: googleId,
-						idea: idea,
+						idea: idea
 					};
 				dispatchEvent('mapLoaded', mapInfo);
 			},
@@ -188,7 +196,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				var mapInfo = {
 					mapId: mapId,
 					googleId: googleId,
-					idea: content(result.body),
+					idea: content(result.body)
 				};
 				dispatchEvent('mapLoaded', mapInfo);
 			},

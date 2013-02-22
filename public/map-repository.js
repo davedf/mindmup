@@ -1,4 +1,4 @@
-/*jslint forin: true*/
+/*jslint forin: true nomen: true*/
 /*global _, content, jQuery, MM, observable, setTimeout, window, document*/
 MM.MapRepository = function (activityLog, alert, publicrepository, privateRepository) {
 	'use strict';
@@ -33,13 +33,6 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 			'mapSaving': function () {
 				dispatchEvent('mapSaving');
 			}
-		},
-		usePrivateRepository = function (doThis, fail) {
-			if (privateRepository.ready()) {
-				doThis();
-			} else {
-				privateRepository.makeReady(doThis, fail);
-			}
 		};
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
@@ -53,7 +46,7 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 	};
 	this.loadMap = function (mapId) {
 		if (privateRepository.recognises && privateRepository.recognises(mapId)) {
-			usePrivateRepository(
+			privateRepository.use(
 				function () {
 					privateRepository.loadMap(mapId);
 				},
@@ -71,7 +64,7 @@ MM.MapRepository = function (activityLog, alert, publicrepository, privateReposi
 				||
 				privateRepository.recognises(repository)
 			)) {
-			usePrivateRepository(function () {
+			privateRepository.use(function () {
 				privateRepository.saveMap(_.clone(mapInfo));
 			});
 		} else {
