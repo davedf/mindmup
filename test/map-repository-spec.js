@@ -1,11 +1,23 @@
-/*global jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
+/*jslint nomen: true*/
+/*global _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
 describe("Map Repository", function () {
 	'use strict';
 	var publicRepo, personalRepo, underTest;
 	beforeEach(function () {
-		publicRepo = observable({});
-		personalRepo = observable({});
-		underTest = new MM.MapRepository({}, {}, publicRepo, personalRepo);
+		var protoRepo = observable(
+			{
+				recognise: true,
+				recognises: function () {
+					return this.recognise;
+				},
+				use: function (doThis) {
+					doThis();
+				}
+			}
+		);
+		publicRepo = _.extend(protoRepo, {});
+		personalRepo = _.extend(protoRepo, {});
+		underTest = new MM.MapRepository({}, {}, [publicRepo, personalRepo]);
 	});
 	it("should use default repository to save", function () {
 		publicRepo.saveMap = jasmine.createSpy('saveMap');
@@ -21,5 +33,4 @@ describe("Map Repository", function () {
 
 		expect(publicRepo.loadMap).toHaveBeenCalledWith('foo');
 	});
-	
 });
