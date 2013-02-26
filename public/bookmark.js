@@ -43,10 +43,11 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 			throw new Error("Invalid bookmark");
 		}
 		var existing = _.find(list, function (b) {
-			return b.title === bookmark.title;
+			return (b.title === bookmark.title) || (b.mapId === bookmark.mapId);
 		});
 		if (existing) {
 			existing.mapId = bookmark.mapId;
+			existing.title = bookmark.title;
 		} else {
 			list.push(_.clone(bookmark));
 		}

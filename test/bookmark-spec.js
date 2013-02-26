@@ -31,6 +31,14 @@ describe("Magic bookmark manager", function () {
 			expect(_.size(bookmark.list())).toBe(1);
 			expect(bookmark.list()[0]).toEqual(updated);
 		});
+		it("should update a bookmark if one with the same id already exists", function () {
+			var url = {mapId:  'xxx', title:  'old'},
+				updated = {mapId:  'xxx', title:  'new'};
+			bookmark.store(url);
+			bookmark.store(updated);
+			expect(_.size(bookmark.list())).toBe(1);
+			expect(bookmark.list()[0]).toEqual(updated);
+		});
 		it("fails if mapId or title are not provided", function () {
 			bookmark.store(url);
 			expect(function () {bookmark.store({title: 'zeka'}); }).toThrow(new Error("Invalid bookmark"));
