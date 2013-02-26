@@ -122,32 +122,21 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			}
 		);
 	};
-
 	this.makeReady = function (complete, failure, recursionCount, self) {
 		recursionCount = recursionCount || 0;
 		self = self || this;
 		var checkAuth = self.checkAuth,
 			makeReady = self.makeReady;
 		if (driveLoaded) {
-			checkAuth(false, complete, failure);
+			checkAuth(false, complete, function () { checkAuth(true, complete, failure); });
 			return;
 		}
-		if (!gapi.client) {
-			if (recursionCount > 10) {
-				if (failure) {
-					failure();
-				}
-				return;
-			}
-			setTimeout(function () {
-				makeReady(complete, failure, recursionCount + 1, self);
-			}, 100);
-			return;
-		}
-		gapi.client.setApiKey(apiKey);
-		gapi.client.load('drive', 'v2', function () {
-			driveLoaded = true;
-			checkAuth(false, complete, failure);
+		self.loadApi(function () {
+			gapi.client.setApiKey(apiKey);
+			gapi.client.load('drive', 'v2', function () {
+				driveLoaded = true;
+				checkAuth(false, complete, function () { checkAuth(true, complete, failure); });
+			});
 		});
 	};
 
@@ -191,7 +180,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		downloadFile({downloadUrl: 'https://docs.google.com/file/d/' + googleId + '/edit?usp=sharing&pli=1'}, success, fail);
 
 	};
-
+	this.loadApi = function (onComplete) {
+		if (window.gapi && window.gapi.client) {
+			onComplete();
+		} else {
+			window.googleClientLoaded = function () { onComplete(); };
+			jQuery('<script src="https://apis.google.com/js/client.js?onload=googleClientLoaded"></script>').appendTo('body');
+		}
+	};
 	this.loadMap = function (mapId) {
 		var googleId = mapId.substr(2),
 			success = function (result) {
