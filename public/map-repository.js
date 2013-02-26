@@ -135,7 +135,7 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
 	});
 	mapRepository.addEventListener('authRequired', function (message, authCallback) {
-		alertId = alert.show(message, '<a href="#" data-mm-role="auth">Click here to authenticate</a>', 'error');
+		alertId = alert.show(message, '<a href="#" data-mm-role="auth">Click here to authenticate</a>');
 		jQuery('[data-mm-role=auth]').click(function () {
 			alert.hide(alertId);
 			authCallback();

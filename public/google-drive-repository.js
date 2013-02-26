@@ -125,7 +125,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	this.authenticate = function (complete, failure) {
 		var self = this;
 		this.checkAuth(false, complete, function () {
-			self.dispatchEvent('authRequired', 'This operation requires Google authentication!', function () {
+			self.dispatchEvent('authRequired', 'This operation requires authentication through Google!', function () {
 				self.checkAuth(true, complete, failure);
 			});
 		});
