@@ -122,20 +122,25 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			}
 		);
 	};
-	this.makeReady = function (complete, failure, recursionCount, self) {
-		recursionCount = recursionCount || 0;
-		self = self || this;
-		var checkAuth = self.checkAuth,
-			makeReady = self.makeReady;
+	this.authenticate = function (complete, failure) {
+		var self = this;
+		this.checkAuth(false, complete, function () {
+			self.dispatchEvent('authRequired', 'This operation requires Google authentication!', function () {
+				self.checkAuth(true, complete, failure);
+			});
+		});
+	};
+	this.makeReady = function (complete, failure) {
+		var self = this;
 		if (driveLoaded) {
-			checkAuth(false, complete, function () { checkAuth(true, complete, failure); });
+			this.authenticate();
 			return;
 		}
-		self.loadApi(function () {
+		this.loadApi(function () {
 			gapi.client.setApiKey(apiKey);
 			gapi.client.load('drive', 'v2', function () {
 				driveLoaded = true;
-				checkAuth(false, complete, function () { checkAuth(true, complete, failure); });
+				self.authenticate(complete, failure);
 			});
 		});
 	};

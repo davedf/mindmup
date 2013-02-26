@@ -27,6 +27,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			'mapLoadingFailed': function (mapUrl, reason) {
 				dispatchEvent('mapLoadingFailed', mapUrl, reason);
 			},
+			'authRequired': function (message, authCallback) {
+				dispatchEvent('authRequired', message, authCallback);
+			},
 			'mapSavingFailed': function () {
 				dispatchEvent('mapSavingFailed');
 			},
@@ -130,6 +133,13 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	var alertId;
 	mapRepository.addEventListener('mapLoading', function () {
 		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
+	});
+	mapRepository.addEventListener('authRequired', function (message, authCallback) {
+		alertId = alert.show(message, '<a href="#" data-mm-role="auth">Click here to authenticate</a>', 'error');
+		jQuery('[data-mm-role=auth]').click(function () {
+			alert.hide(alertId);
+			authCallback();
+		});
 	});
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
