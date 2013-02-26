@@ -49,7 +49,6 @@ MM.main = function (config) {
 		jQuery('#toolbarShare').shareWidget(config.googleShortenerApiKey, activityLog);
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		mapRepository.loadMap(config.mapId);
-		window.mapRepo = mapRepository;
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };

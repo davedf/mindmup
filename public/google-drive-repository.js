@@ -162,24 +162,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			});
 		retrievePageOfFiles(initialRequest, []);
 	};
-	this.loadPublicMap = function (mapId) {
-		var googleId = mapId.substr(2),
-			success = function (result) {
-				var idea = content(result.body),
-					mapInfo = {
-						mapId: mapId,
-						googleId: googleId,
-						idea: idea
-					};
-				dispatchEvent('mapLoaded', mapInfo);
-			},
-			fail = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
-			};
-		dispatchEvent('mapLoading', mapId);
-		downloadFile({downloadUrl: 'https://docs.google.com/file/d/' + googleId + '/edit?usp=sharing&pli=1'}, success, fail);
-
-	};
 	this.loadApi = function (onComplete) {
 		if (window.gapi && window.gapi.client) {
 			onComplete();
@@ -199,7 +181,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				dispatchEvent('mapLoaded', mapInfo);
 			},
 			fail = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', 'status=' + textStatus + ' error msg=' + errorMsg);
+				dispatchEvent('mapLoadingFailed', mapId, textStatus);
 			};
 		dispatchEvent('mapLoading', mapId);
 		loadFile(googleId, success, fail);

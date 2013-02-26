@@ -69,7 +69,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				repository.loadMap(mapId);
 			},
 			function () {
-				repository.loadPublicMap(mapId);
+				dispatchEvent('mapLoadingFailed', mapId);
 			}
 		);
 	};
@@ -134,7 +134,7 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
 	});
-	mapRepository.addEventListener('mapLoadingFailed', function () {
+	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
 		alert.hide(alertId);
 		alert.show(
 			'Unfortunately, there was a problem loading the map.',
