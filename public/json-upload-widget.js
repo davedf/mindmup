@@ -2,7 +2,8 @@
 $.fn.json_upload = function (action, start, complete, fail) {
     'use strict';
     var element = this,
-        sequence = $('iframe').length;
+        sequence = $('iframe').length,
+		active = false;
 
 	start = start || function (name) { console.log("Uploading", name); };
 	complete = complete || function (content) { console.log("Uploaded", content); };
@@ -11,6 +12,10 @@ $.fn.json_upload = function (action, start, complete, fail) {
     $('<iframe style="display:none" name="upload-' + sequence + '"></iframe>').appendTo('body').load(
 		function () {
 			var result;
+			if (!active)  {
+				return;
+			}
+			active = false;
 			try {
 				result = this.contentWindow.document.body.innerHTML;
 			} catch (err) {
@@ -33,6 +38,7 @@ $.fn.json_upload = function (action, start, complete, fail) {
     element.wrap('<form enctype="multipart/form-data" method="post" action="' + action + '" target="upload-' + sequence + '">');
     element.parents('form').submit(
 		function () {
+			active = true;
 			start((element.val() || '').replace(/.*[\\\/]/g, ''));
 		}
 	);
