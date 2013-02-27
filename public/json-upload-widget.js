@@ -12,7 +12,7 @@ $.fn.json_upload = function (action, start, complete, fail) {
     $('<iframe style="display:none" name="upload-' + sequence + '"></iframe>').appendTo('body').load(
 		function () {
 			var result;
-			if (!active)  {
+			if (!active) {
 				return;
 			}
 			active = false;

@@ -26,6 +26,7 @@ describe("Json Upload Widget", function () {
 	function fakeUpload(content) {
 		readDeps();
 		hiddenFrame[0].contentWindow.document.body.innerHTML = content;
+		parentForm.submit();
 		hiddenFrame.load();
 	}
 	it("submits the form when the value is changed", function () {
@@ -61,5 +62,16 @@ describe("Json Upload Widget", function () {
 		input.json_upload('/', null, null, spy);
 		fakeUpload('{"error":"fake error"}');
 		expect(spy).toHaveBeenCalledWith('fake error');
+	});
+	it("does not execute any callbacks if the frame loads but the form was not submitted - firefox bug check", function () {
+		var begin = jasmine.createSpy('begin'),
+			success = jasmine.createSpy('success'),
+			fail = jasmine.createSpy('fail');
+		input.json_upload('/', begin, success, fail);
+		readDeps();
+		hiddenFrame.load();
+		expect(begin).not.toHaveBeenCalled();
+		expect(success).not.toHaveBeenCalled();
+		expect(fail).not.toHaveBeenCalled();
 	});
 });
