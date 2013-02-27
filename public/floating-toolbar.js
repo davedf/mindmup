@@ -22,10 +22,9 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Tab</strong>: Add child<br/>' +
 				'<strong>Shift+Tab</strong>: Insert parent<br/>' +
 				'<strong>Space</strong>: Edit node<br/>' +
-				'<strong>Backspace</strong>: Remove node<br/>' +
-				'<strong>Delete</strong>: Remove node<br/>' +
+				'<strong>Backspace</strong> or <strong>Delete</strong>: Remove node<br/>' +
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
-				'<strong>Shift + Up Arrow</strong>: Expand or collapse an idea<br/>'
+				'<strong>/</strong> or <strong>Shift+Up Arrow</strong>: Expand or collapse<br/>'
 		});
 		jQuery('#menuPublish').add('#toolbarSave a').click(function () {
 			jQuery('#menuPublish')
