@@ -2,35 +2,60 @@
 /*global _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
 describe("Map Repository", function () {
 	'use strict';
-	var publicRepo, personalRepo, underTest;
+	var repo1, repo2, underTest;
 	beforeEach(function () {
 		var protoRepo = observable(
 			{
-				recognise: true,
+				recognise: false,
 				recognises: function () {
 					return this.recognise;
 				},
 				use: function (doThis) {
 					doThis();
+				},
+				loadMap: function (mapId) {
+
 				}
 			}
 		);
-		publicRepo = _.extend(protoRepo, {});
-		personalRepo = _.extend(protoRepo, {});
-		underTest = new MM.MapRepository({}, {}, [publicRepo, personalRepo]);
+		repo1 = _.extend({}, protoRepo);
+		repo2 = _.extend({}, protoRepo);
+		underTest = new MM.MapRepository({}, {}, [repo1, repo2]);
 	});
-	it("should use default repository to save", function () {
-		publicRepo.saveMap = jasmine.createSpy('saveMap');
+	describe("loadMap", function () {
+		it("should check each repository to see if it recognises the mapId", function () {
+			spyOn(repo1, 'recognises').andCallThrough();
+			spyOn(repo2, 'recognises').andCallThrough();
+			underTest.loadMap('foo');
+			expect(repo1.recognises).toHaveBeenCalledWith('foo');
+			expect(repo2.recognises).toHaveBeenCalledWith('foo');
+		});
+		it("should use the repository which recognises the mapId", function () {
+			repo2.recognise = true;
+			repo1.loadMap = jasmine.createSpy('loadMap1');
+			repo2.loadMap = jasmine.createSpy('loadMap2');
 
-		underTest.publishMap();
+			underTest.loadMap('foo');
 
-		expect(publicRepo.saveMap).toHaveBeenCalled();
+			expect(repo1.loadMap).not.toHaveBeenCalledWith('foo');
+			expect(repo2.loadMap).toHaveBeenCalledWith('foo');
+
+		});
+		it("should use first repository to load as a fallback option", function () {
+			repo1.loadMap = jasmine.createSpy('loadMap');
+
+			underTest.loadMap('foo');
+
+			expect(repo1.loadMap).toHaveBeenCalledWith('foo');
+		});
 	});
-	it("should use default repository to load", function () {
-		publicRepo.loadMap = jasmine.createSpy('loadMap');
+	describe("saveMap", function () {
+		it("should use default repository to save", function () {
+			repo1.saveMap = jasmine.createSpy('saveMap');
 
-		underTest.loadMap('foo');
+			underTest.publishMap();
 
-		expect(publicRepo.loadMap).toHaveBeenCalledWith('foo');
+			expect(repo1.saveMap).toHaveBeenCalled();
+		});
 	});
 });
