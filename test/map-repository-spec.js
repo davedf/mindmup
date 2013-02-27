@@ -7,20 +7,25 @@ describe("Map Repository", function () {
 		var protoRepo = observable(
 			{
 				recognise: false,
+				useable: true,
 				recognises: function () {
 					return this.recognise;
 				},
-				use: function (doThis) {
-					doThis();
+				use: function (doThis, fail) {
+					if (this.useable) {
+						doThis();
+					} else if (fail) {
+						fail();
+					}
 				},
 				loadMap: function (mapId) {
-
 				}
 			}
-		);
+		),
+			s = function () {};
 		repo1 = _.extend({}, protoRepo);
 		repo2 = _.extend({}, protoRepo);
-		underTest = new MM.MapRepository({}, {}, [repo1, repo2]);
+		underTest = new MM.MapRepository({error: s}, {hide: s, show: s}, [repo1, repo2]);
 	});
 	describe("loadMap", function () {
 		it("should check each repository to see if it recognises the mapId", function () {
@@ -39,7 +44,6 @@ describe("Map Repository", function () {
 
 			expect(repo1.loadMap).not.toHaveBeenCalledWith('foo');
 			expect(repo2.loadMap).toHaveBeenCalledWith('foo');
-
 		});
 		it("should use first repository to load as a fallback option", function () {
 			repo1.loadMap = jasmine.createSpy('loadMap');
@@ -47,6 +51,15 @@ describe("Map Repository", function () {
 			underTest.loadMap('foo');
 
 			expect(repo1.loadMap).toHaveBeenCalledWith('foo');
+		});
+		it("should dispatch mapLoadingFailedEvent if repository not usable", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapLoadingFailed', listener);
+			repo1.useable = false;
+
+			underTest.loadMap('foo');
+
+			expect(listener).toHaveBeenCalledWith('foo');
 		});
 	});
 	describe("saveMap", function () {
