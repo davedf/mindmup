@@ -13,16 +13,16 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					'title': mapInfo.idea.title + ".mup",
 					'mimeType': contentType
 				},
-				base64Data = btoa(JSON.stringify(mapInfo.idea)),
+				//base64Data = btoa(JSON.stringify(mapInfo.idea)),
+				data = JSON.stringify (mapInfo.idea),
 				multipartRequestBody =
 					delimiter +
 					'Content-Type: application/json\r\n\r\n' +
 					JSON.stringify(metadata) +
 					delimiter +
 					'Content-Type: ' + contentType + '\r\n' +
-					'Content-Transfer-Encoding: base64\r\n' +
 					'\r\n' +
-					base64Data +
+					data +
 					close_delim,
 				request = gapi.client.request({
 					'path': '/upload/drive/v2/files' + (mapInfo.googleId ? "/" + mapInfo.googleId : ""),
