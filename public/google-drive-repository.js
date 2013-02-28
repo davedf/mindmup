@@ -188,7 +188,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			fail = function (xhr, textStatus, errorMsg) {
 				dispatchEvent('mapLoadingFailed', mapId, textStatus);
 			};
-		dispatchEvent('mapLoading', mapId);
 		loadFile(googleId, success, fail);
 	};
 

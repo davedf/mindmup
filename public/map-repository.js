@@ -67,6 +67,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]);
+		dispatchEvent('mapLoading', mapId);
 		repository.use(
 			function () {
 				repository.loadMap(mapId);

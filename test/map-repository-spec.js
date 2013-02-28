@@ -25,7 +25,7 @@ describe("Map Repository", function () {
 			s = function () {};
 		repo1 = _.extend({}, protoRepo);
 		repo2 = _.extend({}, protoRepo);
-		underTest = new MM.MapRepository({error: s}, {hide: s, show: s}, [repo1, repo2]);
+		underTest = new MM.MapRepository({error: s, log: s}, {hide: s, show: s}, [repo1, repo2]);
 	});
 	describe("loadMap", function () {
 		it("should check each repository to see if it recognises the mapId", function () {
@@ -60,6 +60,15 @@ describe("Map Repository", function () {
 			underTest.loadMap('foo');
 
 			expect(listener).toHaveBeenCalledWith('foo');
+		});
+		it("should dispatch mapLoading Event beforeLoadingStarts", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapLoading', listener);
+
+			underTest.loadMap('foo');
+
+			expect(listener).toHaveBeenCalledWith('foo');
+
 		});
 	});
 	describe("saveMap", function () {

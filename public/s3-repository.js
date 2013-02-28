@@ -14,7 +14,6 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	};
 
 	this.loadMap = function (mapId) {
-		dispatchEvent('mapLoading', s3Url, mapId);
 		var onMapLoaded = function (result) {
 				var mapInfo = {
 					mapId: mapId,
