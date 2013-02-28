@@ -2,43 +2,45 @@
 /*global _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
 describe("Map Repository", function () {
 	'use strict';
-	var repo1, repo2, underTest;
+	var repo1, repo2, underTest,
+		qstub = function (functions) {
+			var ret = {},
+				dummy = function () {};
+			_.each(functions, function (func) {
+				ret[func] = function () {};
+			});
+			return ret;
+		};
 	beforeEach(function () {
 		var protoRepo = observable(
 			{
-				recognise: false,
 				useable: true,
-				recognises: function () {
-					return this.recognise;
-				},
 				use: function (doThis, fail) {
 					if (this.useable) {
 						doThis();
 					} else if (fail) {
 						fail();
 					}
-				},
-				loadMap: function (mapId) {
 				}
 			}
 		),
-			s = function () {};
-		repo1 = _.extend({}, protoRepo);
-		repo2 = _.extend({}, protoRepo);
-		underTest = new MM.MapRepository({error: s, log: s}, {hide: s, show: s}, [repo1, repo2]);
+			repoActions = ['loadMap', 'saveMap', 'recognises'];
+		repo1 = _.extend(qstub(repoActions), protoRepo);
+		repo2 = _.extend(qstub(repoActions), protoRepo);
+		underTest = new MM.MapRepository(qstub(['error', 'log']), qstub(['hide', 'show']), [repo1, repo2]);
 	});
 	describe("loadMap", function () {
 		it("should check each repository to see if it recognises the mapId", function () {
-			spyOn(repo1, 'recognises').andCallThrough();
-			spyOn(repo2, 'recognises').andCallThrough();
+			spyOn(repo1, 'recognises');
+			spyOn(repo2, 'recognises');
 			underTest.loadMap('foo');
 			expect(repo1.recognises).toHaveBeenCalledWith('foo');
 			expect(repo2.recognises).toHaveBeenCalledWith('foo');
 		});
 		it("should use the repository which recognises the mapId", function () {
-			repo2.recognise = true;
-			repo1.loadMap = jasmine.createSpy('loadMap1');
-			repo2.loadMap = jasmine.createSpy('loadMap2');
+			spyOn(repo2, 'recognises').andReturn(true);
+			spyOn(repo1, 'loadMap');
+			spyOn(repo2, 'loadMap');
 
 			underTest.loadMap('foo');
 
