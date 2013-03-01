@@ -13,18 +13,18 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			}).end()
 			.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		keyboardShortcuts.popover({
-			placement: function () {
-				return keyboardShortcuts.offset().left < 250 ? 'right' : 'left';
-			},
+			placement: 'bottom',
 			trigger: 'click',
 			html: 'true',
 			content: '<strong>Enter</strong>: Add sibling<br/>' +
 				'<strong>Tab</strong>: Add child<br/>' +
 				'<strong>Shift+Tab</strong>: Insert parent<br/>' +
 				'<strong>Space</strong>: Edit node<br/>' +
-				'<strong>Backspace</strong> or <strong>Delete</strong>: Remove node<br/>' +
+				'<strong>Backspace</strong>/<strong>DEL</strong>: Remove<br/>' +
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
-				'<strong>/</strong> or <strong>Shift+Up Arrow</strong>: Expand or collapse<br/>'
+				'<strong>/</strong> or <strong>Shift+Up</strong>: Expand or collapse<br/>' +
+				'<strong>Ctrl+Z</strong>/<strong>Cmd+Z</strong>: Undo<br/>' +
+				'<strong>Ctrl+Y</strong>/<strong>Cmd+Y</strong>: Redo<br/>'
 		});
 		jQuery('#menuPublish').add('#toolbarSave a').click(function () {
 			jQuery('#menuPublish')
