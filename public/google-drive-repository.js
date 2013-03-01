@@ -14,7 +14,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					'mimeType': contentType
 				},
 				//base64Data = btoa(JSON.stringify(mapInfo.idea)),
-				data = JSON.stringify (mapInfo.idea),
+				data = JSON.stringify(mapInfo.idea),
 				multipartRequestBody =
 					delimiter +
 					'Content-Type: application/json\r\n\r\n' +
@@ -176,35 +176,32 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		}
 	};
 	this.loadMap = function (mapId) {
-		var googleId = mapId.substr(2),
+		var deferred = jQuery.Deferred(),
+			googleId = mapId.substr(2),
 			success = function (result) {
 				var mapInfo = {
 					mapId: mapId,
 					googleId: googleId,
 					idea: content(result.body)
 				};
-				dispatchEvent('mapLoaded', mapInfo);
-			},
-			fail = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', mapId, textStatus);
+				deferred.resolve(mapInfo);
 			};
-		loadFile(googleId, success, fail);
+		loadFile(googleId, success, deferred.reject);
+		return deferred.promise();
 	};
 
 	this.saveMap = function (mapInfo) {
-		dispatchEvent('mapSaving');
-		var saveFailed = function () {
-				dispatchEvent('mapSavingFailed');
-			},
-			timeout = setTimeout(saveFailed, networkTimeoutMillis);
+		var deferred = jQuery.Deferred(),
+			timeout = setTimeout(deferred.reject, networkTimeoutMillis);
 		saveFile(
 			mapInfo,
 			function (savedMapInfo) {
 				clearTimeout(timeout);
-				dispatchEvent('mapSaved', savedMapInfo);
+				deferred.resolve(savedMapInfo);
 			},
-			saveFailed
+			deferred.reject
 		);
+		return deferred.promise();
 	};
 };
 

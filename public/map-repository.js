@@ -7,34 +7,11 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
 		listeners = {
-			'mapLoaded': function (newMapInfo) {
-				mapInfo = _.clone(newMapInfo);
-				dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
-			},
 			'Before Upload': function (id, idea) {
 				dispatchEvent('Before Upload', id, idea);
 			},
-			'mapSaved': function (savedMapInfo) {
-				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
-				if (mapInfo.mapId !== savedMapInfo.mapId) {
-					document.location = "/map/" + savedMapInfo.mapId;
-				}
-				mapInfo = savedMapInfo;
-			},
-			'mapLoading': function (mapUrl, mapId) {
-				dispatchEvent('mapLoading', mapUrl, mapId);
-			},
-			'mapLoadingFailed': function (mapUrl, reason) {
-				dispatchEvent('mapLoadingFailed', mapUrl, reason);
-			},
 			'authRequired': function (message, authCallback) {
 				dispatchEvent('authRequired', message, authCallback);
-			},
-			'mapSavingFailed': function () {
-				dispatchEvent('mapSavingFailed');
-			},
-			'mapSaving': function () {
-				dispatchEvent('mapSaving');
 			}
 		},
 		addListeners = function (repository) {
@@ -54,23 +31,29 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				}
 			}
 			return repositories[0];
+		},
+		mapLoaded = function (newMapInfo) {
+			mapInfo = _.clone(newMapInfo);
+			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
 		};
-
+	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 	_.each(repositories, addListeners);
 
-	this.setMap = function (mapInfo) {
-		listeners.mapLoaded(mapInfo);
-	};
+	this.setMap = mapLoaded;
 
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]);
 		dispatchEvent('mapLoading', mapId);
 		repository.use(
 			function () {
-				repository.loadMap(mapId);
+				repository.loadMap(mapId).fail(
+					function (errorMessage) {
+						dispatchEvent('mapLoadingFailed', mapId, errorMessage);
+					}
+				).done(mapLoaded);
 			},
 			function () {
 				dispatchEvent('mapLoadingFailed', mapId);
@@ -79,10 +62,19 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	};
 
 	this.publishMap = function (repositoryType) {
+		dispatchEvent('mapSaving');
 		var repository = chooseRepository([repositoryType, mapInfo.mapId]);
 		repository.use(
 			function () {
-				repository.saveMap(_.clone(mapInfo));
+				repository.saveMap(_.clone(mapInfo)).fail(function () {
+					dispatchEvent('mapSavingFailed');
+				}).done(function (savedMapInfo) {
+					dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
+					if (mapInfo.mapId !== savedMapInfo.mapId) {
+						dispatchEvent('mapSavedAsNew', savedMapInfo.mapId);
+					}
+					mapInfo = savedMapInfo;
+				});
 			},
 			function () {
 				dispatchEvent('mapSavingFailed');
@@ -197,8 +189,6 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 	mapRepository.addEventListener('mapSaving', function () {
 		saving = true;
 	});
-
-
 	mapRepository.addEventListener('mapSaved', function () {
 		saving = false;
 		changed = false;
@@ -206,5 +196,11 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		jQuery('#toolbarSave').hide();
 		jQuery('#menuExport').show();
 		jQuery('#menuPublish').hide();
+	});
+};
+MM.MapRepository.mapLocationChange = function (mapRepository) {
+	'use strict';
+	mapRepository.addEventListener('mapSavedAsNew', function (newMapId) {
+		document.location = "/map/" + newMapId;
 	});
 };
