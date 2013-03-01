@@ -6,17 +6,12 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	observable(this);
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
-		listeners = {
-			'Before Upload': function (id, idea) {
-				dispatchEvent('Before Upload', id, idea);
-			}
-		},
 		addListeners = function (repository) {
-			var listenType;
 			MM.MapRepository.alerts(repository, alert);
-			for (listenType in listeners) {
-				repository.addEventListener(listenType, listeners[listenType]);
-			}
+			//Remove this once s3 repository is not redirecting after save
+			repository.addEventListener('mapSaved', function (key, idea) { 
+				dispatchEvent('mapSaved', key, idea);
+			});
 		},
 		chooseRepository = function (identifiers) {
 			// order of identifiers is important, the first identifier takes precedence
@@ -94,7 +89,7 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
 		activityLog.error('Error loading map document [' + mapUrl + '] ' + reason);
 	});
-	mapRepository.addEventListener('Before Upload', function (id, idea) {
+	mapRepository.addEventListener('mapSaved', function (id, idea) {
 		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
 			activityLog.log('Map', 'Created Relevant', id);
 		} else if (wasRelevantOnLoad) {
@@ -169,9 +164,6 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 			toggleChange();
 			activityLog.log(['Map', command].concat(args));
 		});
-	});
-	mapRepository.addEventListener('Before Upload', function () {
-		saving = true;
 	});
 	mapRepository.addEventListener('mapSaving', function () {
 		saving = true;

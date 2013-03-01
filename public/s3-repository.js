@@ -47,7 +47,8 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 				for (name in result) {
 					jQuery('#s3form [name=' + name + ']').val(result[name]);
 				}
-				dispatchEvent('Before Upload', result.s3UploadIdentifier, mapInfo.idea);
+				//Not actually saved, but needs to happen now as form will redirect after
+				dispatchEvent('mapSaved', result.s3UploadIdentifier, mapInfo.idea);
 				jQuery('#s3form').submit();
 			},
 			fetchPublishingConfig = function () {

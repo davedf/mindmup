@@ -26,12 +26,6 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 	if (storage && storageKey) {
 		list = storage.getItem(storageKey) || [];
 	}
-	mapRepository.addEventListener('Before Upload', function (key, idea) {
-		self.store({
-			mapId: key,
-			title: idea.title
-		});
-	});
 	mapRepository.addEventListener('mapSaved', function (key, idea) {
 		self.store({
 			mapId: key,
