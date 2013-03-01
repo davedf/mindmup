@@ -64,10 +64,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				dispatchEvent('mapSavingFailed');
 			})
 			.done(function (savedMapInfo) {
-				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
-				if (mapInfo.mapId !== savedMapInfo.mapId) {
-					dispatchEvent('mapSavedAsNew', savedMapInfo.mapId);
-				}
+				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
 				mapInfo = savedMapInfo;
 			});
 	};
@@ -191,7 +188,9 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 };
 MM.MapRepository.mapLocationChange = function (mapRepository) {
 	'use strict';
-	mapRepository.addEventListener('mapSavedAsNew', function (newMapId) {
-		document.location = "/map/" + newMapId;
+	mapRepository.addEventListener('mapSaved', function (newMapId, idea, idHasChanged) {
+		if (idHasChanged) {
+			document.location = "/map/" + newMapId;
+		}	
 	});
 };

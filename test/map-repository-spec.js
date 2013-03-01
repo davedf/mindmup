@@ -92,8 +92,10 @@ describe("Map Repository", function () {
 		});
 	});
 	describe("saveMap", function () {
+		var loadedMapInfo;
 		beforeEach(function () {
-			underTest.setMap(stubMapInfo('loadedMapId'));
+			loadedMapInfo = stubMapInfo('loadedMapId');
+			underTest.setMap(loadedMapInfo);
 		});
 		it("should use first repository to load as a fallback option", function () {
 			spyOn(repo1, 'saveMap').andCallThrough();
@@ -158,13 +160,11 @@ describe("Map Repository", function () {
 
 			underTest.publishMap();
 
-			expect(listener).toHaveBeenCalled();
+			expect(listener).toHaveBeenCalledWith('loadedMapId', loadedMapInfo.idea, false);
 		});
 		it("should dispatch mapSaved and mapSavedAsNew event if saveMap succeeds and mapId has changed", function () {
-			var listener = jasmine.createSpy(),
-				listenerNew = jasmine.createSpy();
+			var listener = jasmine.createSpy();
 			underTest.addEventListener('mapSaved', listener);
-			underTest.addEventListener('mapSavedAsNew', listenerNew);
 			repo1.saveMap = function (saveMapinfo) {
 				var deferred = jQuery.Deferred();
 				deferred.resolve(stubMapInfo('newMapId'));
@@ -173,8 +173,7 @@ describe("Map Repository", function () {
 
 			underTest.publishMap();
 
-			expect(listener).toHaveBeenCalled();
-			expect(listenerNew).toHaveBeenCalled();
+			expect(listener).toHaveBeenCalledWith('newMapId', loadedMapInfo.idea, true);
 		});
 
 	});
