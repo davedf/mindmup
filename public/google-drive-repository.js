@@ -191,18 +191,17 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.saveMap = function (mapInfo) {
-		var saveFailed = function () {
-				dispatchEvent('mapSavingFailed');
-			},
-			timeout = setTimeout(saveFailed, networkTimeoutMillis);
+		var deferred = jQuery.Deferred(),
+			timeout = setTimeout(deferred.reject, networkTimeoutMillis);
 		saveFile(
 			mapInfo,
 			function (savedMapInfo) {
 				clearTimeout(timeout);
-				dispatchEvent('mapSaved', savedMapInfo);
+				deferred.resolve(savedMapInfo);
 			},
-			saveFailed
+			deferred.reject
 		);
+		return deferred.promise();
 	};
 };
 

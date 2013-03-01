@@ -15,6 +15,7 @@ describe("Map Repository", function () {
 			return {mapId: mapId, idea: qstub(['addEventListener'])};
 		};
 	beforeEach(function () {
+		MM.MapRepository.mapLocationChange = function () {};
 		var protoRepo = observable(
 			{
 				useable: true,
@@ -25,19 +26,19 @@ describe("Map Repository", function () {
 						fail();
 					}
 				},
-				loads: true,
 				loadMap: function (mapId) {
 					var deferred = jQuery.Deferred();
-					if (this.loads) {
-						deferred.resolve(stubMapInfo(mapId));
-					} else {
-						deferred.reject('errorMsg');
-					}
+					deferred.resolve(stubMapInfo(mapId));
+					return deferred.promise();
+				},
+				saveMap: function (saveMapinfo) {
+					var deferred = jQuery.Deferred();
+					deferred.resolve(stubMapInfo(saveMapinfo.mapId));
 					return deferred.promise();
 				}
 			}
 		),
-			repoActions = ['saveMap', 'recognises'];
+			repoActions = ['recognises'];
 		repo1 = _.extend(qstub(repoActions), protoRepo);
 		repo2 = _.extend(qstub(repoActions), protoRepo);
 		underTest = new MM.MapRepository(qstub(['error', 'log']), qstub(['hide', 'show']), [repo1, repo2]);
@@ -88,7 +89,11 @@ describe("Map Repository", function () {
 		it("should dispatch mapLoadingFailed event if loadmap fails", function () {
 			var listener = jasmine.createSpy();
 			underTest.addEventListener('mapLoadingFailed', listener);
-			repo1.loads = false;
+			repo1.loadMap = function (mapId) {
+				var deferred = jQuery.Deferred();
+				deferred.reject('errorMsg');
+				return deferred.promise();
+			};
 
 			underTest.loadMap('foo');
 
@@ -108,8 +113,7 @@ describe("Map Repository", function () {
 			underTest.setMap(stubMapInfo('loadedMapId'));
 		});
 		it("should use first repository to load as a fallback option", function () {
-			repo1.saveMap = jasmine.createSpy('saveMap');
-
+			spyOn(repo1, 'saveMap').andCallThrough();
 			underTest.publishMap();
 
 			expect(repo1.saveMap).toHaveBeenCalled();
@@ -159,5 +163,43 @@ describe("Map Repository", function () {
 
 			expect(listener).toHaveBeenCalled();
 		});
+		it("should dispatch mapLoadingFailed event if saveMap fails", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapSavingFailed', listener);
+			repo1.saveMap = function (saveMapinfo) {
+				var deferred = jQuery.Deferred();
+				deferred.reject();
+				return deferred.promise();
+			};
+
+			underTest.publishMap();
+
+			expect(listener).toHaveBeenCalled();
+		});
+		it("should dispatch mapSaved event if saveMap succeeds and mapId not changed", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapSaved', listener);
+
+			underTest.publishMap();
+
+			expect(listener).toHaveBeenCalled();
+		});
+		it("should dispatch mapSaved and mapSavedAsNew event if saveMap succeeds and mapId has changed", function () {
+			var listener = jasmine.createSpy(),
+				listenerNew = jasmine.createSpy();
+			underTest.addEventListener('mapSaved', listener);
+			underTest.addEventListener('mapSavedAsNew', listenerNew);
+			repo1.saveMap = function (saveMapinfo) {
+				var deferred = jQuery.Deferred();
+				deferred.resolve(stubMapInfo('newMapId'));
+				return deferred.promise();
+			};
+
+			underTest.publishMap();
+
+			expect(listener).toHaveBeenCalled();
+			expect(listenerNew).toHaveBeenCalled();
+		});
+
 	});
 });

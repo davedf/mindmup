@@ -10,18 +10,8 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			'Before Upload': function (id, idea) {
 				dispatchEvent('Before Upload', id, idea);
 			},
-			'mapSaved': function (savedMapInfo) {
-				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
-				if (mapInfo.mapId !== savedMapInfo.mapId) {
-					document.location = "/map/" + savedMapInfo.mapId;
-				}
-				mapInfo = savedMapInfo;
-			},
 			'authRequired': function (message, authCallback) {
 				dispatchEvent('authRequired', message, authCallback);
-			},
-			'mapSavingFailed': function () {
-				dispatchEvent('mapSavingFailed');
 			}
 		},
 		addListeners = function (repository) {
@@ -46,7 +36,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			mapInfo = _.clone(newMapInfo);
 			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
 		};
-
+	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
@@ -76,7 +66,15 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		var repository = chooseRepository([repositoryType, mapInfo.mapId]);
 		repository.use(
 			function () {
-				repository.saveMap(_.clone(mapInfo));
+				repository.saveMap(_.clone(mapInfo)).fail(function () {
+					dispatchEvent('mapSavingFailed');
+				}).done(function (savedMapInfo) {
+					dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
+					if (mapInfo.mapId !== savedMapInfo.mapId) {
+						dispatchEvent('mapSavedAsNew', savedMapInfo.mapId);
+					}
+					mapInfo = savedMapInfo;
+				});
 			},
 			function () {
 				dispatchEvent('mapSavingFailed');
@@ -191,8 +189,6 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 	mapRepository.addEventListener('mapSaving', function () {
 		saving = true;
 	});
-
-
 	mapRepository.addEventListener('mapSaved', function () {
 		saving = false;
 		changed = false;
@@ -200,5 +196,11 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		jQuery('#toolbarSave').hide();
 		jQuery('#menuExport').show();
 		jQuery('#menuPublish').hide();
+	});
+};
+MM.MapRepository.mapLocationChange = function (mapRepository) {
+	'use strict';
+	mapRepository.addEventListener('mapSavedAsNew', function (newMapId) {
+		document.location = "/map/" + newMapId;
 	});
 };

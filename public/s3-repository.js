@@ -38,10 +38,11 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	};
 
 	this.saveMap = function (mapInfo) {
-		var publishing = true,
+		var deferred = jQuery.Deferred(),
+			publishing = true,
 			saveTimeoutOccurred = function () {
 				publishing = false;
-				dispatchEvent('mapSavingFailed');
+				deferred.reject();
 			},
 			submitS3Form = function (result) {
 				var name;
@@ -71,5 +72,6 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 			};
 		setTimeout(saveTimeoutOccurred, networkTimeoutMillis);
 		fetchPublishingConfig();
+		return deferred.promise();
 	};
 };
