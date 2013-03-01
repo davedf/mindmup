@@ -14,28 +14,27 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	};
 
 	this.loadMap = function (mapId) {
-		var onMapLoaded = function (result) {
+		var deferred = jQuery.Deferred(),
+			onMapLoaded = function (result) {
 				var mapInfo = {
 					mapId: mapId,
 					idea: content(result)
 				};
-				dispatchEvent('mapLoaded', mapInfo);
+				deferred.resolve(mapInfo);
 			},
 			mapUrl = s3Url + mapId + ".json",
-			onMapLoadingFailed = function (xhr, textStatus, errorMsg) {
-				dispatchEvent('mapLoadingFailed', mapUrl, 'status=' + textStatus + ' error msg=' + errorMsg);
-			},
 			loadMapUsingProxy = function () {
 				activityLog.log('Map', 'ProxyLoad', mapId);
 				jQuery.ajax(
 					'/s3proxy/' + mapId,
-					{ dataType: 'json', success: onMapLoaded, error: onMapLoadingFailed }
+					{ dataType: 'json', success: onMapLoaded, error: deferred.reject }
 				);
 			};
 		jQuery.ajax(
 			mapUrl,
 			{ dataType: 'json', success: onMapLoaded, error: loadMapUsingProxy }
 		);
+		return deferred.promise();
 	};
 
 	this.saveMap = function (mapInfo) {

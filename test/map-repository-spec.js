@@ -1,15 +1,18 @@
 /*jslint nomen: true*/
-/*global _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
+/*global content, _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
 describe("Map Repository", function () {
 	'use strict';
 	var repo1, repo2, underTest,
+		dummy = function () {},
 		qstub = function (functions) {
-			var ret = {},
-				dummy = function () {};
+			var ret = {};
 			_.each(functions, function (func) {
-				ret[func] = function () {};
+				ret[func] = dummy;
 			});
 			return ret;
+		},
+		stubMapInfo = function (mapId) {
+			return {mapId: mapId, idea: qstub(['addEventListener'])};
 		};
 	beforeEach(function () {
 		var protoRepo = observable(
@@ -21,10 +24,20 @@ describe("Map Repository", function () {
 					} else if (fail) {
 						fail();
 					}
+				},
+				loads: true,
+				loadMap: function (mapId) {
+					var deferred = jQuery.Deferred();
+					if (this.loads) {
+						deferred.resolve(stubMapInfo(mapId));
+					} else {
+						deferred.reject('errorMsg');
+					}
+					return deferred.promise();
 				}
 			}
 		),
-			repoActions = ['loadMap', 'saveMap', 'recognises'];
+			repoActions = ['saveMap', 'recognises'];
 		repo1 = _.extend(qstub(repoActions), protoRepo);
 		repo2 = _.extend(qstub(repoActions), protoRepo);
 		underTest = new MM.MapRepository(qstub(['error', 'log']), qstub(['hide', 'show']), [repo1, repo2]);
@@ -39,8 +52,8 @@ describe("Map Repository", function () {
 		});
 		it("should use the repository which recognises the mapId", function () {
 			spyOn(repo2, 'recognises').andReturn(true);
-			spyOn(repo1, 'loadMap');
-			spyOn(repo2, 'loadMap');
+			spyOn(repo1, 'loadMap').andCallThrough();
+			spyOn(repo2, 'loadMap').andCallThrough();
 
 			underTest.loadMap('foo');
 
@@ -48,7 +61,7 @@ describe("Map Repository", function () {
 			expect(repo2.loadMap).toHaveBeenCalledWith('foo');
 		});
 		it("should use first repository to load as a fallback option", function () {
-			repo1.loadMap = jasmine.createSpy('loadMap');
+			spyOn(repo1, 'loadMap').andCallThrough();
 
 			underTest.loadMap('foo');
 
@@ -71,6 +84,23 @@ describe("Map Repository", function () {
 
 			expect(listener).toHaveBeenCalledWith('foo');
 
+		});
+		it("should dispatch mapLoadingFailed event if loadmap fails", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapLoadingFailed', listener);
+			repo1.loads = false;
+
+			underTest.loadMap('foo');
+
+			expect(listener).toHaveBeenCalledWith('foo', 'errorMsg');
+		});
+		it("should dispatch mapLoaded event if loadMap succeeds", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapLoaded', listener);
+
+			underTest.loadMap('foo');
+
+			expect(listener).toHaveBeenCalledWith(stubMapInfo('foo').idea, 'foo');
 		});
 	});
 	describe("saveMap", function () {

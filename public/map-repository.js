@@ -7,10 +7,6 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
 		listeners = {
-			'mapLoaded': function (newMapInfo) {
-				mapInfo = _.clone(newMapInfo);
-				dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
-			},
 			'Before Upload': function (id, idea) {
 				dispatchEvent('Before Upload', id, idea);
 			},
@@ -20,12 +16,6 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 					document.location = "/map/" + savedMapInfo.mapId;
 				}
 				mapInfo = savedMapInfo;
-			},
-			'mapLoading': function (mapUrl, mapId) {
-				dispatchEvent('mapLoading', mapUrl, mapId);
-			},
-			'mapLoadingFailed': function (mapUrl, reason) {
-				dispatchEvent('mapLoadingFailed', mapUrl, reason);
 			},
 			'authRequired': function (message, authCallback) {
 				dispatchEvent('authRequired', message, authCallback);
@@ -70,7 +60,14 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		dispatchEvent('mapLoading', mapId);
 		repository.use(
 			function () {
-				repository.loadMap(mapId);
+				repository.loadMap(mapId).fail(
+					function (errorMessage) {
+						dispatchEvent('mapLoadingFailed', mapId, errorMessage);
+					}
+				).done(function (newMapInfo) {
+					mapInfo = _.clone(newMapInfo);
+					dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
+				});
 			},
 			function () {
 				dispatchEvent('mapLoadingFailed', mapId);
