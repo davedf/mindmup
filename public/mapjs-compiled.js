@@ -33,7 +33,7 @@ var observable = function (base) {
 	};
 	return base;
 };
-/*jslint forin: true, nomen: true*/
+/*jslint eqeq: true, forin: true, nomen: true*/
 /*global _, observable*/
 var content = function (contentAggregate) {
 	'use strict';
@@ -105,9 +105,11 @@ var content = function (contentAggregate) {
 			return new_rank;
 		},
 		appendSubIdea = function (parentIdea, subIdea) {
+			var rank;
 			parentIdea.ideas = parentIdea.ideas || {};
-
-			parentIdea.ideas[nextChildRank(parentIdea)] = subIdea;
+			rank = nextChildRank(parentIdea);
+			parentIdea.ideas[rank] = subIdea;
+			return rank;
 		},
 		findIdeaById = function (ideaId) {
 			ideaId = parseFloat(ideaId);
@@ -116,24 +118,19 @@ var content = function (contentAggregate) {
 		sameSideSiblingRanks = function (parentIdea, ideaRank) {
 			return _(_.map(_.keys(parentIdea.ideas), parseFloat)).reject(function (k) {return k * ideaRank < 0; });
 		},
-		traverseAndRemoveIdea = function (parentIdea, subIdeaId) {
-			var deleted, childRank = parentIdea.findChildRankById(subIdeaId);
-			if (childRank) {
-				deleted = parentIdea.ideas[childRank];
-				delete parentIdea.ideas[childRank];
-				return deleted;
-			}
-			return _.reduce(
-				parentIdea.ideas,
-				function (result, child) {
-					return result || traverseAndRemoveIdea(child, subIdeaId);
-				},
-				false
-			);
-		},
 		sign = function (number) {
 			/* intentionally not returning 0 case, to help with split sorting into 2 groups */
 			return number < 0 ? -1 : 1;
+		},
+		eventStack = [],
+		redoStack = [],
+		notifyChange = function (method, args, undofunc) {
+			contentAggregate.dispatchEvent('changed', method, args);
+			eventStack.push({eventMethod: method, eventArgs: args, undoFunction: undofunc});
+		},
+		reorderChild = function (parentIdea, newRank, oldRank) {
+			parentIdea.ideas[newRank] = parentIdea.ideas[oldRank];
+			delete parentIdea.ideas[oldRank];
 		};
 	contentAggregate.maxId = function maxId(idea) {
 		idea = idea || contentAggregate;
@@ -198,38 +195,53 @@ var content = function (contentAggregate) {
 		}
 		max_rank = maxKey(contentAggregate.ideas, -1 * sign(current_rank));
 		new_rank = max_rank - 10 * sign(current_rank);
-		contentAggregate.ideas[new_rank] = contentAggregate.ideas[current_rank];
-		delete contentAggregate.ideas[current_rank];
-		contentAggregate.dispatchEvent('changed', 'flip', [ideaId]);
+		reorderChild(contentAggregate, new_rank, current_rank);
+		notifyChange('flip', [ideaId], function () {
+			reorderChild(contentAggregate, current_rank, new_rank);
+		});
 		return true;
 	};
 	contentAggregate.updateTitle = function (ideaId, title) {
-		var idea = findIdeaById(ideaId);
+		var idea = findIdeaById(ideaId), originalTitle;
 		if (!idea) {
 			return false;
 		}
+		originalTitle = idea.title;
+		if (originalTitle == title) {
+			return false;
+		}
 		idea.title = title;
-		contentAggregate.dispatchEvent('changed', 'updateTitle', [ideaId, title]);
+		notifyChange('updateTitle', [ideaId, title], function () {
+			idea.title = originalTitle;
+		});
 		return true;
 	};
 	contentAggregate.addSubIdea = function (parentId, ideaTitle) {
-		var idea, parent = findIdeaById(parentId);
+		var idea, parent = findIdeaById(parentId), newRank;
 		if (!parent) {
 			return false;
 		}
 		idea = init({
 			title: ideaTitle
 		});
-		appendSubIdea(parent, idea);
-		contentAggregate.dispatchEvent('changed', 'addSubIdea', [parentId, ideaTitle, idea.id]);
+		newRank = appendSubIdea(parent, idea);
+		notifyChange('addSubIdea', [parentId, ideaTitle, idea.id], function () {
+			delete parent.ideas[newRank];
+		});
 		return true;
 	};
 	contentAggregate.removeSubIdea = function (subIdeaId) {
-		var result = traverseAndRemoveIdea(contentAggregate, subIdeaId);
-		if (result) {
-			contentAggregate.dispatchEvent('changed', 'removeSubIdea', [subIdeaId]);
+		var parent = contentAggregate.findParent(subIdeaId), oldRank, oldIdea;
+		if (parent) {
+			oldRank = parent.findChildRankById(subIdeaId);
+			oldIdea = parent.ideas[oldRank];
+			delete parent.ideas[oldRank];
+			notifyChange('removeSubIdea', [subIdeaId], function () {
+				parent.ideas[oldRank] = oldIdea;
+			});
+			return true;
 		}
-		return result;
+		return false;
 	};
 	contentAggregate.insertIntermediate = function (inFrontOfIdeaId, title) {
 		if (contentAggregate.id === inFrontOfIdeaId) {
@@ -251,14 +263,16 @@ var content = function (contentAggregate) {
 		newIdea.ideas = {
 			1: oldIdea
 		};
-		contentAggregate.dispatchEvent('changed', 'insertIntermediate', [inFrontOfIdeaId, title, newIdea.id]);
+		notifyChange('insertIntermediate', [inFrontOfIdeaId, title, newIdea.id], function () {
+			parentIdea.ideas[childRank] = oldIdea;
+		});
 		return true;
 	};
 	contentAggregate.changeParent = function (ideaId, newParentId) {
+		var oldParent, oldRank, newRank, idea, parent = findIdeaById(newParentId);
 		if (ideaId === newParentId) {
 			return false;
 		}
-		var idea, parent = findIdeaById(newParentId);
 		if (!parent) {
 			return false;
 		}
@@ -272,19 +286,25 @@ var content = function (contentAggregate) {
 		if (parent.containsDirectChild(ideaId)) {
 			return false;
 		}
-		traverseAndRemoveIdea(contentAggregate, ideaId);
-		if (!idea) {
+		oldParent = contentAggregate.findParent(ideaId);
+		if (!oldParent) {
 			return false;
 		}
-		appendSubIdea(parent, idea);
-		contentAggregate.dispatchEvent('changed', 'changeParent', [ideaId, newParentId]);
+		oldRank = oldParent.findChildRankById(ideaId);
+		newRank = appendSubIdea(parent, idea);
+		delete oldParent.ideas[oldRank];
+		notifyChange('changeParent', [ideaId, newParentId], function () {
+			oldParent.ideas[oldRank] = idea;
+			delete parent.ideas[newRank];
+		});
 		return true;
 	};
 	contentAggregate.updateStyle = function (ideaId, styleName, styleValue) {
-		var idea = findIdeaById(ideaId);
+		var idea = findIdeaById(ideaId), oldStyle;
 		if (!idea) {
 			return false;
 		}
+		oldStyle = _.extend({}, idea.style);
 		idea.style = _.extend({}, idea.style);
 		if (!styleValue || styleValue === "false") {
 			if (!idea.style[styleName]) {
@@ -301,7 +321,9 @@ var content = function (contentAggregate) {
 		if (_.size(idea.style) === 0) {
 			delete idea.style;
 		}
-		contentAggregate.dispatchEvent('changed', 'updateStyle', [ideaId, styleName, styleValue]);
+		notifyChange('updateStyle', [ideaId, styleName, styleValue], function () {
+			idea.style = oldStyle;
+		});
 		return true;
 	};
 	contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId, parentIdea) {
@@ -345,10 +367,33 @@ var content = function (contentAggregate) {
 		if (new_rank === current_rank) {
 			return false;
 		}
-		parentIdea.ideas[new_rank] = parentIdea.ideas[current_rank];
-		delete parentIdea.ideas[current_rank];
-		contentAggregate.dispatchEvent('changed', 'positionBefore', [ideaId, positionBeforeIdeaId]);
+		reorderChild(parentIdea, new_rank, current_rank);
+
+		notifyChange('positionBefore', [ideaId, positionBeforeIdeaId], function () {
+			reorderChild(parentIdea, current_rank, new_rank);
+		});
 		return true;
+	};
+	/* undo/redo */
+	contentAggregate.undo = function () {
+		var topEvent;
+		topEvent = eventStack.pop();
+		if (topEvent && topEvent.undoFunction) {
+			topEvent.undoFunction();
+			redoStack.push(topEvent);
+			contentAggregate.dispatchEvent('changed', 'undo', []);
+			return true;
+		}
+		return false;
+	};
+	contentAggregate.redo = function () {
+		var topEvent;
+		topEvent = redoStack.pop();
+		if (topEvent) {
+			contentAggregate[topEvent.eventMethod].apply(contentAggregate, topEvent.eventArgs);
+			return true;
+		}
+		return false;
 	};
 	init(contentAggregate);
 	return observable(contentAggregate);
@@ -897,6 +942,14 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				self.selectNode(closestNode.id);
 			}
 
+		};
+		self.undo = function (source) {
+			analytic('undo', source);
+			idea.undo();
+		};
+		self.redo = function (source) {
+			analytic('redo', source);
+			idea.redo();
 		};
 	}());
 	//Todo - clean up this shit below
@@ -1451,9 +1504,13 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		}, shiftKeyboardEventHandlers = {
 			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
 			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
+		}, metaKeyboardEventHandlers = {
+			90: mapModel.undo.bind(mapModel, 'keyboard'),
+			89: mapModel.redo.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
-				var eventHandler = (evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers)[evt.which];
+				var eventHandler = (evt.metaKey ? metaKeyboardEventHandlers :
+						(evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers))[evt.which];
 				if (eventHandler) {
 					eventHandler();
 					evt.preventDefault();
