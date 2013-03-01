@@ -104,12 +104,60 @@ describe("Map Repository", function () {
 		});
 	});
 	describe("saveMap", function () {
-		it("should use default repository to save", function () {
+		beforeEach(function () {
+			underTest.setMap(stubMapInfo('loadedMapId'));
+		});
+		it("should use first repository to load as a fallback option", function () {
 			repo1.saveMap = jasmine.createSpy('saveMap');
 
 			underTest.publishMap();
 
 			expect(repo1.saveMap).toHaveBeenCalled();
+		});
+		it("should check each repository to see if it recognises the mapId", function () {
+			spyOn(repo1, 'recognises');
+			spyOn(repo2, 'recognises');
+			underTest.publishMap('foo');
+			expect(repo1.recognises).toHaveBeenCalled();//With(['foo', 'loadedMapId']);
+			expect(repo2.recognises).toHaveBeenCalled(); //With(['foo', 'loadedMapId']);
+		});
+		it("should use the repository which recognises the mapId", function () {
+			repo2.recognises = function (id) {return (id === 'loadedMapId'); };
+			spyOn(repo1, 'saveMap').andCallThrough();
+			spyOn(repo2, 'saveMap').andCallThrough();
+
+			underTest.publishMap('foo');
+
+			expect(repo1.saveMap).not.toHaveBeenCalled();
+			expect(repo2.saveMap).toHaveBeenCalled();
+		});
+		it("should use the repository which recognises the repositoryType", function () {
+			repo2.recognises = function (id) {return (id === 'foo'); };
+			spyOn(repo1, 'saveMap').andCallThrough();
+			spyOn(repo2, 'saveMap').andCallThrough();
+
+			underTest.publishMap('foo');
+
+			expect(repo1.saveMap).not.toHaveBeenCalled();
+			expect(repo2.saveMap).toHaveBeenCalled();
+		});
+		it("should dispatch mapSaving Event before Saving starts", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapSaving', listener);
+
+			underTest.publishMap();
+
+			expect(listener).toHaveBeenCalled();
+
+		});
+		it("should dispatch mapSavingFailedEvent if repository not usable", function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapSavingFailed', listener);
+			repo1.useable = false;
+
+			underTest.publishMap();
+
+			expect(listener).toHaveBeenCalled();
 		});
 	});
 });

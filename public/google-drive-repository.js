@@ -191,7 +191,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	};
 
 	this.saveMap = function (mapInfo) {
-		dispatchEvent('mapSaving');
 		var saveFailed = function () {
 				dispatchEvent('mapSavingFailed');
 			},

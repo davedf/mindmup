@@ -38,7 +38,6 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 	};
 
 	this.saveMap = function (mapInfo) {
-		dispatchEvent('mapSaving');
 		var publishing = true,
 			saveTimeoutOccurred = function () {
 				publishing = false;

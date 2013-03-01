@@ -22,9 +22,6 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			},
 			'mapSavingFailed': function () {
 				dispatchEvent('mapSavingFailed');
-			},
-			'mapSaving': function () {
-				dispatchEvent('mapSaving');
 			}
 		},
 		addListeners = function (repository) {
@@ -75,6 +72,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	};
 
 	this.publishMap = function (repositoryType) {
+		dispatchEvent('mapSaving');
 		var repository = chooseRepository([repositoryType, mapInfo.mapId]);
 		repository.use(
 			function () {
