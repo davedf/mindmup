@@ -105,8 +105,10 @@ describe("Map Repository", function () {
 			spyOn(repo1, 'recognises');
 			spyOn(repo2, 'recognises');
 			underTest.publishMap('foo');
-			expect(repo1.recognises).toHaveBeenCalled();//With(['foo', 'loadedMapId']);
-			expect(repo2.recognises).toHaveBeenCalled(); //With(['foo', 'loadedMapId']);
+			expect(repo1.recognises).toHaveBeenCalledWith('foo');
+			expect(repo1.recognises).toHaveBeenCalledWith('loadedMapId');
+			expect(repo2.recognises).toHaveBeenCalledWith('foo');
+			expect(repo2.recognises).toHaveBeenCalledWith('loadedMapId');
 		});
 		it("should use the repository which recognises the mapId", function () {
 			repo2.recognises = function (id) {return (id === 'loadedMapId'); };
