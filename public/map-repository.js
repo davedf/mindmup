@@ -44,6 +44,10 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				}
 			}
 			return repositories[0];
+		},
+		mapLoaded = function (newMapInfo) {
+			mapInfo = _.clone(newMapInfo);
+			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
 		};
 
 	MM.MapRepository.activityTracking(this, activityLog);
@@ -51,9 +55,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 	_.each(repositories, addListeners);
 
-	this.setMap = function (mapInfo) {
-		listeners.mapLoaded(mapInfo);
-	};
+	this.setMap = mapLoaded;
 
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]);
@@ -64,10 +66,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 					function (errorMessage) {
 						dispatchEvent('mapLoadingFailed', mapId, errorMessage);
 					}
-				).done(function (newMapInfo) {
-					mapInfo = _.clone(newMapInfo);
-					dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
-				});
+				).done(mapLoaded);
 			},
 			function () {
 				dispatchEvent('mapLoadingFailed', mapId);
