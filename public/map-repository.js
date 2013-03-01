@@ -47,39 +47,29 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]);
 		dispatchEvent('mapLoading', mapId);
-		repository.use(
-			function () {
-				repository.loadMap(mapId).fail(
-					function (errorMessage) {
-						dispatchEvent('mapLoadingFailed', mapId, errorMessage);
-					}
-				).done(mapLoaded);
-			},
-			function () {
-				dispatchEvent('mapLoadingFailed', mapId);
-			}
-		);
+		repository.loadMap(mapId)
+			.fail(
+				function (errorMessage) {
+					dispatchEvent('mapLoadingFailed', mapId, errorMessage);
+				}
+			)
+			.done(mapLoaded);
 	};
 
 	this.publishMap = function (repositoryType) {
+		var repo = chooseRepository([repositoryType, mapInfo.mapId]);
 		dispatchEvent('mapSaving');
-		var repository = chooseRepository([repositoryType, mapInfo.mapId]);
-		repository.use(
-			function () {
-				repository.saveMap(_.clone(mapInfo)).fail(function () {
-					dispatchEvent('mapSavingFailed');
-				}).done(function (savedMapInfo) {
-					dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
-					if (mapInfo.mapId !== savedMapInfo.mapId) {
-						dispatchEvent('mapSavedAsNew', savedMapInfo.mapId);
-					}
-					mapInfo = savedMapInfo;
-				});
-			},
-			function () {
+		repo.saveMap(_.clone(mapInfo))
+			.fail(function () {
 				dispatchEvent('mapSavingFailed');
-			}
-		);
+			})
+			.done(function (savedMapInfo) {
+				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea);
+				if (mapInfo.mapId !== savedMapInfo.mapId) {
+					dispatchEvent('mapSavedAsNew', savedMapInfo.mapId);
+				}
+				mapInfo = savedMapInfo;
+			});
 	};
 };
 

@@ -83,66 +83,68 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					downloadFile(resp, complete, fail);
 				}
 			});
+		},
+		checkAuth = function (showDialog, complete, failure) {
+			gapi.auth.authorize(
+				{
+					'client_id': clientId,
+					'scope': 'https://www.googleapis.com/auth/drive',
+					'immediate': !showDialog
+				},
+				function (authResult) {
+					if (authResult) {
+						isAuthorised = true;
+						if (complete) {
+							complete();
+						}
+					} else if (failure) {
+						isAuthorised = false;
+						failure();
+					}
+				}
+			);
+		},
+		authenticate = function (complete, failure) {
+			checkAuth(false, complete, function () {
+				dispatchEvent('authRequired', 'This operation requires authentication through Google!', function () {
+					checkAuth(true, complete, failure);
+				});
+			});
+		},
+		loadApi = function (onComplete) {
+			if (window.gapi && window.gapi.client) {
+				onComplete();
+			} else {
+				window.googleClientLoaded = function () { onComplete(); };
+				jQuery('<script src="https://apis.google.com/js/client.js?onload=googleClientLoaded"></script>').appendTo('body');
+			}
+		},
+		makeReady = function (complete, failure) {
+			if (driveLoaded) {
+				authenticate();
+				return;
+			}
+			loadApi(function () {
+				gapi.client.setApiKey(apiKey);
+				gapi.client.load('drive', 'v2', function () {
+					driveLoaded = true;
+					authenticate(complete, failure);
+				});
+			});
 		};
-	this.use = function (doThis, fail) {
-		var self = this;
-		if (self.ready()) {
-			doThis();
-		} else {
-			self.makeReady(doThis, fail);
-		}
-	};
 
 	this.ready = function () {
-		return driveLoaded && isAuthorised;
+		var deferred = jQuery.Deferred();
+		if (driveLoaded && isAuthorised) {
+			deferred.resolve();
+		} else {
+			makeReady(deferred.resolve, deferred.reject);
+		}
+		return deferred.promise();
 	};
 
 	this.recognises = function (mapId) {
 		return mapId && mapId[0] === "g";
-	};
-
-	this.checkAuth = function (showDialog, complete, failure) {
-		gapi.auth.authorize(
-			{
-				'client_id': clientId,
-				'scope': 'https://www.googleapis.com/auth/drive',
-				'immediate': !showDialog
-			},
-			function (authResult) {
-				if (authResult) {
-					isAuthorised = true;
-					if (complete) {
-						complete();
-					}
-				} else if (failure) {
-					isAuthorised = false;
-					failure();
-				}
-
-			}
-		);
-	};
-	this.authenticate = function (complete, failure) {
-		var self = this;
-		this.checkAuth(false, complete, function () {
-			self.dispatchEvent('authRequired', 'This operation requires authentication through Google!', function () {
-				self.checkAuth(true, complete, failure);
-			});
-		});
-	};
-	this.makeReady = function (complete, failure) {
-		var self = this;
-		if (driveLoaded) {
-			this.authenticate();
-			return;
-		}
-		this.loadApi(function () {
-			gapi.client.setApiKey(apiKey);
-			gapi.client.load('drive', 'v2', function () {
-				driveLoaded = true;
-				self.authenticate(complete, failure);
-			});
-		});
 	};
 
 	this.retrieveAllFiles = function (callback) {
@@ -167,14 +169,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			});
 		retrievePageOfFiles(initialRequest, []);
 	};
-	this.loadApi = function (onComplete) {
-		if (window.gapi && window.gapi.client) {
-			onComplete();
-		} else {
-			window.googleClientLoaded = function () { onComplete(); };
-			jQuery('<script src="https://apis.google.com/js/client.js?onload=googleClientLoaded"></script>').appendTo('body');
-		}
-	};
+
+
+
 	this.loadMap = function (mapId) {
 		var deferred = jQuery.Deferred(),
 			googleId = mapId.substr(2),
@@ -186,22 +183,34 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				};
 				deferred.resolve(mapInfo);
 			};
-		loadFile(googleId, success, deferred.reject);
+		this.ready().then(
+			function () {
+				loadFile(googleId, success, deferred.reject);
+			},
+			deferred.reject
+		);
 		return deferred.promise();
 	};
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
-			timeout = setTimeout(deferred.reject, networkTimeoutMillis);
-		saveFile(
-			mapInfo,
-			function (savedMapInfo) {
-				clearTimeout(timeout);
-				deferred.resolve(savedMapInfo);
+			timeout;
+		this.ready().then(
+			function () {
+				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
+				saveFile(
+					mapInfo,
+					function (savedMapInfo) {
+						clearTimeout(timeout);
+						deferred.resolve(savedMapInfo);
+					},
+					deferred.reject
+				);
 			},
 			deferred.reject
 		);
 		return deferred.promise();
+
 	};
 };
 

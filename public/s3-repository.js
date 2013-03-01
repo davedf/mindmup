@@ -9,10 +9,6 @@ MM.S3MapRepository = function (s3Url, activityLog, networkTimeoutMillis) {
 		return mapId && mapId[0] === "a";
 	};
 
-	this.use = function (doThis) {
-		doThis();
-	};
-
 	this.loadMap = function (mapId) {
 		var deferred = jQuery.Deferred(),
 			onMapLoaded = function (result) {
