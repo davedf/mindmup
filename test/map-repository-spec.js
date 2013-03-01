@@ -18,14 +18,6 @@ describe("Map Repository", function () {
 		MM.MapRepository.mapLocationChange = function () {};
 		var protoRepo = observable(
 			{
-				useable: true,
-				use: function (doThis, fail) {
-					if (this.useable) {
-						doThis();
-					} else if (fail) {
-						fail();
-					}
-				},
 				loadMap: function (mapId) {
 					var deferred = jQuery.Deferred();
 					deferred.resolve(stubMapInfo(mapId));
@@ -67,15 +59,6 @@ describe("Map Repository", function () {
 			underTest.loadMap('foo');
 
 			expect(repo1.loadMap).toHaveBeenCalledWith('foo');
-		});
-		it("should dispatch mapLoadingFailedEvent if repository not usable", function () {
-			var listener = jasmine.createSpy();
-			underTest.addEventListener('mapLoadingFailed', listener);
-			repo1.useable = false;
-
-			underTest.loadMap('foo');
-
-			expect(listener).toHaveBeenCalledWith('foo');
 		});
 		it("should dispatch mapLoading Event beforeLoadingStarts", function () {
 			var listener = jasmine.createSpy();
@@ -153,15 +136,6 @@ describe("Map Repository", function () {
 
 			expect(listener).toHaveBeenCalled();
 
-		});
-		it("should dispatch mapSavingFailedEvent if repository not usable", function () {
-			var listener = jasmine.createSpy();
-			underTest.addEventListener('mapSavingFailed', listener);
-			repo1.useable = false;
-
-			underTest.publishMap();
-
-			expect(listener).toHaveBeenCalled();
 		});
 		it("should dispatch mapLoadingFailed event if saveMap fails", function () {
 			var listener = jasmine.createSpy();
