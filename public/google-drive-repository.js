@@ -132,7 +132,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				});
 			});
 		};
-
 	this.ready = function () {
 		var deferred = jQuery.Deferred();
 		if (driveLoaded && isAuthorised) {

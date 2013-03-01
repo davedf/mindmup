@@ -9,13 +9,11 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		listeners = {
 			'Before Upload': function (id, idea) {
 				dispatchEvent('Before Upload', id, idea);
-			},
-			'authRequired': function (message, authCallback) {
-				dispatchEvent('authRequired', message, authCallback);
 			}
 		},
 		addListeners = function (repository) {
 			var listenType;
+			MM.MapRepository.alerts(repository, alert);
 			for (listenType in listeners) {
 				repository.addEventListener(listenType, listeners[listenType]);
 			}
@@ -38,6 +36,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		};
 	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
+
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 	_.each(repositories, addListeners);
@@ -191,6 +190,6 @@ MM.MapRepository.mapLocationChange = function (mapRepository) {
 	mapRepository.addEventListener('mapSaved', function (newMapId, idea, idHasChanged) {
 		if (idHasChanged) {
 			document.location = "/map/" + newMapId;
-		}	
+		}
 	});
 };
