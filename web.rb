@@ -38,6 +38,16 @@ get '/' do
     redirect "/map/#{session['mapid']}"
   end
 end
+get '/gd' do
+  state = params[:state]
+  begin
+    mapid = "g1" + JSON.parse(params[:state])['ids'][0]
+    redirect "/map/"+mapid
+  rescue Exception=>e
+    puts e
+    halt 400, "Google drive state missing or invalid"
+  end
+end
 get '/fb' do
 	redirect "http://facebook.com/mindmupapp"
 end
@@ -122,7 +132,7 @@ helpers do
     end
   end
   def join_scripts script_url_array
-    return script_url_array if development?
+    return script_url_array if (development? || test?)
     target_file="#{settings.public_folder}/#{settings.cache_prevention_key}.js" 
     if (!File.exists? target_file) then
       File.open(target_file,"w") do |output_file|
