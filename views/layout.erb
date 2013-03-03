@@ -104,11 +104,15 @@
               </div>
               </li>
               <li>
-              <div id="menuExport" class="btn-group">
+			  <div id="menuExport" class="btn-group">
+				  <form method="post" id="formExport" action="/export" class="hide">
+					  <input type="hidden" name="map" />
+					  <input type="hidden" name="format" />
+				  </form>
                 <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
                 <ul class="dropdown-menu">
-                  <li><a rel="nofollow" href="/export/mindmup/<%=@mapid%>" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
-                  <li><a rel="nofollow" href="/export/freemind/<%=@mapid%>" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
+                  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
+                  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
                   <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
                 </ul>
               </div>

@@ -66,20 +66,19 @@ get "/s3proxy/:mapid" do
   content_type 'application/json'
   settings.s3_bucket.objects[map_key(params[:mapid])].read
 end
-get "/export/mindmup/:mapid" do
+
+post "/export" do
   content_type 'application/octet-stream'
-  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  contents=params[:map]
   json=JSON.parse(contents)
-  attachment (Rack::Utils.escape(json['title'])+'.mup')
-  contents
+  attachment (Rack::Utils.escape(json['title'])+'.'+params[:format])
+  if (params[:format] == "mm")
+    FreemindFormat.new(json).to_freemind
+  else
+    contents
+  end
 end
-get "/export/freemind/:mapid" do
-  content_type 'application/octet-stream'
-  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
-  json=JSON.parse(contents)
-  attachment (Rack::Utils.escape(json['title'])+'.mm')
-  FreemindFormat.new(json).to_freemind
-end
+
 get "/map/:mapid" do
   @mapid = params[:mapid]
   session['mapid']=@mapid

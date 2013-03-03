@@ -2,16 +2,22 @@
 jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	'use strict';
 	return this.each(function () {
-		var element = jQuery(this),
+		var element = jQuery(this), loadedIdea,
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
-			toggleButton = element.find('.toggle');
+			toggleButton = element.find('.toggle'),
+			exportForm = $('#formExport');
 		element
 			.draggable({containment: 'window'})
 			.find('button.close').click(function () {
 				element.find('.toolbar-inner').toggle();
 				toggleButton.toggleClass('icon-resize-small').toggleClass('icon-resize-full');
-			}).end()
-			.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
+			});
+		element.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
+		element.find('[data-mm-role="remote-export"]').click(function () {
+			exportForm.find('[name=format]').val($(this).data('mm-format'));
+			exportForm.find('[name=map]').val(JSON.stringify(loadedIdea));
+			exportForm.submit();
+		});
 		keyboardShortcuts.popover({
 			placement: 'bottom',
 			trigger: 'click',
@@ -41,6 +47,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			var repository = (mapId && mapId[0]);
 			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
 			element.find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
+			loadedIdea = idea;
 		});
 		mapRepository.addEventListener('mapSavingFailed', function () {
 			jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
