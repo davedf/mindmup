@@ -72,22 +72,23 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				fail();
 			}
 		},
-		loadFile = function (fileId, complete, fail) {
-			var request = gapi.client.drive.files.get({
-				'fileId': fileId
-			});
-			fail = fail || function () {};
+		loadFile = function (fileId) {
+			var deferred = jQuery.Deferred(),
+				request = gapi.client.drive.files.get({
+					'fileId': fileId
+				});
 			request.execute(function (resp) {
 				if (resp.error) {
 					if (resp.error.code === 404) {
-						fail('no-access-allowed');
+						deferred.reject('no-access-allowed');
 					} else {
-						fail(resp.error);
+						deferred.reject(resp.error);
 					}
 				} else {
-					downloadFile(resp, complete, fail);
+					downloadFile(resp, deferred.resolve, deferred.reject);
 				}
 			});
+			return deferred.promise();
 		},
 		checkAuth = function (showDialog) {
 			var deferred = jQuery.Deferred();
@@ -193,7 +194,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			};
 		this.ready().then(
 			function () {
-				loadFile(googleId, success, deferred.reject);
+				loadFile(googleId).then(success, deferred.reject);
 			},
 			deferred.reject
 		);
