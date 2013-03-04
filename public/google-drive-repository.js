@@ -213,9 +213,13 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				clearTimeout(timeout);
 				deferred.resolve(savedMapInfo);
 			},
+			saveFailed = function (reason) {
+				clearTimeout(timeout);
+				deferred.reject(reason);
+			},
 			readySucceeded = function () {
 				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
-				saveFile(mapInfo).then(saveSucceeded, deferred.reject);
+				saveFile(mapInfo).then(saveSucceeded, saveFailed);
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
