@@ -5,15 +5,15 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	var driveLoaded,
 		isAuthorised,
 		dispatchEvent = this.dispatchEvent,
-		saveFile = function (mapInfo, complete, fail) {
-			var	boundary = '-------314159265358979323846',
+		saveFile = function (mapInfo) {
+			var	deferred = jQuery.Deferred(),
+				boundary = '-------314159265358979323846',
 				delimiter = "\r\n--" + boundary + "\r\n",
 				close_delim = "\r\n--" + boundary + "--",
 				metadata = {
 					'title': mapInfo.idea.title + ".mup",
 					'mimeType': contentType
 				},
-				//base64Data = btoa(JSON.stringify(mapInfo.idea)),
 				data = JSON.stringify(mapInfo.idea),
 				multipartRequestBody =
 					delimiter +
@@ -35,17 +35,16 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				});
 			request.execute(function (resp) {
 				if (resp.error) {
-					if (fail) {
-						fail(resp.error);
-					}
-				} else if (complete) {
+					deferred.reject(resp.error);
+				} else {
 					if (!mapInfo.googleId) {
 						mapInfo.mapId = "g1" + resp.id;
 						mapInfo.googleId = resp.id;
 					}
-					complete(mapInfo);
+					deferred.resolve(mapInfo);
 				}
 			});
+			return deferred.promise();
 		},
 		downloadFile = function (file) {
 			var deferred = jQuery.Deferred(),
@@ -153,8 +152,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		return mapId && mapId[0] === "g";
 	};
 
-	this.retrieveAllFiles = function (callback) {
-		var searchCriteria = "mimeType = '" + contentType + "' and not trashed",
+	this.retrieveAllFiles = function () {
+		var deferred = jQuery.Deferred(),
+			searchCriteria = "mimeType = '" + contentType + "' and not trashed",
 			retrievePageOfFiles = function (request, result) {
 				request.execute(function (resp) {
 					result = result.concat(resp.items);
@@ -166,7 +166,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						});
 						retrievePageOfFiles(request, result);
 					} else {
-						callback(result);
+						deferred.resolve();
 					}
 				});
 			},
@@ -174,6 +174,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				'q': searchCriteria
 			});
 		retrievePageOfFiles(initialRequest, []);
+		return deferred.promise();
 	};
 
 
@@ -181,40 +182,33 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	this.loadMap = function (mapId) {
 		var deferred = jQuery.Deferred(),
 			googleId = mapId.substr(2),
-			success = function (result) {
+			loadSucceeded = function (result) {
 				var mapInfo = {
 					mapId: mapId,
 					googleId: googleId,
 					idea: content(result.body)
 				};
 				deferred.resolve(mapInfo);
-			};
-		this.ready().then(
-			function () {
-				loadFile(googleId).then(success, deferred.reject);
 			},
-			deferred.reject
-		);
+			readySucceeded = function () {
+				loadFile(googleId).then(loadSucceeded, deferred.reject);
+			};
+		this.ready().then(readySucceeded, deferred.reject);
 		return deferred.promise();
 	};
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
-			timeout;
-		this.ready().then(
-			function () {
-				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
-				saveFile(
-					mapInfo,
-					function (savedMapInfo) {
-						clearTimeout(timeout);
-						deferred.resolve(savedMapInfo);
-					},
-					deferred.reject
-				);
+			timeout,
+			saveSucceeded = function (savedMapInfo) {
+				clearTimeout(timeout);
+				deferred.resolve(savedMapInfo);
 			},
-			deferred.reject
-		);
+			readySucceeded = function () {
+				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
+				saveFile(mapInfo).then(saveSucceeded, deferred.reject);
+			};
+		this.ready().then(readySucceeded, deferred.reject);
 		return deferred.promise();
 
 	};
