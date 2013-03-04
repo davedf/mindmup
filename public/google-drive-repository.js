@@ -109,12 +109,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				}
 			);
 		},
-		authenticate = function (complete, failure) {
-			checkAuth(false, complete, function () {
+		authenticate = function () {
+			var deferred = jQuery.Deferred();
+			checkAuth(false, deferred.resolve, function () {
 				dispatchEvent('authRequired', 'This operation requires authentication through Google!', function () {
-					checkAuth(true, complete, failure);
+					checkAuth(true, deferred.resolve, deferred.reject);
 				});
 			});
+			return deferred.promise();
 		},
 		loadApi = function (onComplete) {
 			if (window.gapi && window.gapi.client) {
@@ -127,14 +129,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		makeReady = function () {
 			var deferred = jQuery.Deferred();
 			if (driveLoaded) {
-				authenticate(deferred.resolve, deferred.reject);
+				authenticate().then(deferred.resolve, deferred.reject);
 				return;
 			}
 			loadApi(function () {
 				gapi.client.setApiKey(apiKey);
 				gapi.client.load('drive', 'v2', function () {
 					driveLoaded = true;
-					authenticate(deferred.resolve, deferred.reject);
+					authenticate().then(deferred.resolve, deferred.reject);
 				});
 			});
 			return deferred.promise();
