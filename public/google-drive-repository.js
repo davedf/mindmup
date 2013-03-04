@@ -89,7 +89,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				}
 			});
 		},
-		checkAuth = function (showDialog, complete, failure) {
+		checkAuth = function (showDialog) {
+			var deferred = jQuery.Deferred();
 			gapi.auth.authorize(
 				{
 					'client_id': clientId,
@@ -99,21 +100,20 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				function (authResult) {
 					if (authResult) {
 						isAuthorised = true;
-						if (complete) {
-							complete();
-						}
-					} else if (failure) {
+						deferred.resolve();
+					} else {
 						isAuthorised = false;
-						failure();
+						deferred.reject();
 					}
 				}
 			);
+			return deferred.promise();
 		},
 		authenticate = function () {
 			var deferred = jQuery.Deferred();
-			checkAuth(false, deferred.resolve, function () {
+			checkAuth(false).then(deferred.resolve, function () {
 				dispatchEvent('authRequired', 'This operation requires authentication through Google!', function () {
-					checkAuth(true, deferred.resolve, deferred.reject);
+					checkAuth(true).then(deferred.resolve, deferred.reject);
 				});
 			});
 			return deferred.promise();
