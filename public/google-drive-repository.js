@@ -43,7 +43,11 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			request.execute(function (resp) {
 				if (resp.error) {
 					if (resp.error.code === 403) {
-						deferred.reject('no-access-allowed');
+						if (resp.error.reason && (resp.error.reason === 'rateLimitExceeded' || resp.error.reason === 'userRateLimitExceeded')) {
+							deferred.reject('rate-limit');
+						} else {
+							deferred.reject('no-access-allowed');
+						}
 					} else {
 						deferred.reject(resp.error);
 					}
@@ -85,7 +89,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				});
 			request.execute(function (resp) {
 				if (resp.error) {
-					if (resp.error.code === 404) {
+					if (resp.error.code === 403) {
+						deferred.reject('rate-limit');
+					} else if (resp.error.code === 404) {
 						deferred.reject('no-access-allowed');
 					} else {
 						deferred.reject(resp.error);
@@ -209,17 +215,28 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	this.saveMap = function (mapInfo, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
 			timeout,
-			saveSucceeded = function (savedMapInfo) {
-				clearTimeout(timeout);
-				deferred.resolve(savedMapInfo);
-			},
-			saveFailed = function (reason) {
-				clearTimeout(timeout);
-				deferred.reject(reason);
-			},
-			readySucceeded = function () {
+			maxRetrys = 5,
+			startSave = function (recursionCount) {
+				var retry = function () {
+						startSave(recursionCount++);
+					},
+					saveSucceeded = function (savedMapInfo) {
+						clearTimeout(timeout);
+						deferred.resolve(savedMapInfo);
+					},
+					saveFailed = function (reason) {
+						clearTimeout(timeout);
+						if (recursionCount < maxRetrys && reason === 'rate-limit') {
+							setTimeout(deferred.reject, recursionCount * 1000);
+						} else {
+							deferred.reject(reason);
+						}
+					};
 				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
 				saveFile(mapInfo).then(saveSucceeded, saveFailed);
+			},
+			readySucceeded = function () {
+				startSave(0);
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
