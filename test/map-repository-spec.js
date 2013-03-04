@@ -82,6 +82,22 @@ describe("Map Repository", function () {
 
 			expect(listener).toHaveBeenCalledWith('foo', 'errorMsg');
 		});
+		it("should dispatch mapLoadingUnAuthorized event if loadmap fails with reason no-access-allowed", function () {
+			var listener = jasmine.createSpy(),
+				authListener = jasmine.createSpy();
+			underTest.addEventListener('mapLoadingFailed', listener);
+			underTest.addEventListener('mapLoadingUnAuthorized', authListener);
+			repo1.loadMap = function (mapId) {
+				var deferred = jQuery.Deferred();
+				deferred.reject('no-access-allowed');
+				return deferred.promise();
+			};
+
+			underTest.loadMap('foo');
+
+			expect(listener).not.toHaveBeenCalled();
+			expect(authListener).toHaveBeenCalledWith('foo', 'no-access-allowed');
+		});
 		it("should dispatch mapLoaded event if loadMap succeeds", function () {
 			var listener = jasmine.createSpy();
 			underTest.addEventListener('mapLoaded', listener);

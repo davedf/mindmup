@@ -9,7 +9,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		addListeners = function (repository) {
 			MM.MapRepository.alerts(repository, alert);
 			//Remove this once s3 repository is not redirecting after save
-			repository.addEventListener('mapSaved', function (key, idea) { 
+			repository.addEventListener('mapSaved', function (key, idea) {
 				dispatchEvent('mapSaved', key, idea);
 			});
 		},
@@ -43,8 +43,12 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		dispatchEvent('mapLoading', mapId);
 		repository.loadMap(mapId)
 			.fail(
-				function (errorMessage) {
-					dispatchEvent('mapLoadingFailed', mapId, errorMessage);
+				function (reason) {
+					if (reason === 'no-access-allowed') {
+						dispatchEvent('mapLoadingUnAuthorized', mapId, reason);
+					} else {
+						dispatchEvent('mapLoadingFailed', mapId, reason);
+					}
 				}
 			)
 			.done(mapLoaded);
@@ -119,9 +123,17 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
 	});
+	mapRepository.addEventListener('mapLoadingUnAuthorized', function (mapUrl, reason) {
+		alert.hide(alertId);
+		alertId = alert.show(
+			'The map could not be loaded.',
+			'You do not have the right to view this map',
+			'error'
+		);
+	});
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
 		alert.hide(alertId);
-		alert.show(
+		alertId = alert.show(
 			'Unfortunately, there was a problem loading the map.',
 			'An automated error report was sent and we will look into this as soon as possible',
 			'error'

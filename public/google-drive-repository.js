@@ -76,9 +76,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			var request = gapi.client.drive.files.get({
 				'fileId': fileId
 			});
+			fail = fail || function () {};
 			request.execute(function (resp) {
 				if (resp.error) {
-					fail(resp.error);
+					if (resp.error.code === 404) {
+						fail('no-access-allowed');
+					} else {
+						fail(resp.error);
+					}
 				} else {
 					downloadFile(resp, complete, fail);
 				}
