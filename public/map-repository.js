@@ -43,18 +43,16 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	this.loadMap = function (mapId) {
 		var repository = chooseRepository([mapId]),
 			mapLoadFailed = function (reason) {
+				var retryWithDialog = function () {
+					dispatchEvent('mapLoading', mapId);
+					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
+				};
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapLoadingUnAuthorized', mapId, reason);
 				} else if (reason === 'failed-authentication') {
-					dispatchEvent('authorisationFailed', 'We were unable to authenticate with ' + repository.description, function () {
-						dispatchEvent('mapLoading', mapId);
-						repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
-					});
+					dispatchEvent('authorisationFailed', repository.description, retryWithDialog);
 				} else if (reason === 'not-authenticated') {
-					dispatchEvent('authRequired', 'This operation requires authentication through ' + repository.description + ' !', function () {
-						dispatchEvent('mapLoading', mapId);
-						repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
-					});
+					dispatchEvent('authRequired', repository.description, retryWithDialog);
 				} else {
 					dispatchEvent('mapLoadingFailed', mapId, reason);
 				}
@@ -70,6 +68,10 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				mapInfo = savedMapInfo;
 			},
 			mapSaveFailed = function (reason) {
+				var retryWithDialog = function () {
+					dispatchEvent('mapSaving');
+					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
+				};
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapSavingUnAuthorized', function () {
 						dispatchEvent('mapSaving');
@@ -78,15 +80,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed);
 					});
 				} else if (reason === 'failed-authentication') {
-					dispatchEvent('authorisationFailed', 'We were unable to authenticate with ' + repository.description, function () {
-						dispatchEvent('mapSaving');
-						repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
-					});
+					dispatchEvent('authorisationFailed', repository.description, retryWithDialog);
 				} else if (reason === 'not-authenticated') {
-					dispatchEvent('authRequired', 'This operation requires authentication through ' + repository.description + ' !', function () {
-						dispatchEvent('mapSaving');
-						repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
-					});
+					dispatchEvent('authRequired', repository.description, retryWithDialog);
 				} else {
 					dispatchEvent('mapSavingFailed');
 				}
@@ -140,9 +136,12 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapLoading', function () {
 		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
 	});
-	mapRepository.addEventListener('authRequired', function (message, authCallback) {
+	mapRepository.addEventListener('authRequired', function (providerName, authCallback) {
 		alert.hide(alertId);
-		alertId = alert.show(message, '<a href="#" data-mm-role="auth">Click here to authenticate</a>');
+		alertId = alert.show(
+			'This operation requires authentication through ' + providerName + ' !',
+			'<a href="#" data-mm-role="auth">Click here to authenticate</a>'
+		);
 		jQuery('[data-mm-role=auth]').click(function () {
 			alert.hide(alertId);
 			authCallback();
@@ -151,10 +150,10 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
 	});
-	mapRepository.addEventListener('authorisationFailed', function (message, authCallback) {
+	mapRepository.addEventListener('authorisationFailed', function (providerName, authCallback) {
 		alert.hide(alertId);
 		alertId = alert.show(
-			message,
+			'We were unable to authenticate with ' + providerName,
 			'<a href="#" data-mm-role="auth">Click here to try again</a>',
 			'error'
 		);
