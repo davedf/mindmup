@@ -7,9 +7,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
 		addListeners = function (repository) {
-			MM.MapRepository.alerts(repository, alert);
 			//Remove this once s3 repository is not redirecting after save
 			if (repository.addEventListener) {
+				MM.MapRepository.alerts(repository, alert);
 				repository.addEventListener('mapSaved', function (key, idea) {
 					dispatchEvent('mapSaved', key, idea);
 				});
@@ -64,16 +64,35 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	};
 
 	this.publishMap = function (repositoryType) {
-		var repo = chooseRepository([repositoryType, mapInfo.mapId]);
-		dispatchEvent('mapSaving');
-		repo.saveMap(_.clone(mapInfo))
-			.fail(function (reason) {
-				dispatchEvent('mapSavingFailed');
-			})
-			.done(function (savedMapInfo) {
+		var repository = chooseRepository([repositoryType, mapInfo.mapId]),
+			mapSaved = function (savedMapInfo) {
 				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
 				mapInfo = savedMapInfo;
-			});
+			},
+			mapSaveFailed = function (reason) {
+				if (reason === 'no-access-allowed') {
+					dispatchEvent('mapSavingUnAuthorized', function () {
+						dispatchEvent('mapSaving');
+						var saveAsNewInfo = _.clone(mapInfo);
+						saveAsNewInfo.mapId = 'new';
+						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed);
+					});
+				} else if (reason === 'failed-authentication') {
+					dispatchEvent('authorisationFailed', 'We were unable to authenticate with ' + repository.description, function () {
+						dispatchEvent('mapSaving');
+						repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
+					});
+				} else if (reason === 'not-authenticated') {
+					dispatchEvent('authRequired', 'This operation requires authentication through ' + repository.description + ' !', function () {
+						dispatchEvent('mapSaving');
+						repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
+					});
+				} else {
+					dispatchEvent('mapSavingFailed');
+				}
+			};
+		dispatchEvent('mapSaving');
+		repository.saveMap(_.clone(mapInfo)).then(mapSaved, mapSaveFailed);
 	};
 };
 
@@ -134,19 +153,35 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	});
 	mapRepository.addEventListener('authorisationFailed', function (message, authCallback) {
 		alert.hide(alertId);
-		alertId = alert.show(message, '<a href="#" data-mm-role="auth">Click here to try again</a>', 'error');
+		alertId = alert.show(
+			message,
+			'<a href="#" data-mm-role="auth">Click here to try again</a>',
+			'error'
+		);
 		jQuery('[data-mm-role=auth]').click(function () {
 			alert.hide(alertId);
 			authCallback();
 		});
 	});
-	mapRepository.addEventListener('mapLoadingUnAuthorized', function (mapUrl, reason) {
+	mapRepository.addEventListener('mapLoadingUnAuthorized', function () {
 		alert.hide(alertId);
 		alertId = alert.show(
 			'The map could not be loaded.',
 			'You do not have the right to view this map',
 			'error'
 		);
+	});
+	mapRepository.addEventListener('mapSavingUnAuthorized', function (callback) {
+		alert.hide(alertId);
+		alertId = alert.show(
+			'You do not have the right to edit this map',
+			'<a href="#" data-mm-role="auth">Click here to save a copy</a>',
+			'error'
+		);
+		jQuery('[data-mm-role=auth]').click(function () {
+			alert.hide(alertId);
+			callback();
+		});
 	});
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
 		alert.hide(alertId);

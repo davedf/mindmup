@@ -3,8 +3,17 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	'use strict';
 	var driveLoaded,
 		isAuthorised,
+		recognises = function (mapId) {
+			return mapId && mapId[0] === "g";
+		},
+		googleMapId = function (mapId) {
+			if (recognises(mapId)) {
+				return mapId.substr(2);
+			}
+		},
 		saveFile = function (mapInfo) {
-			var	deferred = jQuery.Deferred(),
+			var	googleId =  googleMapId(mapInfo.mapId),
+				deferred = jQuery.Deferred(),
 				boundary = '-------314159265358979323846',
 				delimiter = "\r\n--" + boundary + "\r\n",
 				close_delim = "\r\n--" + boundary + "--",
@@ -23,8 +32,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					data +
 					close_delim,
 				request = gapi.client.request({
-					'path': '/upload/drive/v2/files' + (mapInfo.googleId ? "/" + mapInfo.googleId : ""),
-					'method': (mapInfo.googleId ? 'PUT' : 'POST'),
+					'path': '/upload/drive/v2/files' + (googleId ? "/" + googleId : ""),
+					'method': (googleId ? 'PUT' : 'POST'),
 					'params': {'uploadType': 'multipart'},
 					'headers': {
 						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
@@ -33,11 +42,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				});
 			request.execute(function (resp) {
 				if (resp.error) {
-					deferred.reject(resp.error);
+					if (resp.error.code === 403) {
+						deferred.reject('no-access-allowed');
+					} else {
+						deferred.reject(resp.error);
+					}
 				} else {
-					if (!mapInfo.googleId) {
+					if (!googleId) {
 						mapInfo.mapId = "g1" + resp.id;
-						mapInfo.googleId = resp.id;
 					}
 					deferred.resolve(mapInfo);
 				}
@@ -148,9 +160,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		return deferred.promise();
 	};
 
-	this.recognises = function (mapId) {
-		return mapId && mapId[0] === "g";
-	};
+	this.recognises = recognises;
 
 	this.retrieveAllFiles = function () {
 		var deferred = jQuery.Deferred(),
@@ -181,11 +191,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 
 	this.loadMap = function (mapId, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
-			googleId = mapId.substr(2),
+			googleId = googleMapId(mapId),
 			loadSucceeded = function (result) {
 				var mapInfo = {
 					mapId: mapId,
-					googleId: googleId,
 					idea: content(result.body)
 				};
 				deferred.resolve(mapInfo);
@@ -197,7 +206,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		return deferred.promise();
 	};
 
-	this.saveMap = function (mapInfo) {
+	this.saveMap = function (mapInfo, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
 			timeout,
 			saveSucceeded = function (savedMapInfo) {
@@ -208,7 +217,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
 				saveFile(mapInfo).then(saveSucceeded, deferred.reject);
 			};
-		this.ready().then(readySucceeded, deferred.reject);
+		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
 
 	};
