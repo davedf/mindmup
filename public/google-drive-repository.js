@@ -124,25 +124,27 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				jQuery('<script src="https://apis.google.com/js/client.js?onload=googleClientLoaded"></script>').appendTo('body');
 			}
 		},
-		makeReady = function (complete, failure) {
+		makeReady = function () {
+			var deferred = jQuery.Deferred();
 			if (driveLoaded) {
-				authenticate();
+				authenticate(deferred.resolve, deferred.reject);
 				return;
 			}
 			loadApi(function () {
 				gapi.client.setApiKey(apiKey);
 				gapi.client.load('drive', 'v2', function () {
 					driveLoaded = true;
-					authenticate(complete, failure);
+					authenticate(deferred.resolve, deferred.reject);
 				});
 			});
+			return deferred.promise();
 		};
 	this.ready = function () {
 		var deferred = jQuery.Deferred();
 		if (driveLoaded && isAuthorised) {
 			deferred.resolve();
 		} else {
-			makeReady(deferred.resolve, deferred.reject);
+			makeReady().then(deferred.resolve, deferred.reject);
 		}
 		return deferred.promise();
 	};
