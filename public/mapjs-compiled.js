@@ -760,6 +760,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	this.setIdea = function (anIdea) {
 		if (idea) {
 			idea.removeEventListener('changed', onIdeaChanged);
+			currentlySelectedIdeaId = undefined;
 		}
 		idea = anIdea;
 		idea.addEventListener('changed', onIdeaChanged);
@@ -783,8 +784,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.getSelectedStyle = function (prop) {
-		var style = currentLayout.nodes[currentlySelectedIdeaId].style;
-		return style && style[prop];
+		var node = currentLayout.nodes[currentlySelectedIdeaId];
+		return node && node.style && node.style[prop];
 	};
 	this.toggleCollapse = function (source) {
 		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
@@ -1546,7 +1547,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 
 	}());
 };
-MAPJS.KineticMediator.dimensionProvider = function (title) {
+MAPJS.KineticMediator.dimensionProvider = _.memoize(function (title) {
 	'use strict';
 	var text = new Kinetic.Idea({
 		text: title
@@ -1555,7 +1556,7 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 		width: text.getWidth(),
 		height: text.getHeight()
 	};
-};
+});
 MAPJS.KineticMediator.layoutCalculator = function (idea) {
 	'use strict';
 	return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
