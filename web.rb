@@ -5,6 +5,7 @@ require 'aws-sdk'
 
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require File.dirname(__FILE__)+'/lib/freemind_format.rb'
+require File.dirname(__FILE__)+'/lib/browser_detection.rb'
 
 configure do
   set :google_analytics_account, ENV["GOOGLE_ANALYTICS_ACCOUNT"]
@@ -33,7 +34,7 @@ end
 get '/' do
   if session['mapid'].nil?
     @mapid=settings.default_map
-    erb :editor
+    show_map
   else
     redirect "/map/#{session['mapid']}"
   end
@@ -82,7 +83,7 @@ end
 get "/map/:mapid" do
   @mapid = params[:mapid]
   session['mapid']=@mapid
-  erb :editor
+  show_map
 end
 
 get "/publishingConfig" do
@@ -99,7 +100,10 @@ end
 get '/trouble' do
   erb :trouble, :layout => false
 end
-
+get '/browserok/:mapid' do
+  session['browserok']=true
+  redirect "/map/#{params[:mapid]}"
+end
 post '/import' do
   file = params['file']
   json_fail('No file uploaded') unless file 
@@ -117,6 +121,20 @@ post '/import' do
 end
 
 helpers do
+  include Sinatra::UserAgentHelpers
+  def show_map
+    if (browser_supported? || user_accepted_browser?)
+      erb :editor
+    else
+      erb :unsupported, :layout => false
+    end
+  end
+  def user_accepted_browser?
+    !(session["browserok"].nil?)
+  end
+  def browser_supported? 
+    browser.chrome? || browser.gecko? || browser.safari?
+  end
   def json_fail message
     halt %Q!{"error":"#{message}"}!
   end

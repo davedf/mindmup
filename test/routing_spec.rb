@@ -5,6 +5,9 @@ describe 'Map request routing' do
     n=Nokogiri::HTML last_response.body
     eval(n.xpath('//script[@id="main"]').text().match('MM.main\(([^)]*)\)')[1])
   end
+  before(:each) do
+    header "User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.152 Safari/537.22"
+  end
   describe 'named map route' do
     it "takes map ID from the url after /map, appends .json and prepends S3 website and folder to the mindmap attribute. sets mapid attrib to just the map id." do
       get "/map/ABCDEFGH"
@@ -65,4 +68,35 @@ describe 'Map request routing' do
       last_request.url.should=='http://example.org/map/g10B79-DtmfqRMET0x2NHpoLWd5ZWM'
     end
   end
+  describe 'browser whitelisting' do
+    before(:each) do
+      header "User-Agent", "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))"
+    end      
+    def last_response_body_xml
+      Nokogiri::HTML last_response.body
+    end
+    it "does not load map config with /map/xxx if the browser is not in the white list" do
+      get "/map/ABCD"
+      last_response_body_xml.xpath('//script[@id="main"]').should be_empty
+    end
+    it "does not load map config with / if the browser is not in the white list" do
+      header "User-Agent", "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))"
+      get "/"
+      last_response_body_xml.xpath('//script[@id="main"]').should be_empty
+    end
+    it "loads map config if browser is not in white list but users accept the risk" do
+      header "User-Agent", "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))"
+      get "/", {}, {'rack.session'=>{'browserok' => true}}
+      last_response_body_xml.xpath('//script[@id="main"]').should_not be_empty
+    end
+    it "enables users to self-approve a browser using /browserok" do
+      header "User-Agent", "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))"
+      session = {}
+      get "/browserok/ABC",{}, {'rack.session'=>session}
+      session["browserok"].should be_true
+      last_response.should be_redirect
+      follow_redirect! 
+      last_request.url.should == "http://example.org/map/ABC"
+    end
+  end 
 end
