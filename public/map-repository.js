@@ -132,70 +132,61 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 };
 MM.MapRepository.alerts = function (mapRepository, alert) {
 	'use strict';
-	var alertId;
+	var alertId,
+		showAlertWithCallBack = function (message, prompt, type, callback) {
+			alert.hide(alertId);
+			alertId = alert.show(
+				message,
+				'<a href="#" data-mm-role="auth">' + prompt + '</a>',
+				'warning'
+			);
+			jQuery('[data-mm-role=auth]').click(function () {
+				alert.hide(alertId);
+				callback();
+			});
+		},
+		showErrorAlert = function (title, message) {
+			alert.hide(alertId);
+			alertId = alert.show(title, message, 'error');
+		};
 	mapRepository.addEventListener('mapLoading', function () {
 		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
 	});
 	mapRepository.addEventListener('authRequired', function (providerName, authCallback) {
-		alert.hide(alertId);
-		alertId = alert.show(
+		showAlertWithCallBack(
 			'This operation requires authentication through ' + providerName + ' !',
-			'<a href="#" data-mm-role="auth">Click here to authenticate</a>'
+			'Click here to authenticate',
+			'warning',
+			authCallback
 		);
-		jQuery('[data-mm-role=auth]').click(function () {
-			alert.hide(alertId);
-			authCallback();
-		});
 	});
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
 	});
 	mapRepository.addEventListener('authorisationFailed', function (providerName, authCallback) {
-		alert.hide(alertId);
-		alertId = alert.show(
+		showAlertWithCallBack(
 			'We were unable to authenticate with ' + providerName,
-			'<a href="#" data-mm-role="auth">Click here to try again</a>',
-			'error'
+			'Click here to try again',
+			'warning',
+			authCallback
 		);
-		jQuery('[data-mm-role=auth]').click(function () {
-			alert.hide(alertId);
-			authCallback();
-		});
 	});
 	mapRepository.addEventListener('mapLoadingUnAuthorized', function () {
-		alert.hide(alertId);
-		alertId = alert.show(
-			'The map could not be loaded.',
-			'You do not have the right to view this map',
-			'error'
-		);
+		showErrorAlert('The map could not be loaded.', 'You do not have the right to view this map');
 	});
 	mapRepository.addEventListener('mapSavingUnAuthorized', function (callback) {
-		alert.hide(alertId);
-		alertId = alert.show(
+		showAlertWithCallBack(
 			'You do not have the right to edit this map',
-			'<a href="#" data-mm-role="auth">Click here to save a copy</a>',
-			'error'
+			'Click here to save a copy',
+			'error',
+			callback
 		);
-		jQuery('[data-mm-role=auth]').click(function () {
-			alert.hide(alertId);
-			callback();
-		});
 	});
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
-		alert.hide(alertId);
-		alertId = alert.show(
-			'Unfortunately, there was a problem loading the map.',
-			'An automated error report was sent and we will look into this as soon as possible',
-			'error'
-		);
+		showErrorAlert('Unfortunately, there was a problem loading the map.', 'An automated error report was sent and we will look into this as soon as possible');
 	});
 	mapRepository.addEventListener('mapSavingFailed', function () {
-		alert.show(
-			'Unfortunately, there was a problem saving the map.',
-			'Please try again later. We have sent an error report and we will look into this as soon as possible',
-			'error'
-		);
+		showErrorAlert('Unfortunately, there was a problem saving the map.', 'Please try again later. We have sent an error report and we will look into this as soon as possible');
 	});
 };
 MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {
