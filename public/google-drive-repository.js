@@ -11,6 +11,26 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				return mapId.substr(2);
 			}
 		},
+		checkAuth = function (showDialog) {
+			var deferred = jQuery.Deferred();
+			gapi.auth.authorize(
+				{
+					'client_id': clientId,
+					'scope': 'https://www.googleapis.com/auth/drive  https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/userinfo.profile',
+					'immediate': !showDialog
+				},
+				function (authResult) {
+					if (authResult) {
+						isAuthorised = true;
+						deferred.resolve();
+					} else {
+						isAuthorised = false;
+						deferred.reject('not-authenticated');
+					}
+				}
+			);
+			return deferred.promise();
+		},
 		saveFile = function (mapInfo) {
 			var	googleId =  googleMapId(mapInfo.mapId),
 				deferred = jQuery.Deferred(),
@@ -48,6 +68,13 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						} else {
 							deferred.reject('no-access-allowed');
 						}
+					} else if (resp.error.code === 401) {
+						checkAuth(false).then(
+							function () {
+								saveFile(mapInfo).then(deferred.resolve, deferred.reject);
+							},
+							deferred.reject
+						);
 					} else {
 						deferred.reject(resp.error);
 					}
@@ -100,26 +127,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					downloadFile(resp).then(deferred.resolve, deferred.reject);
 				}
 			});
-			return deferred.promise();
-		},
-		checkAuth = function (showDialog) {
-			var deferred = jQuery.Deferred();
-			gapi.auth.authorize(
-				{
-					'client_id': clientId,
-					'scope': 'https://www.googleapis.com/auth/drive  https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/userinfo.profile',
-					'immediate': !showDialog
-				},
-				function (authResult) {
-					if (authResult) {
-						isAuthorised = true;
-						deferred.resolve();
-					} else {
-						isAuthorised = false;
-						deferred.reject('not-authenticated');
-					}
-				}
-			);
 			return deferred.promise();
 		},
 		authenticate = function (showAuthenticationDialogs) {
@@ -225,9 +232,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.resolve(savedMapInfo);
 					},
 					saveFailed = function (reason) {
+						console.log(reason);
 						clearTimeout(timeout);
 						if (recursionCount < maxRetrys && reason === 'rate-limit') {
-							setTimeout(deferred.reject, recursionCount * 1000);
+							setTimeout(retry, recursionCount * 1000);
 						} else {
 							deferred.reject(reason);
 						}
