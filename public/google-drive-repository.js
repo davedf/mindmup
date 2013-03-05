@@ -1,7 +1,9 @@
 /*global content, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi, btoa, XMLHttpRequest */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
-	var driveLoaded,
+	observable(this);
+	var dispatchEvent = this.dispatchEvent,
+		driveLoaded,
 		isAuthorised,
 		recognises = function (mapId) {
 			return mapId && mapId[0] === "g";
@@ -87,7 +89,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					}
 				});
 			} catch (e) {
-				deferred.reject('network-error');
+				deferred.reject('network-error', e);
 			}
 			return deferred.promise();
 		},
@@ -99,7 +101,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					{
 						dataType: 'json',
 						success: deferred.resolve,
-						error: deferred.reject,
+						error: function (resp) {
+							deferred.reject('network-error', resp);
+						},
 						headers: {'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }
 					}
 				);
@@ -214,8 +218,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						};
 						deferred.resolve(mapInfo);
 					},
-					loadFailed = function (reason) {
-						console.log(reason);
+					loadFailed = function (reason, error) {
+						if (error) {
+							dispatchEvent('networkError', error);
+						}
 						if (recursionCount < maxRetrys && reason === 'network-error') {
 							setTimeout(retry, recursionCount * 1000);
 						} else {
@@ -243,8 +249,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						clearTimeout(timeout);
 						deferred.resolve(savedMapInfo);
 					},
-					saveFailed = function (reason) {
-						console.log(reason);
+					saveFailed = function (reason, error) {
+						if (error) {
+							dispatchEvent('networkError', error);
+						}
 						clearTimeout(timeout);
 						if (recursionCount < maxRetrys && reason === 'network-error') {
 							setTimeout(retry, recursionCount * 1000);

@@ -13,6 +13,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				repository.addEventListener('mapSaved', function (key, idea) {
 					dispatchEvent('mapSaved', key, idea);
 				});
+				repository.addEventListener('networkError', function (err) {
+					dispatchEvent('networkError', err);
+				});
 			}
 		},
 		chooseRepository = function (identifiers) {
@@ -84,7 +87,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				} else if (reason === 'not-authenticated') {
 					dispatchEvent('authRequired', repository.description, retryWithDialog);
 				} else {
-					dispatchEvent('mapSavingFailed');
+					dispatchEvent('mapSavingFailed', reason);
 				}
 			};
 		dispatchEvent('mapSaving');
@@ -115,7 +118,7 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 		wasRelevantOnLoad = isMapRelevant(idea);
 	});
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
-		activityLog.error('Error loading map document [' + mapUrl + '] ' + reason);
+		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason));
 	});
 	mapRepository.addEventListener('mapSaved', function (id, idea) {
 		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
@@ -126,8 +129,11 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 			activityLog.log('Map', 'Saved Irrelevant', id);
 		}
 	});
-	mapRepository.addEventListener('mapSavingFailed', function () {
-		activityLog.error('Map save failed');
+	mapRepository.addEventListener('mapSavingFailed', function (reason) {
+		activityLog.error('Map save failed ' + JSON.stringify(reason));
+	});
+	mapRepository.addEventListener('networkError', function (reason) {
+		activityLog.log('Map', 'networkError', JSON.stringify(reason));
 	});
 };
 MM.MapRepository.alerts = function (mapRepository, alert) {
