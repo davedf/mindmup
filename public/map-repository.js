@@ -138,7 +138,7 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 			alertId = alert.show(
 				message,
 				'<a href="#" data-mm-role="auth">' + prompt + '</a>',
-				'warning'
+				type
 			);
 			jQuery('[data-mm-role=auth]').click(function () {
 				alert.hide(alertId);

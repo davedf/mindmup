@@ -60,31 +60,35 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					},
 					'body': multipartRequestBody
 				});
-			request.execute(function (resp) {
-				if (resp.error) {
-					if (resp.error.code === 403) {
-						if (resp.error.reason && (resp.error.reason === 'rateLimitExceeded' || resp.error.reason === 'userRateLimitExceeded')) {
-							deferred.reject('rate-limit');
+			try {
+				request.execute(function (resp) {
+					if (resp.error) {
+						if (resp.error.code === 403) {
+							if (resp.error.reason && (resp.error.reason === 'rateLimitExceeded' || resp.error.reason === 'userRateLimitExceeded')) {
+								deferred.reject('network-error');
+							} else {
+								deferred.reject('no-access-allowed');
+							}
+						} else if (resp.error.code === 401) {
+							checkAuth(false).then(
+								function () {
+									saveFile(mapInfo).then(deferred.resolve, deferred.reject);
+								},
+								deferred.reject
+							);
 						} else {
-							deferred.reject('no-access-allowed');
+							deferred.reject(resp.error);
 						}
-					} else if (resp.error.code === 401) {
-						checkAuth(false).then(
-							function () {
-								saveFile(mapInfo).then(deferred.resolve, deferred.reject);
-							},
-							deferred.reject
-						);
 					} else {
-						deferred.reject(resp.error);
+						if (!googleId) {
+							mapInfo.mapId = "g1" + resp.id;
+						}
+						deferred.resolve(mapInfo);
 					}
-				} else {
-					if (!googleId) {
-						mapInfo.mapId = "g1" + resp.id;
-					}
-					deferred.resolve(mapInfo);
-				}
-			});
+				});
+			} catch (e) {
+				deferred.reject('network-error');
+			}
 			return deferred.promise();
 		},
 		downloadFile = function (file) {
@@ -112,7 +116,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			request.execute(function (resp) {
 				if (resp.error) {
 					if (resp.error.code === 403) {
-						deferred.reject('rate-limit');
+						deferred.reject('network-error');
 					} else if (resp.error.code === 404) {
 						deferred.reject('no-access-allowed');
 					} else {
@@ -195,20 +199,33 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		return deferred.promise();
 	};
 
-
-
 	this.loadMap = function (mapId, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
+			maxRetrys = 5,
 			googleId = googleMapId(mapId),
-			loadSucceeded = function (result) {
-				var mapInfo = {
-					mapId: mapId,
-					idea: content(result)
-				};
-				deferred.resolve(mapInfo);
+			startLoad = function (recursionCount) {
+				var retry = function () {
+						startLoad(recursionCount++);
+					},
+					loadSucceeded = function (result) {
+						var mapInfo = {
+							mapId: mapId,
+							idea: content(result)
+						};
+						deferred.resolve(mapInfo);
+					},
+					loadFailed = function (reason) {
+						console.log(reason);
+						if (recursionCount < maxRetrys && reason === 'network-error') {
+							setTimeout(retry, recursionCount * 1000);
+						} else {
+							deferred.reject(reason);
+						}
+					};
+				loadFile(googleId).then(loadSucceeded, loadFailed);
 			},
 			readySucceeded = function () {
-				loadFile(googleId).then(loadSucceeded, deferred.reject);
+				startLoad(0);
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
@@ -229,7 +246,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					saveFailed = function (reason) {
 						console.log(reason);
 						clearTimeout(timeout);
-						if (recursionCount < maxRetrys && reason === 'rate-limit') {
+						if (recursionCount < maxRetrys && reason === 'network-error') {
 							setTimeout(retry, recursionCount * 1000);
 						} else {
 							deferred.reject(reason);
