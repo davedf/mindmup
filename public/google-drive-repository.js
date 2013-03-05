@@ -88,22 +88,17 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			return deferred.promise();
 		},
 		downloadFile = function (file) {
-			var deferred = jQuery.Deferred(),
-				xhr;
+			var deferred = jQuery.Deferred();
 			if (file.downloadUrl) {
-				xhr = new XMLHttpRequest();
-				xhr.open('GET', file.downloadUrl);
-				if (file.title) {
-					xhr.setRequestHeader('Authorization', 'Bearer ' + gapi.auth.getToken().access_token);
-				}
-				xhr.onload = function () {
-					deferred.resolve({
-						title: file.title || 'unknown',
-						body: JSON.parse(xhr.responseText)
-					});
-				};
-				xhr.onerror = deferred.reject;
-				xhr.send();
+				jQuery.ajax(
+					file.downloadUrl,
+					{
+						dataType: 'json',
+						success: deferred.resolve,
+						error: deferred.reject,
+						headers: {'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }
+					}
+				);
 			} else {
 				deferred.reject();
 			}
@@ -208,7 +203,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			loadSucceeded = function (result) {
 				var mapInfo = {
 					mapId: mapId,
-					idea: content(result.body)
+					idea: content(result)
 				};
 				deferred.resolve(mapInfo);
 			},
