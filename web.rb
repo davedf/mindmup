@@ -119,7 +119,9 @@ post '/import' do
   end
   result
 end
-
+get "/un" do
+  erb :unsupported, :layout=> false
+end
 helpers do
   include Sinatra::UserAgentHelpers
   def show_map
