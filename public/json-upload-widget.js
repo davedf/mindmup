@@ -17,7 +17,7 @@ $.fn.json_upload = function (action, start, complete, fail) {
 			}
 			active = false;
 			try {
-				result = this.contentWindow.document.body.innerText;
+				result = $(this.contentWindow.document.body).text();
 			} catch (err) {
 				fail("problem uploading the file to server", result);
 				return;
