@@ -48,7 +48,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 			var repository = (mapId && mapId[0]);
 			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
-			element.find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
+			jQuery('#toolbarSave').find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
 			loadedIdea = idea;
 		});
 		mapRepository.addEventListener('mapSaving', function () {

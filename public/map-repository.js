@@ -201,8 +201,8 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		toggleChange = function () {
 			saving = false;
 			if (!changed) {
+				jQuery('body').removeClass('map-unchanged').addClass('map-changed');
 				jQuery('#toolbarShare').hide();
-				jQuery('#toolbarSave').show();
 				jQuery('#menuExport').hide();
 				jQuery('#menuPublish').effect('highlight');
 				activityLog.log('Map', 'Edit');
@@ -232,9 +232,8 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		saving = false;
 		changed = false;
 		jQuery('#toolbarShare').show();
-		jQuery('#toolbarSave').hide();
+		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
 		jQuery('#menuExport').show();
-		jQuery('#menuPublish').hide();
 	});
 };
 MM.MapRepository.mapLocationChange = function (mapRepository) {

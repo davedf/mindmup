@@ -19,7 +19,7 @@
           <li><a data-category="Tools" data-event-type="Delete idea" class="removeSubIdea"><i class="icon-remove"></i>&nbsp;Delete</a></li>
         </ul>
         </li>
-        <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="Top Bar" data-event-type="Open Bookmarks">
+        <li class="dropdown hidden-map-changed"> <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="Top Bar" data-event-type="Open Bookmarks">
           <i class="icon-user hidden-phone"></i>&nbsp;My&nbsp;Maps&nbsp;<b class="caret"></b></a>
         <ul class="dropdown-menu" role="menu" id="listBookmarks">
           <li><a href="#">Save a map and it will appear in this list</a></li>
@@ -29,6 +29,14 @@
           <a href="#" data-event-type="Import" data-category="Top Bar" data-target="#modalImport" data-toggle="modal">Import a Freemind or MindMup file</a>
           </li>
         </ul>
+        </li>
+        <li id="toolbarSave" class="visible-map-changed pull-left btn-group">
+          <button id="menuPublish" class="btn btn-primary" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
+          <button class="btn dropdown-toggle" data-toggle='dropdown'/><span data-mm-role='currentrepo' class='repo-a'>&nbsp;</span><b class="caret"></b></button>
+          <ul class="dropdown-menu">
+            <li><a data-mm-repository='a' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to MindMup">MindMup</a></li>
+            <li><a data-mm-repository='g' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Google Drive">Google&nbsp;Drive</a></li>	
+          </ul>
         </li>
       </ul>
       <ul class="nav pull-right">

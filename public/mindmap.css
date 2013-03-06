@@ -46,6 +46,12 @@ body {
 .ios .hidden-touch, .android .hidden-touch {
   display: none !important;
 }
+.map-changed .hidden-map-changed {
+  display: none;
+}
+.map-unchanged .visible-map-changed {
+  display: none;
+}
 #toolbarEdit button { margin-top:5px; }
 .ideaInput {
   position: absolute;
