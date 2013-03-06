@@ -35,7 +35,9 @@ MM.main = function (config) {
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
-		jQuery('#topbar').alertWidget(alert).topbarWidget();
+		jQuery('#topbar').alertWidget(alert).topbarWidget().mapToolbarWidget(mapModel);
+		jQuery('#topbar .updateStyle').colorPicker();
+		jQuery('#topbar .colorPicker-picker').parent('a').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit .updateStyle').colorPicker();

@@ -31,7 +31,11 @@ body {
 	padding: 0px; /* cancel default bootstrap padding on mobile screens, we use full screen */
 }
 }
-
+@media (max-height: 320px) {
+.hidden-phone-landscape {
+  display: none;
+}
+}
 @media screen {
   #topbar  .nav > li > a { font-weight:bold; }
 }
