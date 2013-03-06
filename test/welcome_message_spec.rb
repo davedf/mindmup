@@ -1,6 +1,9 @@
 require File.join(File.dirname(__FILE__),'spec_helper.rb')
 
 describe 'Welcome message banner' do  
+  before(:each) do
+    header "User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.152 Safari/537.22"
+  end
   it "shows the first welcome message about beta on an empty session" do
     local_session={}
     get "/",{}, {'rack.session'=>local_session}
