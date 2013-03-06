@@ -12,13 +12,16 @@ html, body {
  background-image:url('http://mindmup.s3.amazonaws.com/lib/img/logo_32.png');
  background-position:left center;
  background-repeat:no-repeat;
- margin-left:6px;
+ width: 40px;
+ height: 40px;
+ padding: 0;
 }
 @media (max-width: 979px) {
   .navbar-fixed-top {
     margin-bottom:0px;
   }
 }
+
 @media screen {
   #topbar  .nav > li > a { font-weight:bold; }
 }
@@ -45,6 +48,7 @@ html, body {
  background-position:left center;
  background-repeat:no-repeat;
  margin-left: 6px; margin-top:2px;
+ padding-right: 0px;
 }
 #modalDownload .modal-body {
 	text-align: center;
