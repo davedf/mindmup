@@ -1,5 +1,5 @@
 /*global MM,jQuery,document*/
-jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
+jQuery.fn.shareWidget = function () {
 	'use strict';
 	var shareToolbar = this,
 		shareModal = shareToolbar.find('.modal').detach().appendTo('body'),
@@ -28,28 +28,6 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 				emailElement.val('');
 				shareModal.modal('hide');
 			}
-		},
-		shortenerRetriesLeft = 5,
-		fireShortener = function () {
-			jQuery.ajax({
-				type: 'post',
-				url: 'https://www.googleapis.com/urlshortener/v1/url?key=' + googleShortenerApiKey,
-				dataType: 'json',
-				contentType: 'application/json',
-				data: '{"longUrl": "' + document.location.href + '"}',
-				success: function (result) {
-					shareToolbar.data('mm-url', result.id);
-					shareToolbar.find('[data-mm-role=short-url]').show().val(result.id);
-				},
-				error: function (xhr, err, msg) {
-					if (shortenerRetriesLeft > 0) {
-						shortenerRetriesLeft--;
-						setTimeout(fireShortener, 1000);
-					} else {
-						activityLog.log('Map', 'URL shortener failed', err + " " + msg);
-					}
-				}
-			});
 		};
 	shareToolbar.data('mm-url', document.location.href);
 	formElement.find('input').blur(function () { validate(jQuery(this)); });
@@ -80,5 +58,5 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 		}
 		return false;
 	});
-	fireShortener();
+	return shareToolbar;
 };

@@ -47,7 +47,7 @@ MM.main = function (config) {
 		jQuery('[rel=tooltip]').tooltip();
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery(document).titleUpdateWidget(mapRepository);
-		jQuery('#toolbarShare').shareWidget(config.googleShortenerApiKey, activityLog);
+		jQuery('#toolbarShare').shareWidget().urlShortenerWidget(config.googleShortenerApiKey, activityLog);
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		mapRepository.loadMap(config.mapId);
 	});

@@ -15,7 +15,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			};
 		element
 			.draggable({containment: 'window'})
-			.find('button.close').click(function () {
+			.find('[data-mm-role="toggle-toolbar"]').click(function () {
 				element.find('.toolbar-inner').toggle();
 				toggleButton.toggleClass('icon-resize-small').toggleClass('icon-resize-full');
 			});
