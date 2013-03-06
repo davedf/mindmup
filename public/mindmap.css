@@ -16,7 +16,17 @@ html, body {
  height: 40px;
  padding: 0;
 }
+@media (max-width: 979px) {
+.navbar-fixed-top, .navbar-fixed-bottom {
+position: fixed;
+margin-bottom:0px;
+}
+}
 @media (max-width: 767px) {
+.navbar {
+  padding-left:20px;
+  padding-right: 20px;
+}
 body {
 	padding: 0px; /* cancel default bootstrap padding on mobile screens, we use full screen */
 }
