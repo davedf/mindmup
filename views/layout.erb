@@ -18,9 +18,9 @@
     <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
-  <body>
+  <body class="<%=browser.body_class %>">
 	  <%=erb :topbar %>  
-	<div id="floating-toolbar" class="floating span2 well well-small hidden-phone">
+	<div id="floating-toolbar" class="floating span2 well well-small hidden-phone hidden-touch">
       <span id="toolbarSave" class="hide pull-left btn-group">
 		  <button id="menuPublish" class="btn btn-primary" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
 		  <button class="btn dropdown-toggle" data-toggle='dropdown'/><span data-mm-role='currentrepo' class='repo-a'>&nbsp;</span><b class="caret"></b></button>

@@ -97,9 +97,6 @@ get "/publishingConfig" do
   erb :s3UploadConfig, :layout => false
 end
 
-get '/trouble' do
-  erb :trouble, :layout => false
-end
 get '/browserok/:mapid' do
   session['browserok']=true
   redirect "/map/#{params[:mapid]}"
@@ -122,8 +119,8 @@ end
 get "/un" do
   erb :unsupported, :layout=> false
 end
+include Sinatra::UserAgentHelpers
 helpers do
-  include Sinatra::UserAgentHelpers
   def show_map
     if (browser_supported? || user_accepted_browser?)
       erb :editor
