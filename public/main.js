@@ -35,7 +35,7 @@ MM.main = function (config) {
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
-		jQuery('#topbar').alertWidget(alert);
+		jQuery('#topbar').alertWidget(alert).topbarWidget();
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit .updateStyle').colorPicker();
