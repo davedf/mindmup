@@ -5,14 +5,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 		var element = jQuery(this), loadedIdea,
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
 			toggleButton = element.find('.toggle'),
-			exportForm = $('#formExport'),
-			resetSaveButtonEvents = ['mapSavingFailed', 'mapSavingUnAuthorized', 'authorisationFailed', 'authRequired'],
-			resetSaveButton = function () {
-				if (jQuery('#menuPublish').attr('disabled')) {
-					jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
-					jQuery('#toolbarSave p').show();
-				}
-			};
+			exportForm = $('#formExport');
 		element
 			.draggable({containment: 'window'})
 			.find('[data-mm-role="toggle-toolbar"]').click(function () {
@@ -39,33 +32,8 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Ctrl+Z</strong>/<strong>Cmd+Z</strong>: Undo<br/>' +
 				'<strong>Ctrl+Y</strong>/<strong>Cmd+Y</strong>: Redo<br/>'
 		});
-		jQuery('#menuPublish').add('#toolbarSave a').click(function () {
-			mapRepository.publishMap($(this).attr('data-mm-repository'));
-		});
-		$('#toolbarSave a[data-mm-repository]').addClass(function () {
-			return 'repo-' + $(this).data('mm-repository');
-		});
 		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
-			var repository = (mapId && mapId[0]);
-			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
-			jQuery('#toolbarSave').find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
 			loadedIdea = idea;
-		});
-		mapRepository.addEventListener('mapSaving', function () {
-			jQuery('#menuPublish')
-				.html('<i class="icon-spinner icon-spin"></i>Saving...')
-				.removeClass('btn-primary')
-				.attr('disabled', true);
-			jQuery('#toolbarSave p').hide();
-		});
-
-		_.each(resetSaveButtonEvents, function (eventName) {
-			mapRepository.addEventListener(eventName, resetSaveButton);
-		});
-
-		mapRepository.addEventListener('mapSaved', function () {
-			jQuery('#menuPublish').text('Save Map').addClass('btn-primary').attr('disabled', false);
-			jQuery('#toolbarSave p').show();
 		});
 	});
 };

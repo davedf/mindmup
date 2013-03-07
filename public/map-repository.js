@@ -202,9 +202,6 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 			saving = false;
 			if (!changed) {
 				jQuery('body').removeClass('map-unchanged').addClass('map-changed');
-				jQuery('#toolbarShare').hide();
-				jQuery('#menuExport').hide();
-				jQuery('#menuPublish').effect('highlight');
 				activityLog.log('Map', 'Edit');
 				changed = true;
 			}
@@ -231,9 +228,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 	mapRepository.addEventListener('mapSaved', function () {
 		saving = false;
 		changed = false;
-		jQuery('#toolbarShare').show();
 		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
-		jQuery('#menuExport').show();
 	});
 };
 MM.MapRepository.mapLocationChange = function (mapRepository) {

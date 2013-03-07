@@ -51,6 +51,7 @@ MM.main = function (config) {
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('#toolbarShare').shareWidget().urlShortenerWidget(config.googleShortenerApiKey, activityLog);
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
+		jQuery('#toolbarSave').saveWidget(mapRepository);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
