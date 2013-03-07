@@ -1,5 +1,5 @@
 /*global $, _, jQuery*/
-jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter, toggleClassTarget) {
+jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this), loadedIdea,
@@ -9,7 +9,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter, toggleCl
 		element
 			.draggable({containment: 'window'})
 			.find('[data-mm-role="toggle-toolbar"]').click(function () {
-				toggleClassTarget.addClass('collapsed-toolbar');
+				$($(this).data('mm-target')).addClass('collapsed-toolbar');
 			});
 		element.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		element.find('[data-mm-role="remote-export"]').click(function () {
