@@ -21,6 +21,14 @@
   <body class="map-unchanged <%=browser.body_class %>">
 	  <%=erb :topbar %>  
 	<div id="floating-toolbar" class="floating span2 well well-small hidden-phone hidden-touch">
+        <div data-mm-role="save" class="visible-map-changed pull-left btn-group">
+          <button class="btn btn-primary" data-mm-role="publish" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
+          <button class="btn dropdown-toggle" data-toggle='dropdown'/><span data-mm-role='currentrepo' class='repo-a'>&nbsp;</span><b class="caret"></b></button>
+          <ul class="dropdown-menu">
+            <li><a data-mm-repository='a' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to MindMup">MindMup</a></li>
+            <li><a data-mm-repository='g' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Google Drive">Google&nbsp;Drive</a></li>	
+          </ul>
+        </div>
       <button class="close pull-right" data-category="Toolbar Click" data-event-type="Expand/Collapse" data-mm-role="toggle-toolbar"><i class="toggle icon-resize-small"></i></button>
       <div class="toolbar-inner">
         <div class="toolbar" id="toolbarEdit">

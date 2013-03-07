@@ -10,7 +10,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 					element.find('p').show();
 				}
 			};
-		element.find('[data-mm-role=publish]').add('#toolbarSave a').click(function () {
+		element.find('[data-mm-role=publish]').add('a', element).click(function () {
 			mapRepository.publishMap($(this).attr('data-mm-repository'));
 		});
 		element.find('a[data-mm-repository]').addClass(function () {
