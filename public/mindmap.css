@@ -138,3 +138,6 @@ a.repo-g, a.repo-a {
 span.repo-g, span.repo-a {
 	padding-left:16px;
 }
+.dropdown-menu li a {
+	cursor: pointer
+}
