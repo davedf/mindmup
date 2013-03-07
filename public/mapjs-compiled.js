@@ -1040,10 +1040,18 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	'use strict';
 	var horizontalConnector, calculateConnector;
 	Kinetic.Connector = function (config) {
+		var oldTransitionTo;
 		this.shapeFrom = config.shapeFrom;
 		this.shapeTo = config.shapeTo;
 		this.shapeType = 'Connector';
 		Kinetic.Shape.call(this, config);
+		oldTransitionTo = this.transitionTo.bind(this);
+		this.transitionTo = function (transition) {
+			if (!(this.shapeFrom.isVisible || this.shapeTo.isVisible())) {
+				transition.duration = 0.01;
+			}
+			oldTransitionTo(transition);
+		};
 		this._setDrawFuncs();
 	};
 	horizontalConnector = function (parent, child) {
@@ -1087,9 +1095,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			var context = canvas.getContext(),
 				shapeFrom = this.shapeFrom,
 				shapeTo = this.shapeTo,
-				conn = calculateConnector(shapeFrom, shapeTo),
+				conn,
 				offset,
 				maxOffset;
+			if (!(shapeFrom.isVisible() || shapeTo.isVisible())) {
+				return;
+			}
+			conn = calculateConnector(shapeFrom, shapeTo);
 			if (!conn) {
 				return;
 			}
@@ -1134,13 +1146,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				self.getStage().setDraggable(isDraggable);
 			},
 			unformattedText = joinLines(config.text),
-			oldSetText;
+			oldSetText,
+			oldTransitionTo;
 		config.text = breakWords(config.text);
 		this.level = config.level;
 		this.mmStyle = config.mmStyle;
 		this.isSelected = false;
 		this.setStyle(config);
-
 		config.draggable = true;
 		config.name = 'Idea';
 		Kinetic.Text.apply(this, [config]);
@@ -1156,37 +1168,57 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			this.on('mouseout touchend', setStageDraggable.bind(null, true));
 		}
 		this.oldDrawFunc = this.getDrawFunc();
-
 		this.setDrawFunc(function (canvas) {
-			if (this.mmStyle && this.mmStyle.collapsed) {
-				var context = canvas.getContext(), width = this.getWidth(), height = this.getHeight();
-				this.drawCollapsedBG(canvas, {x: 8, y: 8});
-				this.drawCollapsedBG(canvas, {x: 4, y: 4});
+			if (self.isVisible()) {
+				if (this.mmStyle && this.mmStyle.collapsed) {
+					var context = canvas.getContext(), width = this.getWidth(), height = this.getHeight();
+					this.drawCollapsedBG(canvas, {x: 8, y: 8});
+					this.drawCollapsedBG(canvas, {x: 4, y: 4});
+				}
+				this.oldDrawFunc(canvas);
 			}
-			this.oldDrawFunc(canvas);
 		});
-		this.drawCollapsedBG =  function (canvas, offset) {
-            var context = canvas.getContext(),
+		oldTransitionTo = this.transitionTo.bind(this);
+		this.transitionTo = function (transition) {
+			if (!self.isVisible()) {
+				transition.duration = 0.01;
+			}
+			oldTransitionTo(transition);
+		};
+		this.drawCollapsedBG = function (canvas, offset) {
+			var context = canvas.getContext(),
 				cornerRadius = this.getCornerRadius(),
 				width = this.getWidth(),
 				height = this.getHeight();
-            context.beginPath();
-            if (cornerRadius === 0) {
-                context.rect(offset.x, offset.y, width, height);
-            } else {
-                context.moveTo(offset.x + cornerRadius, offset.y);
-                context.lineTo(offset.x + width - cornerRadius, offset.y);
-                context.arc(offset.x + width - cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI * 3 / 2, 0, false);
-                context.lineTo(offset.x + width, offset.y + height - cornerRadius);
-                context.arc(offset.x + width - cornerRadius, offset.y + height - cornerRadius, cornerRadius, 0, Math.PI / 2, false);
-                context.lineTo(offset.x + cornerRadius, offset.y + height);
-                context.arc(offset.x + cornerRadius, offset.y + height - cornerRadius, cornerRadius, Math.PI / 2, Math.PI, false);
-                context.lineTo(offset.x, offset.y + cornerRadius);
-                context.arc(offset.x + cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI, Math.PI * 3 / 2, false);
-            }
-            context.closePath();
-            canvas.fillStroke(this);
-        };
+			context.beginPath();
+			if (cornerRadius === 0) {
+				context.rect(offset.x, offset.y, width, height);
+			} else {
+				context.moveTo(offset.x + cornerRadius, offset.y);
+				context.lineTo(offset.x + width - cornerRadius, offset.y);
+				context.arc(offset.x + width - cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI * 3 / 2, 0, false);
+				context.lineTo(offset.x + width, offset.y + height - cornerRadius);
+				context.arc(offset.x + width - cornerRadius, offset.y + height - cornerRadius, cornerRadius, 0, Math.PI / 2, false);
+				context.lineTo(offset.x + cornerRadius, offset.y + height);
+				context.arc(offset.x + cornerRadius, offset.y + height - cornerRadius, cornerRadius, Math.PI / 2, Math.PI, false);
+				context.lineTo(offset.x, offset.y + cornerRadius);
+				context.arc(offset.x + cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI, Math.PI * 3 / 2, false);
+			}
+			context.closePath();
+			canvas.fillStroke(this);
+		};
+		this.isVisible = function () {
+			var stage = self.getStage(),
+				scale = stage.getScale().x || 1,
+				position = self.attrs,
+				result = !(
+					position.x > -stage.attrs.x + stage.getWidth() ||
+					-stage.attrs.x > position.x + scale * self.getWidth() ||
+					position.y > -stage.attrs.y + stage.getHeight() ||
+					-stage.attrs.y > position.y + scale * self.getHeight()
+				);
+			return result;
+		};
 		this.editNode = function (shouldSelectAll) {
 			self.fire(':editing');
 			//this only works for solid color nodes
