@@ -5,11 +5,11 @@
       <ul class="nav pull-left">
         <li><a id="logo-img" class="hidden-phone" href="/default" rel="tooltip" title="Mindmup Home" data-category="Top Bar" data-event-type="Logo">&nbsp;</a></li>
         <li class="hidden-phone hidden-touch"> <a href="/map/new" data-category="Top Bar" data-event-type="Create a Map"><i class="icon-lightbulb"></i>&nbsp;Create&nbsp;a&nbsp;Map</a> </li>
-        <li class="dropdown visible-phone visible-touch"> <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="Top Bar" data-event-type="Tools">
+        <li class="dropdown visible-phone visible-touch visible-collapsed-toolbar"> <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="Top Bar" data-event-type="Tools">
           <i class="icon-wrench hidden-phone"></i>&nbsp;Tools&nbsp;<b class="caret"></b></a>
-        <ul class="dropdown-menu" role="menu">
-          <li> <a href="/map/new" data-category="Tools" data-event-type="Create a Map"><i class="icon-lightbulb"></i>&nbsp;Create&nbsp;a&nbsp;Map</a> </li>
-          <li class="divider"></li>
+		  <ul class="dropdown-menu" role="menu">
+			  <li class="hide hidden-touch visible-collapsed-toolbar"><a data-mm-role="open-toolbar" ><i class="icon-food"></i>&nbsp;Open&nbsp;toolbar</a></li>
+          <li class="divider hide hidden-touch visible-collapsed-toolbar"></li>
           <li><a data-category="Tools" data-event-type="Add idea" class="addSubIdea"><i class="icon-signout" ></i>&nbsp;Add Child</a></li>
           <li><a data-category="Tools" data-event-type="Edit idea" class="editNode"><i class="icon-pencil"></i>&nbsp;Edit node</a></li>
           <li><a data-category="Tools" data-event-type="Node Color"><input type="hidden" data-mm-target-property='background' class="updateStyle"></input>&nbsp;Node color</a></li>
@@ -24,11 +24,12 @@
         <li class="dropdown hidden-map-changed"> <a class="dropdown-toggle" data-toggle="dropdown" href="#" data-category="Top Bar" data-event-type="Open Bookmarks">
           <i class="icon-user hidden-phone"></i>&nbsp;My&nbsp;Maps&nbsp;<b class="caret"></b></a>
         <ul class="dropdown-menu" role="menu" id="listBookmarks">
-          <li><a href="#">Save a map and it will appear in this list</a></li>
+		  <li><a>Save a map and it will appear here</a></li>
           <li class="template" style="display:none"><a data-category="Top Bar" data-event-type="Bookmark click"><button data-mm-role='bookmark-delete' class='btn-inline pull-right icon-remove' rel='tooltip' data-title='Remove bookmark'></button></a></li>
           <li class="divider" data-mm-role="bookmark-keep" />
+          <li data-mm-role="bookmark-keep"> <a href="/map/new" data-category="Tools" data-event-type="Create a Map"><i class="icon-lightbulb"></i>&nbsp;Create&nbsp;a&nbsp;Map</a> </li>
           <li data-mm-role="bookmark-keep">
-          <a href="#" data-event-type="Import" data-category="Top Bar" data-target="#modalImport" data-toggle="modal">Import a Freemind or MindMup file</a>
+		  <a href="#" data-event-type="Import" data-category="Top Bar" data-target="#modalImport" data-toggle="modal"><i class="icon-upload"></i>&nbsp;Import a Freemind or MindMup file</a>
           </li>
         </ul>
         </li>

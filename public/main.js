@@ -35,7 +35,7 @@ MM.main = function (config) {
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
-		jQuery('#topbar').alertWidget(alert).topbarWidget().mapToolbarWidget(mapModel);
+		jQuery('#topbar').alertWidget(alert).topbarWidget(jQuery('body')).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();
 		jQuery('#topbar .colorPicker-picker').parent('a').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
@@ -43,7 +43,7 @@ MM.main = function (config) {
 		jQuery('#toolbarEdit .updateStyle').colorPicker();
 		jQuery('#toolbarEdit .colorPicker-picker').parent('button').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
-		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
+		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter, jQuery('body'));
 		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks, alert);
 		jQuery('#modalDownload').downloadWidget(pngExporter);
 		jQuery('[rel=tooltip]').tooltip();

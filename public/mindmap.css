@@ -141,3 +141,9 @@ span.repo-g, span.repo-a {
 .dropdown-menu li a {
 	cursor: pointer
 }
+.collapsed-toolbar .visible-collapsed-toolbar {
+	display: block !important;
+}
+.collapsed-toolbar .hidden-collapsed-toolbar {
+	display: none !important;
+}
