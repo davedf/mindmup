@@ -17,6 +17,7 @@ MM.jsonStorage = function (storage) {
 MM.Bookmark = function (mapRepository, storage, storageKey) {
 	'use strict';
 	var self = observable(this),
+		currentMap = false,
 		list = [],
 		pushToStorage = function () {
 			if (storage && storageKey) {
@@ -31,6 +32,16 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 			mapId: key,
 			title: idea.title
 		});
+	});
+	mapRepository.addEventListener('mapLoaded', function (idea, key) {
+		var couldPin = self.canPin();
+		currentMap = {
+			mapId: key,
+			title: idea.title
+		};
+		if (couldPin !== self.canPin()) {
+			self.dispatchEvent('pinChanged');
+		}
 	});
 	self.store = function (bookmark) {
 		if (!(bookmark.mapId && bookmark.title)) {
@@ -72,6 +83,16 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 			};
 		});
 	};
+	self.pin = function () {
+		if (currentMap) {
+			self.store(currentMap);
+		}
+	};
+	self.canPin = function () {
+		return currentMap && _.every(list, function (bookmark) {
+			return bookmark.mapId !== currentMap.mapId;
+		});
+	};
 };
 jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 	'use strict';
@@ -80,6 +101,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 			template = element.find('.template').clone(),
 		    originalContent = element.children().clone(),
 			keep = element.children().filter('[data-mm-role=bookmark-keep]').clone(),
+			pin = element.children().filter('[data-mm-role=bookmark-pin]').clone(),
 			updateLinks = function () {
 				var list = bookmarks.links(),
 					link,
@@ -101,13 +123,17 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 						});
 					});
 					keep.clone().appendTo(element);
+					if (bookmarks.canPin()) {
+						pin.clone().appendTo(element).find('a').click(function () {
+							bookmarks.pin();
+						});
+					}
 				} else {
 					originalContent.clone().appendTo(element);
 				}
 			};
-		bookmarks.addEventListener('added', function (mark) {
-			updateLinks();
-		});
+		bookmarks.addEventListener('added', updateLinks);
+		bookmarks.addEventListener('pinChanged', updateLinks);
 		bookmarks.addEventListener('deleted', function (mark) {
 			var alertId;
 			updateLinks();
