@@ -32,7 +32,7 @@ MM.S3MapRepositoryV2 = function (s3Url, folder, activityLog, networkTimeoutMilli
 		);
 		return deferred.promise();
 	};
-	this.description = "S3";
+	this.description = "S3_CORS";
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),

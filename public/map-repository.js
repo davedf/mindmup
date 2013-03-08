@@ -12,6 +12,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				MM.MapRepository.alerts(repository, alert);
 				repository.addEventListener('mapSaved', function (key, idea) {
 					dispatchEvent('mapSaved', key, idea);
+					dispatchEvent('mapSaveCompleted', repository.description);
 				});
 				repository.addEventListener('networkError', function (err) {
 					dispatchEvent('networkError', err);
@@ -68,6 +69,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		var repository = chooseRepository([repositoryType, mapInfo.mapId]),
 			mapSaved = function (savedMapInfo) {
 				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
+				dispatchEvent('mapSaveCompleted', repository.description);
 				mapInfo = savedMapInfo;
 			},
 			mapSaveFailed = function (reason) {
@@ -121,6 +123,7 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason));
 	});
 	mapRepository.addEventListener('mapSaving', activityLog.log.bind(activityLog, 'Map', 'Save Attempted'));
+	mapRepository.addEventListener('mapSaveCompleted', activityLog.log.bind(activityLog, 'Map', 'Save Completed'));
 	mapRepository.addEventListener('mapSaved', function (id, idea) {
 		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
 			activityLog.log('Map', 'Created Relevant', id);
