@@ -4,7 +4,7 @@ MM.S3MapRepositoryV2 = function (s3Url, folder, activityLog, networkTimeoutMilli
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent;
-	MM.S3MapRepository.version = 2;
+	MM.S3MapRepository.version = '2';
 	this.recognises = function (mapId) {
 		return mapId && mapId[0] === "a";
 	};
