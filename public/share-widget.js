@@ -5,6 +5,9 @@ $.fn.shareWidget = function () {
 		var self = $(this),
 			target = self.attr('data-mm-target');
 		self.data('mm-url', document.location.href);
+		if (!target) {
+			return;
+		}
 		self.click(function () {
 			var title = encodeURIComponent(document.title),
 				url = encodeURIComponent(self.data('mm-url'));

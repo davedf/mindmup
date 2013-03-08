@@ -52,7 +52,7 @@ MM.main = function (config) {
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('[data-mm-role=share]').shareWidget();
 		jQuery('#modalShareEmail').shareEmailWidget();
-		jQuery('[data-mm-url]').add('[data-mm-role=short-url]').urlShortenerWidget(config.googleShortenerApiKey, activityLog);
+		jQuery('[data-mm-role=share]').add('[data-mm-role=short-url]').urlShortenerWidget(config.googleShortenerApiKey, activityLog);
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		jQuery('#toolbarSave').saveWidget(mapRepository);
 		jQuery('#floating-toolbar [data-mm-role=save]').saveWidget(mapRepository);
