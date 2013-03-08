@@ -4,15 +4,8 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	return this.each(function () {
 		var element = jQuery(this), loadedIdea,
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
-			toggleButton = element.find('.toggle'),
-			exportForm = $('#formExport');
+			toggleButton = element.find('.toggle');
 		element.draggable({containment: 'window'});
-		element.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
-		element.find('[data-mm-role="remote-export"]').click(function () {
-			exportForm.find('[name=format]').val($(this).data('mm-format'));
-			exportForm.find('[name=map]').val(JSON.stringify(loadedIdea));
-			exportForm.submit();
-		});
 		keyboardShortcuts.popover({
 			placement: 'bottom',
 			trigger: 'click',
@@ -26,9 +19,6 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>/</strong> or <strong>Shift+Up</strong>: Expand or collapse<br/>' +
 				'<strong>Ctrl+Z</strong>/<strong>Cmd+Z</strong>: Undo<br/>' +
 				'<strong>Ctrl+Y</strong>/<strong>Cmd+Y</strong>: Redo<br/>'
-		});
-		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
-			loadedIdea = idea;
 		});
 	});
 };

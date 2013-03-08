@@ -9,7 +9,15 @@
           <i class="icon-wrench hidden-phone"></i>&nbsp;Tools&nbsp;<b class="caret"></b></a>
 		  <ul class="dropdown-menu" role="menu">
 			  <li class="hide hidden-touch visible-collapsed-toolbar"><a data-mm-target="body" data-mm-role="toggle-class" data-mm-class="collapsed-toolbar"><i class="icon-food"></i>&nbsp;Open&nbsp;toolbar</a></li>
-          <li class="divider hide hidden-touch visible-collapsed-toolbar"></li>
+			  <li class="hidden-touch hidden-map-changed dropdown-submenu">
+<a href="#">Export Map</a>
+<ul class="dropdown-menu" role="menu"> 
+	<li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
+	<li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
+	<li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
+</ul>
+              </li>
+		  <li class="divider hidden-touch"></li>
           <li><a data-category="Tools" data-event-type="Add idea" class="addSubIdea"><i class="icon-signout" ></i>&nbsp;Add Child</a></li>
           <li><a data-category="Tools" data-event-type="Edit idea" class="editNode"><i class="icon-pencil"></i>&nbsp;Edit node</a></li>
           <li><a data-category="Tools" data-event-type="Node Color"><input type="hidden" data-mm-target-property='background' class="updateStyle"></input>&nbsp;Node color</a></li>

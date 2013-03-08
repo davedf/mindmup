@@ -53,7 +53,9 @@ MM.main = function (config) {
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		jQuery('#toolbarSave').saveWidget(mapRepository);
 		jQuery('#floating-toolbar [data-mm-role=save]').saveWidget(mapRepository);
+		jQuery('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		jQuery('[data-mm-role="toggle-class"]').topbarWidget();
+		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

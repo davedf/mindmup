@@ -60,17 +60,13 @@
               </div>
               </li>
               <li>
-			  <div id="menuExport" class="btn-group hidden-map-changed">
-				  <form method="post" id="formExport" action="/export" class="hide">
-					  <input type="hidden" name="map" />
-					  <input type="hidden" name="format" />
-				  </form>
-                <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
-                <ul class="dropdown-menu">
-                  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
-                  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
-                  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
-                </ul>
+			  <div class="btn-group hidden-map-changed">
+				  <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
+				  <ul class="dropdown-menu">
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
+				  </ul>
               </div>
             </li>
           </ul>
@@ -85,6 +81,10 @@
     <%= erb :feedback %>
     <%= erb :terms_and_conditions %>
     <%= yield %>
+	<form method="post" id="formExport" action="/export" class="hide">
+		<input type="hidden" name="map" />
+		<input type="hidden" name="format" />
+	</form>
     <div id="fb-root"></div>
     <%= erb :scripts %>
     <script id="main">
