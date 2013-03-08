@@ -3,6 +3,7 @@
 MM.main = function (config) {
 	'use strict';
 	var setupTracking = function (activityLog, jotForm, mapModel) {
+		_gaq.push(['_setCustomVar', 1, 's3RepositoryVersion', MM.S3MapRepository.version]);
 		activityLog.addEventListener('log', function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.call(arguments, 0, 3))); });
 		activityLog.addEventListener('error', function (message) {
 			jotForm.sendError(message, activityLog.getLog());
@@ -17,12 +18,12 @@ MM.main = function (config) {
 				fjs.parentNode.insertBefore(js, fjs);
 			});
 		};
-	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview'], ['_setCustomVar', 1, 's3RepositoryVersion', MM.S3MapRepository.version]];
+	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview']];
 	jQuery(function () {
 		var activityLog = new MM.ActivityLog(10000),
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
-			s3Repository = new MM.S3MapRepository(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis),
+			s3Repository = Math.random() < 0.8 ? new MM.S3MapRepository(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis) : new MM.S3MapRepositoryV2(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis),
 			googleRepository = new MM.GoogleDriveRepository(config.googleClientId, config.googleShortenerApiKey, config.networkTimeoutMillis, "application/json"),
 			mapRepository = new MM.MapRepository(activityLog, alert, [s3Repository, googleRepository]),
 			pngExporter = new MAPJS.PNGExporter(mapRepository),

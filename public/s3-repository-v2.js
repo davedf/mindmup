@@ -1,10 +1,10 @@
 /*jslint forin: true*/
 /*global content, FormData, jQuery, MM, observable, setTimeout, window */
-MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis) {
+MM.S3MapRepositoryV2 = function (s3Url, folder, activityLog, networkTimeoutMillis) {
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent;
-
+	MM.S3MapRepository.version = '2';
 	this.recognises = function (mapId) {
 		return mapId && mapId[0] === "a";
 	};
@@ -32,7 +32,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 		);
 		return deferred.promise();
 	};
-	this.description = "S3";
+	this.description = "S3_CORS";
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
@@ -87,4 +87,3 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 		return deferred.promise();
 	};
 };
-MM.S3MapRepository.version = 2;
