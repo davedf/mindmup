@@ -1,5 +1,5 @@
 /*global jQuery, beforeEach, afterEach, $, describe, it, expect */
-describe("topbar-widget", function () {
+describe("toggle-class-widget", function () {
 	'use strict';
 	var link,
 		className = 'cls',
