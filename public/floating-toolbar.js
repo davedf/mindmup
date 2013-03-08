@@ -6,11 +6,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
 			toggleButton = element.find('.toggle'),
 			exportForm = $('#formExport');
-		element
-			.draggable({containment: 'window'})
-			.find('[data-mm-role="toggle-toolbar"]').click(function () {
-				$($(this).data('mm-target')).addClass('collapsed-toolbar');
-			});
+		element.draggable({containment: 'window'});
 		element.find('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		element.find('[data-mm-role="remote-export"]').click(function () {
 			exportForm.find('[name=format]').val($(this).data('mm-format'));

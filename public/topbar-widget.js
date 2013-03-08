@@ -1,9 +1,15 @@
 /*global $, content*/
-$.fn.topbarWidget = function (target) {
+$.fn.topbarWidget = function () {
 	'use strict';
 	var element = this;
-	element.find('[data-mm-role=open-toolbar]').click(function () {
-		$($(this).data('mm-target')).removeClass('collapsed-toolbar');
+	element.click(function () {
+		var target = $($(this).data('mm-target')),
+			targetClass = $(this).data('mm-class');
+		if (target.hasClass(targetClass)) {
+			target.removeClass(targetClass);
+		} else {
+			target.addClass(targetClass);
+		}
 	});
 	return element;
 };

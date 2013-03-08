@@ -1,11 +1,30 @@
-/*global jQuery, $, describe, it, expect */
+/*global jQuery, beforeEach, afterEach, $, describe, it, expect */
 describe("topbar-widget", function () {
 	'use strict';
-	it('removes collapsed-toolbar class when clicked on open-toolbar', function () {
-		var toolbar = $('<span><a data-mm-role="open-toolbar" data-mm-target="#tgt">x</a></span>'),
-			target = $('<span>').attr('id', 'tgt').addClass('collapsed-toolbar').appendTo('body');
-		toolbar.topbarWidget();
-		$('a', toolbar).click();
-		expect(target.hasClass('collapsed-toolbar')).toBeFalsy();
+	var link,
+		className = 'cls',
+		target,
+		nonChanged;
+	beforeEach(function () {
+		link = $('<a data-mm-role="toggle-class" data-mm-class="cls" data-mm-target="#tgt">x</a>');
+		target = $('<span>').attr('id', 'tgt').appendTo('body');
+		nonChanged = $('<span>').attr('id', 'tgt2').appendTo('body');
+		link.topbarWidget();
+	});
+	afterEach(function () {
+		target.remove();
+		nonChanged.remove();
+	});
+	it('removes target class only from target element when clicked if class present', function () {
+		target.addClass(className);
+		nonChanged.addClass(className);
+		link.click();
+		expect(target.hasClass(className)).toBeFalsy();
+		expect(nonChanged.hasClass(className)).toBeTruthy();
+	});
+	it('adds target class to target element when clicked if class not present', function () {
+		link.click();
+		expect(target.hasClass(className)).toBeTruthy();
+		expect(nonChanged.hasClass(className)).toBeFalsy();
 	});
 });

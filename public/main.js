@@ -35,7 +35,7 @@ MM.main = function (config) {
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('#container').mapWidget(activityLog, mapModel);
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
-		jQuery('#topbar').alertWidget(alert).topbarWidget().mapToolbarWidget(mapModel);
+		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();
 		jQuery('#topbar .colorPicker-picker').parent('a').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
@@ -53,6 +53,7 @@ MM.main = function (config) {
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		jQuery('#toolbarSave').saveWidget(mapRepository);
 		jQuery('#floating-toolbar [data-mm-role=save]').saveWidget(mapRepository);
+		jQuery('[data-mm-role="toggle-class"]').topbarWidget();
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
