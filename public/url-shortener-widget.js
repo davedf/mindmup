@@ -1,7 +1,7 @@
 /*global MM,jQuery,document, setTimeout*/
 jQuery.fn.urlShortenerWidget = function (googleShortenerApiKey, activityLog) {
 	'use strict';
-	var element = this,
+	var list = this,
 		shortenerRetriesLeft = 5,
 		fireShortener = function () {
 			jQuery.ajax({
@@ -11,8 +11,10 @@ jQuery.fn.urlShortenerWidget = function (googleShortenerApiKey, activityLog) {
 				contentType: 'application/json',
 				data: '{"longUrl": "' + document.location.href + '"}',
 				success: function (result) {
-					element.data('mm-url', result.id);
-					element.find('[data-mm-role=short-url]').show().val(result.id);
+					list.each(function () {
+						jQuery(this).data('mm-url', result.id);
+					});
+					list.filter('[data-mm-role=short-url]').show().val(result.id);
 				},
 				error: function (xhr, err, msg) {
 					if (shortenerRetriesLeft > 0) {
@@ -25,5 +27,5 @@ jQuery.fn.urlShortenerWidget = function (googleShortenerApiKey, activityLog) {
 			});
 		};
 	fireShortener();
-	return element;
+	return list;
 };
