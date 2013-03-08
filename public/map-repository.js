@@ -72,7 +72,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			},
 			mapSaveFailed = function (reason) {
 				var retryWithDialog = function () {
-					dispatchEvent('mapSaving');
+					dispatchEvent('mapSaving', repository.description);
 					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
 				};
 				if (reason === 'no-access-allowed') {
@@ -87,10 +87,10 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				} else if (reason === 'not-authenticated') {
 					dispatchEvent('authRequired', repository.description, retryWithDialog);
 				} else {
-					dispatchEvent('mapSavingFailed', reason);
+					dispatchEvent('mapSavingFailed', reason, repository.description);
 				}
 			};
-		dispatchEvent('mapSaving');
+		dispatchEvent('mapSaving', repository.description);
 		repository.saveMap(_.clone(mapInfo)).then(mapSaved, mapSaveFailed);
 	};
 };
@@ -120,6 +120,7 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
 		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason));
 	});
+	mapRepository.addEventListener('mapSaving', activityLog.log.bind(activityLog, 'Map', 'Save Attempted'));
 	mapRepository.addEventListener('mapSaved', function (id, idea) {
 		if (isMapRelevant(idea) && !wasRelevantOnLoad) {
 			activityLog.log('Map', 'Created Relevant', id);
@@ -129,8 +130,8 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 			activityLog.log('Map', 'Saved Irrelevant', id);
 		}
 	});
-	mapRepository.addEventListener('mapSavingFailed', function (reason) {
-		activityLog.error('Map save failed ' + JSON.stringify(reason));
+	mapRepository.addEventListener('mapSavingFailed', function (reason, repositoryName) {
+		activityLog.error('Map save failed (' + repositoryName + ')' + JSON.stringify(reason));
 	});
 	mapRepository.addEventListener('networkError', function (reason) {
 		activityLog.log('Map', 'networkError', JSON.stringify(reason));
