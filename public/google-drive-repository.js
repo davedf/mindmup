@@ -206,12 +206,14 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 	this.loadMap = function (mapId, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
 			maxRetrys = 5,
+			timeout,
 			googleId = googleMapId(mapId),
 			startLoad = function (recursionCount) {
 				var retry = function () {
 						startLoad(recursionCount++);
 					},
 					loadSucceeded = function (result) {
+						clearTimeout(timeout);
 						var mapInfo = {
 							mapId: mapId,
 							idea: content(result)
@@ -219,6 +221,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.resolve(mapInfo);
 					},
 					loadFailed = function (reason, error) {
+						clearTimeout(timeout);
 						if (error) {
 							dispatchEvent('networkError', error);
 						}
@@ -228,6 +231,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 							deferred.reject(reason);
 						}
 					};
+				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
 				loadFile(googleId).then(loadSucceeded, loadFailed);
 			},
 			readySucceeded = function () {
@@ -250,10 +254,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.resolve(savedMapInfo);
 					},
 					saveFailed = function (reason, error) {
+						clearTimeout(timeout);
 						if (error) {
 							dispatchEvent('networkError', error);
 						}
-						clearTimeout(timeout);
 						if (recursionCount < maxRetrys && reason === 'network-error') {
 							setTimeout(retry, recursionCount * 1000);
 						} else {
