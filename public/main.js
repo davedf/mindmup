@@ -17,7 +17,7 @@ MM.main = function (config) {
 				fjs.parentNode.insertBefore(js, fjs);
 			});
 		};
-	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview']];
+	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview'], ['_setCustomVar', 1, 's3RepositoryVersion', MM.S3MapRepository.version]];
 	jQuery(function () {
 		var activityLog = new MM.ActivityLog(10000),
 			alert = new MM.Alert(),
