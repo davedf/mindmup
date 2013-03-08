@@ -126,6 +126,12 @@ describe("Magic bookmark manager", function () {
 		bookmark.store({mapId: 'u1', title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
 		expect(bookmark.links()).toEqual([{url: '/map/u1', title: 'this is a very very long title...', mapId: 'u1'}]);
 	});
+	it("automatically bookmarks all saved maps", function () {
+		var	mapRepository  =  observable({}),
+			bookmark  =  new MM.Bookmark(mapRepository);
+		mapRepository.dispatchEvent('mapSaved', 'key', {title: 'title'});
+		expect(bookmark.list()).toEqual([{mapId: 'key', title: 'title'}]);
+	});
 });
 
 describe("JSONStorage", function () {
