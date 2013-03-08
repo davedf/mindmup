@@ -117,7 +117,8 @@
 	  initMM=function() {
 		MM.main({
           googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
-          s3Url: 'http://<%= settings.s3_website %>/<%= settings.s3_upload_folder %>/',
+          s3Url: 'http://<%= settings.s3_website %>/',
+          s3Folder: '<%= settings.s3_upload_folder %>/',
           mapUrl: '<%= map_url(@mapid) %>',
           mapId: '<%= @mapid %>',
           googleClientId: '<%= ENV['GOOGLE_CLIENT_ID'] %>',

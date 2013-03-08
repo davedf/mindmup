@@ -10,15 +10,26 @@ class S3PolicySigner
 		# format as "2050-01-01T00:00:00Z"
 		expiration=(Time.now+expiration_time).utc.strftime('%FT%TZ')
 
-		policy_document=%Q!{"expiration": "#{expiration}", "conditions": [
-		{"bucket": "#{bucket_name}"}, 
-		["starts-with", "$key", "#{upload_path}"],
-		{"acl": "public-read"},
-		{"success_action_redirect": "#{redirect_url}"},
-		["eq","$Content-Type", "#{content_type}"],
-		["content-length-range", 0, #{max_size}]
-		]
-		}!
+		if redirect_url then
+			policy_document=%Q!{"expiration": "#{expiration}", "conditions": [
+			{"bucket": "#{bucket_name}"},
+			["starts-with", "$key", "#{upload_path}"],
+			{"acl": "public-read"},
+			{"success_action_redirect": "#{redirect_url}"},
+			["eq","$Content-Type", "#{content_type}"],
+			["content-length-range", 0, #{max_size}]
+			]
+			}!
+		else
+			policy_document=%Q!{"expiration": "#{expiration}", "conditions": [
+			{"bucket": "#{bucket_name}"},
+			["starts-with", "$key", "#{upload_path}"],
+			{"acl": "public-read"},
+			["eq","$Content-Type", "#{content_type}"],
+			["content-length-range", 0, #{max_size}]
+			]
+			}!
+		end
 		policy_document.gsub!(/\n|\t| /,'')
 		policy = Base64.encode64(policy_document).gsub("\n","")
 		signature = Base64.encode64(

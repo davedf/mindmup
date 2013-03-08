@@ -87,9 +87,10 @@ get "/map/:mapid" do
 end
 
 get "/publishingConfig" do
+  no_redirect = params.has_key? "no_redirect";
   @s3_upload_identifier = settings.current_map_data_version +  settings.key_id_generator.generate(:compact)
   @s3_key=settings.s3_upload_folder+"/" + @s3_upload_identifier + ".json"
-  @s3_result_url= settings.base_url + "s3/" + @s3_upload_identifier
+  @s3_result_url=  no_redirect ? nil  : settings.base_url + "s3/" + @s3_upload_identifier
   @s3_content_type="text/plain"
   signer=S3PolicySigner.new
   @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name,
