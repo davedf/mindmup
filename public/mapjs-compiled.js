@@ -853,6 +853,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		self.dispatchEvent('mapScaleChanged', scaleMultiplier);
 		analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
 	};
+	this.move = function (source, deltaX, deltaY) {
+		self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
+		analytic('mapMoveRequested', source);
+	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
 				return currentLayout.nodes[id].x >= currentLayout.nodes[idea.id].x;
@@ -1385,6 +1389,21 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		connectorByFromIdeaId_ToIdeaId = {},
 		connectorKey = function (fromIdeaId, toIdeaId) {
 			return fromIdeaId + '_' + toIdeaId;
+		},
+		moveStage = function (deltaX, deltaY) {
+			if (stage) {
+				/*
+				if (deltaY !== 0) { stage.attrs.y += deltaY; }
+				if (deltaX !== 0) { stage.attrs.x += deltaX; }
+				stage.draw();
+				*/
+				stage.transitionTo({
+					x: deltaX === 'center' ? 0.5 * stage.getWidth() : stage.attrs.x + deltaX,
+					y: deltaY === 'center' ? 0.5 * stage.getHeight() : stage.attrs.y + deltaY,
+					duration: 0.5,
+					easing: 'ease-in-out'
+				});
+			}
 		};
 	stage.add(layer);
 	mapModel.addEventListener('nodeCreated', function (n) {
@@ -1536,6 +1555,10 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			duration: 0.1
 		});
 	});
+	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
+		moveStage(deltaX, deltaY);
+	});
+
 	(function () {
 		var keyboardEventHandlers = {
 			13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
@@ -1564,11 +1587,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 				}
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
-				if (stage) {
-					if (deltaY !== 0) { stage.attrs.y += (deltaY < 0 ? -5 : 5); }
-					if (deltaX !== 0) { stage.attrs.x += (deltaX < 0 ? 5 : -5); }
-					stage.draw();
-				}
+				moveStage(deltaX, deltaY);
 				if (deltaX < 0) { /* stop the back button */
 					event.preventDefault();
 				}
