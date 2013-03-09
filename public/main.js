@@ -59,6 +59,7 @@ MM.main = function (config) {
 		jQuery('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		jQuery('[data-mm-role="toggle-class"]').topbarWidget();
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
+		jQuery('body').touchControl(mapModel);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

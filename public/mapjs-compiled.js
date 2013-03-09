@@ -844,12 +844,14 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 
 	};
 	this.scaleUp = function (source) {
-		self.dispatchEvent('mapScaleChanged', true);
-		analytic('scaleUp', source);
+		self.scale(source, 1.25);
 	};
 	this.scaleDown = function (source) {
-		self.dispatchEvent('mapScaleChanged', false);
-		analytic('scaleDown', source);
+		self.scale(source, 0.8);
+	};
+	this.scale = function (source, scaleMultiplier) {
+		self.dispatchEvent('mapScaleChanged', scaleMultiplier);
+		analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -1374,7 +1376,7 @@ Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (con
 	animation.start();
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
-/*global console, window, document, jQuery, Kinetic*/
+/*global _, console, window, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
 MAPJS.KineticMediator = function (mapModel, stage) {
 	'use strict';
@@ -1425,7 +1427,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			mapModel.updateTitle(n.id, event.text);
 			mapModel.dispatchEvent('inputEnabledChanged', true);
 		});
-		node.on(':editing', function(event){
+		node.on(':editing', function (event) {
 			mapModel.dispatchEvent('inputEnabledChanged', false);
 		});
 		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
@@ -1524,8 +1526,8 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			callback: connector.remove.bind(connector)
 		});
 	});
-	mapModel.addEventListener('mapScaleChanged', function (isScaleUp) {
-		var scale = (stage.getScale().x || 1) * (isScaleUp ? 1.25 : 0.8);
+	mapModel.addEventListener('mapScaleChanged', function (scaleMultiplier) {
+		var scale = (stage.getScale().x || 1) * scaleMultiplier;
 		stage.transitionTo({
 			scale: {
 				x: scale,
