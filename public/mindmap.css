@@ -119,9 +119,6 @@ div.colorPicker-picker { display: inline; float: left; background: none }
 	width:0px;
 	height:0px;
 }
-#toolbarSave img {
-	height: 16px;
-}
 .repo-g {
 	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/google_drive.png');
 	background-repeat: no-repeat;
