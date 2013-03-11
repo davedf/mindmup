@@ -1413,6 +1413,22 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			}
 		};
 	stage.add(layer);
+	jQuery(stage.getContainer()).on('dblclick', function (evt) { stage.simulate('dblclick', evt); });
+	stage.on('dbltap dblclick', function (evt) {
+		var targetElement = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
+		if (!targetElement) {
+			stage.transitionTo({
+				x: 0.5 * stage.getWidth(),
+				y: 0.5 * stage.getHeight(),
+				scale: {
+					x: 1,
+					y: 1
+				},
+				duration: 0.5,
+				easing: 'ease-in-out'
+			});
+		}
+	});
 	mapModel.addEventListener('nodeCreated', function (n) {
 		var node = new Kinetic.Idea({
 			level: n.level,

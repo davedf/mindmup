@@ -31,5 +31,14 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 		jQuery('.modal')
 			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
+		element.hammer().on("pinch", function (event) {
+			mapModel.scale('touch', event.gesture.scale);
+		});
+		element.hammer().on("swipe", function (event) {
+			mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
+		});
+		element.hammer().on("doubletap", function (event) {
+			stage.simulate('dbltap', event);
+		});
 	});
 };
