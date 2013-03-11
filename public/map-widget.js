@@ -16,7 +16,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 			simulateTouch = function (touchType, hammerEvent) {
 				var center;
 				if (!hammerEvent.gesture) {
-					return; /* not a hammer event, instead simulated doubleclick */
+					return; // not a hammer event, instead simulated doubleclick
 				}
 				center = hammerEvent.gesture.center;
 				stage.simulate(touchType, {
@@ -24,15 +24,6 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 					offsetY: center.pageY - element.offset().top
 				});
 			};
-		/*
-		initialLayout = MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider),
-		minY = _.min(
-			initialLayout.nodes,
-			function (node) {
-				return node.y;
-			}
-		).y;
-		*/
 		activityLog.log('Creating canvas Size ' + element.width() + ' ' + element.height());
 		setStageDimensions();
 		stage.attrs.x = 0.5 * stage.getWidth();
@@ -44,14 +35,9 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
 		element.hammer().on("pinch", function (event) {
 			mapModel.scale('touch', event.gesture.scale);
-		});
-		element.hammer().on("swipe", function (event) {
+		}).on("swipe", function (event) {
 			mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
-		});
-		element.hammer().on("hold", function (event) {
-			simulateTouch("hold", event);
-		});
-		element.hammer().on("doubletap", function (event) {
+		}).on("doubletap", function (event) {
 			simulateTouch("dbltap", event);
 		});
 	});

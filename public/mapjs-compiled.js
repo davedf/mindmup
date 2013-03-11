@@ -1168,7 +1168,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			oldSetText(breakWords(text));
 		};
 		this.classType = 'Idea';
-		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
+		this.on('dblclick dbltap', self.fire.bind(self, ':nodeEditRequested'));
 		if (config.level > 1) {
 			this.on('mouseover touchstart', setStageDraggable.bind(null, false));
 			this.on('mouseout touchend', setStageDraggable.bind(null, true));
@@ -1241,10 +1241,14 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 						text: newText || unformattedText
 					});
 					ideaInput.remove();
+					self.stopEditing = undefined;
 					self.getStage().off('xChange yChange', onStageMoved);
 				},
 				onCommit = function () {
 					updateText(ideaInput.val());
+				},
+				onCancelEdit = function () {
+					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1,
 				onStageMoved = _.throttle(function () {
@@ -1266,7 +1270,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					if (e.which === ENTER_KEY_CODE) {
 						onCommit();
 					} else if (e.which === ESC_KEY_CODE) {
-						updateText(unformattedText);
+						onCancelEdit();
 					} else if (e.which === 9) {
 						e.preventDefault();
 					}
@@ -1281,6 +1285,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					ideaInput.width(Math.max(ideaInput.width(), text.getWidth()));
 					ideaInput.height(Math.max(ideaInput.height(), text.getHeight()));
 				});
+			self.stopEditing = onCancelEdit;
 			if (shouldSelectAll) {
 				ideaInput.select();
 			} else if (ideaInput[0].setSelectionRange) {
@@ -1370,6 +1375,9 @@ Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	this.isSelected = isSelected;
 	this.setStyle(this.attrs);
 	this.getLayer().draw();
+	if (!isSelected && this.stopEditing) {
+		this.stopEditing();
+	}
 };
 Kinetic.Idea.prototype.setIsDroppable = function (isDroppable) {
 	'use strict';
@@ -1387,7 +1395,7 @@ Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (con
 	animation.start();
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
-/*global _, console, window, document, jQuery, Kinetic*/
+/*global _, window, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
 MAPJS.KineticMediator = function (mapModel, stage) {
 	'use strict';
@@ -1411,12 +1419,19 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 					easing: 'ease-in-out'
 				});
 			}
+		},
+		getTargetShape = function (evt) {
+			var is;
+			if (evt.offsetX && evt.offsetY) {
+				is = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
+				return is && is.shape;
+			}
+			return false;
 		};
 	stage.add(layer);
 	jQuery(stage.getContainer()).on('dblclick', function (evt) { stage.simulate('dblclick', evt); });
 	stage.on('dbltap dblclick', function (evt) {
-		var targetElement = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
-		if (!targetElement) {
+		if (!getTargetShape(evt)) {
 			stage.transitionTo({
 				x: 0.5 * stage.getWidth(),
 				y: 0.5 * stage.getHeight(),
@@ -1429,12 +1444,6 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			});
 		}
 	});
-	stage.on('hold', function (evt) {
-		var targetElement = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
-		if (targetElement && targetElement.shape) {
-			targetElement.shape.simulate('dblclick');
-		}
-	});
 	mapModel.addEventListener('nodeCreated', function (n) {
 		var node = new Kinetic.Idea({
 			level: n.level,
@@ -1445,16 +1454,20 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			opacity: 0
 		});
 		/* in kinetic 4.3 cannot use click because click if fired on dragend */
-		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
+		node.on('click tap', function () {
+			console.log('click/tap', node, n);
+			if (!node.isSelected) {
+				mapModel.selectNode(n.id);
+			} else {
+				mapModel.toggleCollapse(n.id);
+			}
+		});
 		node.on('dragstart', function () {
 			node.moveToTop();
 			node.attrs.shadow.offset = {
 				x: 8,
 				y: 8
 			};
-		});
-		node.on('dbltap', function () {
-			mapModel.toggleCollapse(n.id);
 		});
 		node.on('dragmove', function () {
 			mapModel.nodeDragMove(
