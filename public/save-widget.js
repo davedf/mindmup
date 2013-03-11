@@ -1,6 +1,16 @@
-/*global $, _, jQuery*/
+/*global window, $, _, jQuery*/
 jQuery.fn.saveWidget = function (mapRepository) {
 	'use strict';
+	var mapChanged = false,
+		mapChangedListener = function () {
+			mapChanged = true;
+		};
+	$(window).keydown(function (evt) {
+		if (mapChanged && evt.which === 83 && (evt.metaKey || evt.ctrlKey)) {
+			mapRepository.publishMap();
+			evt.preventDefault();
+		}
+	});
 	return this.each(function () {
 		var element = jQuery(this),
 			resetSaveButtonEvents = ['mapSavingFailed', 'mapSavingUnAuthorized', 'authorisationFailed', 'authRequired'],
@@ -20,6 +30,8 @@ jQuery.fn.saveWidget = function (mapRepository) {
 			var repository = (mapId && mapId[0]);
 			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
 			element.find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
+			idea.addEventListener('changed', mapChangedListener);
+			mapChanged = false;
 		});
 		mapRepository.addEventListener('mapSaving', function () {
 			element.find('[data-mm-role=publish]')
@@ -33,6 +45,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 		});
 
 		mapRepository.addEventListener('mapSaved', function () {
+			mapChanged = false;
 			element.find('[data-mm-role=publish]').text('Save').addClass('btn-primary').attr('disabled', false);
 			element.find('p').show();
 		});
