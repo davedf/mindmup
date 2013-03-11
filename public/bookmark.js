@@ -89,15 +89,16 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		}
 	};
 	self.canPin = function () {
-		return currentMap && _.every(list, function (bookmark) {
+		return currentMap && (list.length === 0 || _.every(list, function (bookmark) {
 			return bookmark.mapId !== currentMap.mapId;
-		});
+		}));
 	};
 };
 jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
+			alertId,
 			template = element.find('.template').clone(),
 		    originalContent = element.children().clone(),
 			keep = element.children().filter('[data-mm-role=bookmark-keep]').clone(),
@@ -129,15 +130,19 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 						});
 					}
 				} else {
-					originalContent.clone().appendTo(element);
+					originalContent.clone().appendTo(element).filter('[data-mm-role=bookmark-pin]').find('a').click(function () {
+						bookmarks.pin();
+					});
 				}
 			};
 		bookmarks.addEventListener('added', updateLinks);
 		bookmarks.addEventListener('pinChanged', updateLinks);
 		bookmarks.addEventListener('deleted', function (mark) {
-			var alertId;
 			updateLinks();
 			if (alert) {
+				if (alertId) {
+					alert.hide(alertId);
+				}
 				alertId = alert.show("Bookmark Removed.", mark.title + " was removed from the list of your maps. <a href='#'> Undo </a> ", "success");
 				jQuery('.alert-no-' + alertId).find('a').click(function () {
 					bookmarks.store(mark);
