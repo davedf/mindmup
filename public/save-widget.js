@@ -6,7 +6,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 			resetSaveButtonEvents = ['mapSavingFailed', 'mapSavingUnAuthorized', 'authorisationFailed', 'authRequired'],
 			resetSaveButton = function () {
 				if (element.find('[data-mm-role=publish]').attr('disabled')) {
-					element.find('[data-mm-role=publish]').text('Save Map').addClass('btn-primary').attr('disabled', false);
+					element.find('[data-mm-role=publish]').text('Save').addClass('btn-primary').attr('disabled', false);
 					element.find('p').show();
 				}
 			};
@@ -33,7 +33,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 		});
 
 		mapRepository.addEventListener('mapSaved', function () {
-			element.find('[data-mm-role=publish]').text('Save Map').addClass('btn-primary').attr('disabled', false);
+			element.find('[data-mm-role=publish]').text('Save').addClass('btn-primary').attr('disabled', false);
 			element.find('p').show();
 		});
 	});
