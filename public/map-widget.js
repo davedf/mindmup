@@ -38,7 +38,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 			mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
 		});
 		element.hammer().on("doubletap", function (event) {
-			stage.simulate('dbltap', event);
+			stage.simulate('dbltap', event.gesture.srcEvent);
 		});
 	});
 };
