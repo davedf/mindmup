@@ -12,6 +12,17 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 				stage.setWidth(element.width());
 				stage.setHeight(element.height());
 				stage.draw();
+			},
+			simulateTouch = function (touchType, hammerEvent) {
+				var center;
+				if (!hammerEvent.gesture) {
+					return; /* not a hammer event, instead simulated doubleclick */
+				}
+				center = hammerEvent.gesture.center;
+				stage.simulate(touchType, {
+					offsetX: center.pageX - element.offset().left,
+					offsetY: center.pageY - element.offset().top
+				});
 			};
 		/*
 		initialLayout = MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider),
@@ -37,8 +48,11 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 		element.hammer().on("swipe", function (event) {
 			mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
 		});
+		element.hammer().on("hold", function (event) {
+			simulateTouch("hold", event);
+		});
 		element.hammer().on("doubletap", function (event) {
-			stage.simulate('dbltap', event.gesture.srcEvent);
+			simulateTouch("dbltap", event);
 		});
 	});
 };

@@ -1429,6 +1429,12 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			});
 		}
 	});
+	stage.on('hold', function (evt) {
+		var targetElement = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
+		if (targetElement && targetElement.shape) {
+			targetElement.shape.simulate('dblclick');
+		}
+	});
 	mapModel.addEventListener('nodeCreated', function (n) {
 		var node = new Kinetic.Idea({
 			level: n.level,
