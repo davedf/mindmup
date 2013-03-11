@@ -1431,6 +1431,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 				y: 8
 			};
 		});
+		node.on('dbltap', function () {
+			mapModel.toggleCollapse(n.id);
+		});
 		node.on('dragmove', function () {
 			mapModel.nodeDragMove(
 				n.id,
