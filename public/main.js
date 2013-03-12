@@ -17,6 +17,9 @@ MM.main = function (config) {
 				js.src = url;
 				fjs.parentNode.insertBefore(js, fjs);
 			});
+		},
+		isTouch = function () {
+			return jQuery('body').hasClass('ios') || jQuery('body').hasClass('android');
 		};
 	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview']];
 	jQuery(function () {
@@ -34,7 +37,7 @@ MM.main = function (config) {
 			mapBookmarks = new MM.Bookmark(mapRepository, MM.jsonStorage(localStorage), 'created-maps');
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
-		jQuery('#container').mapWidget(activityLog, mapModel);
+		jQuery('#container').mapWidget(activityLog, mapModel, isTouch());
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();
@@ -62,3 +65,4 @@ MM.main = function (config) {
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
+

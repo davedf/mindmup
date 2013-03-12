@@ -1,5 +1,5 @@
 /*global jQuery, Kinetic, MAPJS, window*/
-jQuery.fn.mapWidget = function (activityLog, mapModel) {
+jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -23,6 +23,12 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 					offsetX: center.pageX - element.offset().left,
 					offsetY: center.pageY - element.offset().top
 				});
+			},
+			lastGesture,
+			discrete = function (gesture) {
+				var result = (lastGesture && lastGesture.type !== gesture.type && (gesture.timeStamp - lastGesture.timeStamp < 250));
+				lastGesture = gesture;
+				return !result;
 			};
 		activityLog.log('Creating canvas Size ' + element.width() + ' ' + element.height());
 		setStageDimensions();
@@ -33,12 +39,18 @@ jQuery.fn.mapWidget = function (activityLog, mapModel) {
 		jQuery('.modal')
 			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
-		element.hammer().on("pinch", function (event) {
-			mapModel.scale('touch', event.gesture.scale);
-		}).on("swipe", function (event) {
-			mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
-		}).on("doubletap", function (event) {
-			simulateTouch("dbltap", event);
-		});
+		if (touchEnabled) {
+			element.hammer().on("pinch", function (event) {
+				if (discrete(event)) {
+					mapModel.scale('touch', event.gesture.scale);
+				}
+			}).on("swipe", function (event) {
+				if (discrete(event)) {
+					mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
+				}
+			}).on("doubletap", function (event) {
+				simulateTouch("dbltap", event);
+			});
+		}
 	});
 };
