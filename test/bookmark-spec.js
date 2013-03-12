@@ -124,7 +124,9 @@ describe("Magic bookmark manager", function () {
 	it("converts a list of bookmarks to links by appending /map and cutting down long titles", function () {
 		var bookmark = new MM.Bookmark(observable({}));
 		bookmark.store({mapId: 'u1', title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
-		expect(bookmark.links()).toEqual([{url: '/map/u1', title: 'this is a very very long title...', mapId: 'u1'}]);
+		expect(bookmark.links()).toEqual([{url: '/map/u1',
+			title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down',
+			shortTitle: 'this is a very very long title...', mapId: 'u1'}]);
 	});
 	it("automatically bookmarks all saved maps", function () {
 		var	mapRepository  =  observable({}),

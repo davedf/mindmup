@@ -48,9 +48,11 @@ MM.main = function (config) {
 		jQuery('#toolbarEdit .colorPicker-picker').parent('button').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
-		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks, alert);
+		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks, alert, !isTouch());
 		jQuery('#modalDownload').downloadWidget(pngExporter);
-		jQuery('[rel=tooltip]').tooltip();
+		if (!isTouch()) {
+			jQuery('[rel=tooltip]').tooltip();
+		}
 		jQuery('[data-category]').trackingWidget(activityLog);
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('[data-mm-role=share]').shareWidget();

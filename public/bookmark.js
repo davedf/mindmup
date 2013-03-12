@@ -78,7 +78,8 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		return _.map(self.list(), function (element) {
 			return {
 				url: "/map/" + element.mapId,
-				title: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + "..." : element.title,
+				title: element.title,
+				shortTitle: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + "..." : element.title,
 				mapId: element.mapId
 			};
 		});
@@ -94,7 +95,7 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		}));
 	};
 };
-jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
+jQuery.fn.bookmarkWidget = function (bookmarks, alert, addTooltips) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -114,8 +115,10 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 						addition = template.clone().show().appendTo(element);
 						link = addition.find('a');
 						children = link.children().detach();
-						link.attr('href', bookmark.url).text(bookmark.title);
-						link.addClass('repo-' + bookmark.mapId[0]);
+						link.attr('href', bookmark.url).text(bookmark.shortTitle).addClass('repo-' + bookmark.mapId[0]);
+						if (addTooltips) {
+							link.data('title', bookmark.title).tooltip();
+						}
 						children.appendTo(link);
 						addition.find('[data-mm-role=bookmark-delete]').click(function () {
 							bookmarks.remove(bookmark.mapId);
