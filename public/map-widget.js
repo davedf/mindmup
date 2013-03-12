@@ -42,7 +42,10 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
 		if (touchEnabled) {
 			element.hammer().on("pinch", function (event) {
 				if (discrete(event)) {
-					mapModel.scale('touch', event.gesture.scale);
+					mapModel.scale('touch', event.gesture.scale, {
+						x: event.gesture.center.pageX - element.offset().left,
+						y: event.gesture.center.pageY - element.offset().top
+					});
 				}
 			}).on("swipe", function (event) {
 				if (discrete(event)) {

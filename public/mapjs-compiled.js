@@ -849,8 +849,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	this.scaleDown = function (source) {
 		self.scale(source, 0.8);
 	};
-	this.scale = function (source, scaleMultiplier) {
-		self.dispatchEvent('mapScaleChanged', scaleMultiplier);
+	this.scale = function (source, scaleMultiplier, zoomPoint) {
+		self.dispatchEvent('mapScaleChanged', scaleMultiplier, zoomPoint);
 		analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
 	};
 	this.move = function (source, deltaX, deltaY) {
@@ -1620,14 +1620,22 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			callback: connector.remove.bind(connector)
 		});
 	});
-	mapModel.addEventListener('mapScaleChanged', function (scaleMultiplier) {
-		var scale = Math.max(Math.min((stage.getScale().x || 1) * scaleMultiplier, 5), 0.2);
+	mapModel.addEventListener('mapScaleChanged', function (scaleMultiplier, zoomPoint) {
+		var currentScale = stage.getScale().x || 1,
+			targetScale = Math.max(Math.min(currentScale * scaleMultiplier, 5), 0.2);
+		if (currentScale === targetScale) {
+			return;
+		}
+		zoomPoint = zoomPoint || {x:  0.5 * stage.getWidth(), y: 0.5 * stage.getHeight()};
 		stage.transitionTo({
 			scale: {
-				x: scale,
-				y: scale
+				x: targetScale,
+				y: targetScale
 			},
-			duration: 0.1
+			x: zoomPoint.x + (stage.attrs.x - zoomPoint.x) * targetScale / currentScale,
+			y: zoomPoint.y + (stage.attrs.y - zoomPoint.y) * targetScale / currentScale,
+			duration: 0.1,
+			easing: 'ease-in-out'
 		});
 	});
 	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
