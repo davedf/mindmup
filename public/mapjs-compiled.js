@@ -1040,7 +1040,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	}());
 };
-/*global Kinetic*/
+/*global Kinetic, MAPJS*/
 /*jslint nomen: true*/
 (function () {
 	'use strict';
@@ -1097,6 +1097,14 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	};
 	Kinetic.Connector.prototype = {
+		isVisible: function (offset) {
+			var stage = this.getStage(),
+				conn = calculateConnector(this.shapeFrom, this.shapeTo),
+				x = Math.min(conn.from.x, conn.to.x),
+				y = Math.min(conn.from.y, conn.to.y),
+				rect = new MAPJS.Rectangle(x, y, Math.max(conn.from.x, conn.to.x) - x, Math.max(conn.from.y, conn.to.y) - y);
+			return stage && stage.isRectVisible(rect, offset);
+		},
 		drawFunc: function (canvas) {
 			var context = canvas.getContext(),
 				shapeFrom = this.shapeFrom,
@@ -1104,7 +1112,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				conn,
 				offset,
 				maxOffset;
-			if (!(shapeFrom.isVisible() || shapeTo.isVisible())) {
+			if (!this.isVisible()) {
 				return;
 			}
 			conn = calculateConnector(shapeFrom, shapeTo);
@@ -1122,7 +1130,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
-/*global Color, _, console, jQuery, Kinetic*/
+/*global MAPJS, Color, _, console, jQuery, Kinetic*/
 /*jslint nomen: true, newcap: true*/
 (function () {
 	'use strict';
@@ -1213,19 +1221,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			context.closePath();
 			canvas.fillStroke(this);
 		};
-		this.isVisible = function () {
-			var stage = self.getStage(), scale, position;
-			if (!stage) {
-				return false;
-			}
-			scale = stage.getScale().x || 1;
-			position = self.attrs;
-			return !(
-				scale * position.x > -stage.attrs.x + stage.getWidth() ||
-				-stage.attrs.x > scale * position.x + scale * self.getWidth() ||
-				scale * position.y > -stage.attrs.y + stage.getHeight() ||
-				-stage.attrs.y > scale * position.y + scale * self.getHeight()
-			);
+		this.isVisible = function (offset) {
+			var stage = self.getStage();
+			return stage && stage.isRectVisible(new MAPJS.Rectangle(self.attrs.x, self.attrs.y, self.getWidth(), self.getHeight()), offset);
 		};
 		this.editNode = function (shouldSelectAll) {
 			self.fire(':editing');
@@ -1397,6 +1395,38 @@ Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (con
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
 /*global _, window, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
+if (Kinetic.Stage.prototype.isRectVisible) {
+	throw ("isRectVisible already exists, should not mix in our methods");
+}
+MAPJS.Rectangle = function (x, y, width, height) {
+	'use strict';
+	this.scale = function (scale) {
+		return new MAPJS.Rectangle(x * scale, y * scale, width * scale, height * scale);
+	};
+	this.translate = function (dx, dy) {
+		return new MAPJS.Rectangle(x + dx, y + dy, width, height);
+	};
+	this.inset = function (margin) {
+		return new MAPJS.Rectangle(x + margin, y + margin, width - (margin * 2), height - (margin * 2));
+	};
+	this.x = x;
+	this.y = y;
+	this.height = height;
+	this.width = width;
+};
+Kinetic.Stage.prototype.isRectVisible = function (rect, offset) {
+	'use strict';
+	offset = offset || {x: 0, y: 0, margin: 0};
+	var scale = this.getScale().x || 1;
+	rect = rect.scale(scale).translate(offset.x, offset.y).inset(offset.margin);
+	return !(
+		rect.x + this.attrs.x > this.getWidth() ||
+		rect.x + rect.width + this.attrs.x < 0  ||
+		rect.y + this.attrs.y > this.getHeight() ||
+		rect.y + rect.height + this.attrs.y < 0
+	);
+};
+
 MAPJS.KineticMediator = function (mapModel, stage) {
 	'use strict';
 	var layer = new Kinetic.Layer(),
@@ -1405,8 +1435,20 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		connectorKey = function (fromIdeaId, toIdeaId) {
 			return fromIdeaId + '_' + toIdeaId;
 		},
+		atLeastOneVisible = function (list, deltaX, deltaY) {
+			var margin = Math.min(stage.getHeight(), stage.getWidth()) * 0.1;
+			return _.find(list, function (node) {
+				return node.isVisible({x: deltaX, y: deltaY, margin: margin});
+			});
+		},
 		moveStage = function (deltaX, deltaY) {
-			if (stage) {
+			var visibleAfterMove, visibleBeforeMove;
+			if (!stage) {
+				return;
+			}
+			visibleBeforeMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, 0, 0);
+			visibleAfterMove = atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, deltaX, deltaY);
+			if (visibleAfterMove || (!visibleBeforeMove)) {
 				if (deltaY !== 0) { stage.attrs.y += deltaY; }
 				if (deltaX !== 0) { stage.attrs.x += deltaX; }
 				stage.draw();
@@ -1624,10 +1666,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
 				moveStage(-1 * deltaX, deltaY);
-				if (deltaX < 0) { /* stop the back button */
-					event.preventDefault();
-				}
-				if (deltaY < 0) { /*stop scrolling down */
+				if (event.preventDefault) { /* stop the back button */
 					event.preventDefault();
 				}
 			};
