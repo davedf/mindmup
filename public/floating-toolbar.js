@@ -5,11 +5,6 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 		var element = jQuery(this), loadedIdea,
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
 			toggleButton = element.find('.toggle');
-		$(window).keydown(function (evt) {
-			if (evt.which === 66 && (evt.metaKey || evt.ctrlKey)) {
-				toggleButton.click();
-			}
-		});
 		element.draggable({containment: 'window'});
 		keyboardShortcuts.popover({
 			placement: 'bottom',
@@ -28,7 +23,8 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Ctrl/Cmd +</strong>: Zoom in<br/>' +
 				'<strong>Ctrl/Cmd -</strong>: Zoom out<br/>' +
 				'<strong>Ctrl/Cmd 0</strong>: Reset map view<br/>' +
-				'<strong>Ctrl/Cmd B</strong>: Hide toolbar<br/>'
+				'<strong>Ctrl/Cmd B</strong>: Hide toolbar<br/>' +
+				'<strong>Ctrl/Cmd Shift B</strong>: Hide top menu<br/>'
 		});
 	});
 };
