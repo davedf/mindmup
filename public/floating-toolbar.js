@@ -1,10 +1,15 @@
-/*global $, _, jQuery*/
+/*global $, _, jQuery, window*/
 jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this), loadedIdea,
 			keyboardShortcuts = element.find('.keyboardShortcuts'),
 			toggleButton = element.find('.toggle');
+		$(window).keydown(function (evt) {
+			if (evt.which === 66 && (evt.metaKey || evt.ctrlKey)) {
+				toggleButton.click();
+			}
+		});
 		element.draggable({containment: 'window'});
 		keyboardShortcuts.popover({
 			placement: 'bottom',
@@ -17,8 +22,13 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Backspace</strong>/<strong>DEL</strong>: Remove<br/>' +
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
 				'<strong>/</strong> or <strong>Shift+Up</strong>: Expand or collapse<br/>' +
-				'<strong>Ctrl+Z</strong>/<strong>Cmd+Z</strong>: Undo<br/>' +
-				'<strong>Ctrl+Y</strong>/<strong>Cmd+Y</strong>: Redo<br/>'
+				'<strong>Ctrl/Cmd Z</strong>: Undo<br/>' +
+				'<strong>Ctrl/Cmd Y</strong>: Redo<br/>' +
+				'<strong>Ctrl/Cmd S</strong>: Save<br/>' +
+				'<strong>Ctrl/Cmd +</strong>: Zoom in<br/>' +
+				'<strong>Ctrl/Cmd -</strong>: Zoom out<br/>' +
+				'<strong>Ctrl/Cmd 0</strong>: Reset map view<br/>' +
+				'<strong>Ctrl/Cmd B</strong>: Hide toolbar<br/>'
 		});
 	});
 };
