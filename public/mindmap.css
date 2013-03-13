@@ -149,3 +149,15 @@ span.repo-g, span.repo-a {
 .collapsed-toolbar .hidden-collapsed-toolbar {
 	display: none !important;
 }
+
+#listBookmarks a .btn-inline {
+	margin-left:15px;
+	margin-right:0px;
+	padding-right:0px;
+
+}
+
+.android #listBookmarks a .btn-inline, .ios #listBookmarks a .btn-inline {
+	padding-top:8px;
+	padding-left:8px;
+}
