@@ -51,6 +51,24 @@ body {
 .ios .hidden-touch, .android .hidden-touch {
   display: none !important;
 }
+div.topbar-color-picker {
+	width: 127px;
+}
+.topbar-color-picker .colorPicker-swatch {
+	width: 15px;
+	height: 15px;
+}
+
+.ios .colorPicker-swatch, .android .colorPicker-swatch {
+	width: 30px;
+	height: 30px;
+}
+
+.ios .colorPicker-palette, .android .colorPicker-palette {
+	width: 217px;
+	top: 55px;
+	left: 5px;
+}
 .map-changed .hidden-map-changed {
   display: none;
 }

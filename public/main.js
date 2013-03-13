@@ -23,7 +23,7 @@ MM.main = function (config) {
 		};
 	window._gaq = [['_setAccount', config.googleAnalyticsAccount], ['_trackPageview']];
 	jQuery(function () {
-		var activityLog = new MM.ActivityLog(10000),
+		var activityLog = new MM.ActivityLog(10000), oldShowPalette,
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
 			s3Repository = Math.random() < 0.8 ? new MM.S3MapRepository(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis) : new MM.S3MapRepositoryV2(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis),
@@ -42,6 +42,14 @@ MM.main = function (config) {
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();
 		jQuery('#topbar .colorPicker-picker').parent('a').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
+		jQuery('.colorPicker-palette').addClass('topbar-color-picker');
+		oldShowPalette = jQuery.fn.colorPicker.showPalette;
+		jQuery.fn.colorPicker.showPalette = function (palette) {
+			oldShowPalette(palette);
+			if (palette.hasClass('topbar-color-picker')) {
+				palette.css('top', jQuery('#topbar').outerHeight());
+			}
+		};
 		jQuery('#modalFeedback').feedbackWidget(jotForm, activityLog);
 		jQuery('#modalVote').voteWidget(activityLog, alert);
 		jQuery('#toolbarEdit .updateStyle').colorPicker();

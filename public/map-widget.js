@@ -40,7 +40,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
 			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
 		if (touchEnabled) {
-			element.hammer().on("pinch", function (event) {
+			element.find('canvas').hammer().on("pinch", function (event) {
 				if (discrete(event)) {
 					mapModel.scale('touch', event.gesture.scale, {
 						x: event.gesture.center.pageX - element.offset().left,
@@ -53,6 +53,9 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
 				}
 			}).on("doubletap", function (event) {
 				simulateTouch("dbltap", event);
+			}).on("touch", function (evt) {
+				jQuery('.topbar-color-picker:visible').hide();
+				jQuery('.ideaInput:visible').blur();
 			});
 		}
 	});
