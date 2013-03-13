@@ -153,8 +153,3 @@ span.repo-g, span.repo-a {
 #listBookmarks a .btn-inline {
 	margin-left:15px;
 }
-
-.android #listBookmarks a .btn-inline, .ios #listBookmarks a .btn-inline {
-	padding-top:8px;
-	padding-left:8px;
-}
