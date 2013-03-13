@@ -1,5 +1,5 @@
 /*global $, content*/
-$.fn.topbarWidget = function () {
+$.fn.toggleClassWidget = function () {
 	'use strict';
 	var element = this;
 	element.click(function () {

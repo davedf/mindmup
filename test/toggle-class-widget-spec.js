@@ -9,7 +9,7 @@ describe("toggle-class-widget", function () {
 		link = $('<a data-mm-role="toggle-class" data-mm-class="cls" data-mm-target="#tgt">x</a>');
 		target = $('<span>').attr('id', 'tgt').appendTo('body');
 		nonChanged = $('<span>').attr('id', 'tgt2').appendTo('body');
-		link.topbarWidget();
+		link.toggleClassWidget();
 	});
 	afterEach(function () {
 		target.remove();

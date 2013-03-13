@@ -37,6 +37,7 @@ MM.main = function (config) {
 			mapBookmarks = new MM.Bookmark(mapRepository, MM.jsonStorage(localStorage), 'created-maps');
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
+		jQuery('body').classCachingWidget('cached-classes', localStorage);
 		jQuery('#container').mapWidget(activityLog, mapModel, isTouch());
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
@@ -69,7 +70,7 @@ MM.main = function (config) {
 		jQuery('#modalImport').importWidget(activityLog, mapRepository);
 		jQuery('[data-mm-role=save]').saveWidget(mapRepository);
 		jQuery('[data-mm-role="png-export"]').click(pngExporter.exportMap);
-		jQuery('[data-mm-role="toggle-class"]').topbarWidget();
+		jQuery('[data-mm-role="toggle-class"]').toggleClassWidget();
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
 		mapRepository.loadMap(config.mapId);
 	});
