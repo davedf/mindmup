@@ -171,3 +171,21 @@ span.repo-g, span.repo-a {
 #listBookmarks a .btn-inline {
 	margin-left:15px;
 }
+.hidden-topbar #topbar .navbar-inner {
+	visibility:hidden;
+}
+.hidden-topbar #topbar:hover .navbar-inner {
+	visibility:visible;
+}
+#toggleTopbar {
+	position:absolute; top:0; left:0; height:40px;
+}
+#toggleTopbar .icon-hand-down {
+	display: none;
+}
+.hidden-topbar #toggleTopbar .icon-hand-down {
+	display: block;
+}
+.hidden-topbar #toggleTopbar .icon-hand-up {
+	display: none;
+}
