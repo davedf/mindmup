@@ -17,7 +17,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 			resetSaveButton = function () {
 				if (element.find('[data-mm-role=publish]').attr('disabled')) {
 					element.find('[data-mm-role=publish]').text('Save').addClass('btn-primary').attr('disabled', false);
-					element.find('p').show();
+					element.find('.dropdown-toggle').show();
 				}
 			};
 		element.find('[data-mm-role=publish]').add('a', element).click(function () {
@@ -35,10 +35,10 @@ jQuery.fn.saveWidget = function (mapRepository) {
 		});
 		mapRepository.addEventListener('mapSaving', function () {
 			element.find('[data-mm-role=publish]')
-				.html('<i class="icon-spinner icon-spin"></i>Saving...')
+				.html('<i class="icon-spinner icon-spin"></i>&nbsp;Saving')
 				.removeClass('btn-primary')
 				.attr('disabled', true);
-			element.find('p').hide();
+			element.find('.dropdown-toggle').hide();
 		});
 		_.each(resetSaveButtonEvents, function (eventName) {
 			mapRepository.addEventListener(eventName, resetSaveButton);
@@ -47,7 +47,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 		mapRepository.addEventListener('mapSaved', function () {
 			mapChanged = false;
 			element.find('[data-mm-role=publish]').text('Save').addClass('btn-primary').attr('disabled', false);
-			element.find('p').show();
+			element.find('.dropdown-toggle').show();
 		});
 	});
 }
