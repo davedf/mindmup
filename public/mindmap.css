@@ -15,6 +15,7 @@ html, body {
  width: 40px;
  height: 40px;
  padding: 0;
+ margin-left:50px;
 }
 @media (max-width: 979px) {
 .navbar-fixed-top, .navbar-fixed-bottom {
