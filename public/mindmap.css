@@ -180,6 +180,9 @@ span.repo-g, span.repo-a {
 #toggleTopbar {
 	position:absolute; top:0; left:0; height:40px;
 }
+.ios #toggleTopbar, .android #toggleTopbar {
+	display: none;
+}
 #toggleTopbar .icon-hand-down {
 	display: none;
 }
