@@ -73,6 +73,7 @@ MM.main = function (config) {
 		jQuery('[data-mm-role="toggle-class"]').toggleClassWidget();
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleRepository);
+		jQuery('body').commandLineWidget("Ctrl+Space", mapModel);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
