@@ -5,10 +5,14 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
         template = this.find('[data-mm-role=template]'),
         parent = template.parent(),
         statusDiv = this.find('[data-mm-role=status]'),
-        error = function (errorStatus) {
-			statusDiv.html('<div class="alert fade in alert-error">' +
+		showAlert = function (message, type) {
+			type = type || 'block';
+			statusDiv.html('<div class="alert fade-in alert-' + type + '">' +
 					'<button type="button" class="close" data-dismiss="alert">&#215;</button>' +
-					'<strong>' + errorStatus + '</strong>' + '</div>');
+					'<strong>' + message + '</strong>' + '</div>');
+		},
+        error = function (errorStatus) {
+			showAlert(errorStatus, 'error');
 		},
         loaded = function (fileList) {
 			statusDiv.empty();
@@ -16,18 +20,36 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
                 return file && file.modifiedDate;
             }).reverse();
             _.each(sorted, function (file) {
-                var added = template.clone().appendTo(parent);
-                added.find('a[data-mm-role=file-link]').attr('href', "/map/g1" + file.id).text(file.title.replace(/\.mup$/, ''));
-                added.find('[data-mm-role=modification-status]').text('By ' + file.lastModifyingUserName + ' on ' + file.modifiedDate);
+                var added;
+				if (file) {
+					added = template.clone().appendTo(parent);
+					added.find('a[data-mm-role=file-link]').attr('href', "/map/g1" + file.id).text(file.title.replace(/\.mup$/, ''));
+					added.find('[data-mm-role=modification-status]').text('By ' + file.lastModifyingUserName + ' on ' + file.modifiedDate);
+				}
             });
-        };
+        },
+		fileRetrieval = function (showPopup) {
+			parent.empty();
+			statusDiv.html("<i class='icon-spinner icon-spin'/> Retrieving files...");
+			googleDriveRepository.ready(showPopup).then(function () {
+				googleDriveRepository.retrieveAllFiles().then(loaded, function () { error("Problem loading files from Google"); });
+			}, function (reason) {
+				if (reason === 'failed-authentication') {
+					error("Authentication failed, we were not able to access your Google Drive");
+				} else if (reason === 'not-authenticated') {
+					showAlert("<h4>Authorisation required</h4>" +
+						"<p>This action requires authorisation to access your Google Drive. <br/><a href='#'>Click here to authorise</a></p>");
+					statusDiv.find('a').click(function () {
+						fileRetrieval(true);
+					});
+				} else {
+					error("There was a network error, please try again later");
+				}
+			});
+		};
     template.detach();
     modal.on('show', function () {
-        parent.empty();
-        statusDiv.html("<i class='icon-spinner icon-spin'/> Retrieving files...");
-		googleDriveRepository.ready(true).then(function () {
-			googleDriveRepository.retrieveAllFiles().then(loaded, function () { error("Problem loading files from Google"); });
-		}, function () { error("Cannot authenticate with Google Drive"); });
+		fileRetrieval(false);
     });
     return modal;
 }
