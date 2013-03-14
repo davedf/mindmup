@@ -192,7 +192,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						});
 						retrievePageOfFiles(request, result);
 					} else {
-						deferred.resolve();
+						deferred.resolve(result);
 					}
 				});
 			},
