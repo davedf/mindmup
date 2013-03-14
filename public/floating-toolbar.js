@@ -14,6 +14,7 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Tab</strong>: Add child<br/>' +
 				'<strong>Shift+Tab</strong>: Insert parent<br/>' +
 				'<strong>Space</strong>: Edit node<br/>' +
+				'<strong>Shift Space</strong>: Change node color<br/>' +
 				'<strong>Backspace</strong>/<strong>DEL</strong>: Remove<br/>' +
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
 				'<strong>/</strong> or <strong>Shift+Up</strong>: Expand or collapse<br/>' +
