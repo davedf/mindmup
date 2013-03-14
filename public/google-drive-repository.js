@@ -196,7 +196,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					}
 				});
 			},
-			initialRequest = gapi.client.drive.files.list({
+			initialRequest = window.gapi.client.drive.files.list({
 				'q': searchCriteria
 			});
 		retrievePageOfFiles(initialRequest, []);

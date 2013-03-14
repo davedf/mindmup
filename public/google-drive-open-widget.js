@@ -17,7 +17,7 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
             }).reverse();
             _.each(sorted, function (file) {
                 var added = template.clone().appendTo(parent);
-                added.find('a[data-mm-role=file-link]').attr('href', "/map/g1" + file.id).text(file.title.replace(/\.mup$/,''));
+                added.find('a[data-mm-role=file-link]').attr('href', "/map/g1" + file.id).text(file.title.replace(/\.mup$/, ''));
                 added.find('[data-mm-role=modification-status]').text('By ' + file.lastModifyingUserName + ' on ' + file.modifiedDate);
             });
         };
@@ -25,7 +25,9 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
     modal.on('show', function () {
         parent.empty();
         statusDiv.html("<i class='icon-spinner icon-spin'/> Retrieving files...");
-        googleDriveRepository.retrieveAllFiles().then(loaded, error);
+		googleDriveRepository.ready(true).then(function () {
+			googleDriveRepository.retrieveAllFiles().then(loaded, function () { error("Problem loading files from Google"); });
+		}, function () { error("Cannot authenticate with Google Drive"); });
     });
     return modal;
 }
