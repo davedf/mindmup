@@ -700,8 +700,20 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			return titles[Math.floor(titles.length * Math.random())];
 		},
 		horizontalSelectionThreshold = 300,
-		updateCurrentLayout = function (newLayout) {
+		moveNodes = function (nodes, deltaX, deltaY) {
+			_.each(nodes, function (node) {
+				node.x += deltaX;
+				node.y += deltaY;
+			});
+		},
+		updateCurrentLayout = function (newLayout, contextNodeId) {
 			var nodeId, newNode, oldNode, newConnector, oldConnector;
+			if (contextNodeId && currentLayout.nodes[contextNodeId] && newLayout.nodes[contextNodeId]) {
+				moveNodes(newLayout.nodes,
+					currentLayout.nodes[contextNodeId].x - newLayout.nodes[contextNodeId].x,
+					currentLayout.nodes[contextNodeId].y - newLayout.nodes[contextNodeId].y
+				);
+			}
 			for (nodeId in currentLayout.connectors) {
 				newConnector = newLayout.connectors[nodeId];
 				oldConnector = currentLayout.connectors[nodeId];
@@ -747,8 +759,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			currentLayout = newLayout;
 		},
 		onIdeaChanged = function (command, args) {
-			var newIdeaId;
-			updateCurrentLayout(layoutCalculator(idea));
+			var newIdeaId, contextNodeId;
+			contextNodeId = command === 'updateStyle' ? args[0] : undefined;
+			updateCurrentLayout(layoutCalculator(idea), contextNodeId);
 			if (command === 'addSubIdea') {
 				newIdeaId = args[2];
 				self.selectNode(newIdeaId);
@@ -1108,7 +1121,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	calculateConnectorInner = _.memoize(function (parentX, parentY, parentWidth, parentHeight,
 			childX, childY, childWidth, childHeight) {
-		console.log('calculateConnectorInner');
 		var tolerance = 10,
 			childMid = childY + childHeight * 0.5,
 			parentMid = parentY + parentHeight * 0.5,
