@@ -17,6 +17,9 @@ jQuery.fn.floatingToolbarWidget = function (mapRepository, pngExporter) {
 				'<strong>Shift Space</strong>: Change node color<br/>' +
 				'<strong>Backspace</strong>/<strong>DEL</strong>: Remove<br/>' +
 				'<strong>Arrow keys</strong>: Move selection<br/>'  +
+				'<strong>Ctrl/Cmd Up/Down</strong>: Move node up/down<br/>'  +
+				'<strong>C or Ctrl/Cmd X</strong>: mark for movement (cut)<br/>'  +
+				'<strong>P or Ctrl/Cmd V</strong>: paste<br/>'  +
 				'<strong>/</strong> or <strong>Shift+Up</strong>: Expand or collapse<br/>' +
 				'<strong>Ctrl/Cmd Z</strong>: Undo<br/>' +
 				'<strong>Ctrl/Cmd Y</strong>: Redo<br/>' +
