@@ -695,6 +695,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		idea,
 		isInputEnabled,
 		currentlySelectedIdeaId,
+		markedIdeaId,
 		getRandomTitle = function (titles) {
 			return titles[Math.floor(titles.length * Math.random())];
 		},
@@ -982,6 +983,14 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		self.moveRelative = function (source, relativeMovement) {
 			analytic('moveRelative', source);
 			idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
+		};
+		self.mark = function (source) {
+			analytic('mark', source);
+			markedIdeaId = currentlySelectedIdeaId;
+		};
+		self.moveMarked = function (source) {
+			analytic('moveMarked', source);
+			idea.changeParent(markedIdeaId, currentlySelectedIdeaId);
 		};
 	}());
 	//Todo - clean up this shit below
@@ -1674,7 +1683,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
 			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
 			32: mapModel.editNode.bind(mapModel, 'keyboard'),
-			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
+			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
+			67: mapModel.mark.bind(mapModel, 'keyboard'),
+			80: mapModel.moveMarked.bind(mapModel, 'keyboard')
 		}, shiftKeyboardEventHandlers = {
 			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
 			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
@@ -1685,7 +1696,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
 			189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
 			38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
-			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1)
+			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
+			88: mapModel.mark.bind(mapModel, 'keyboard'),
+			86: mapModel.moveMarked.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
 				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
