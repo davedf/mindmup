@@ -178,9 +178,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 
 	this.recognises = recognises;
 
-	this.retrieveAllFiles = function () {
+	this.retrieveAllFiles = function (searchCriteria) {
 		var deferred = jQuery.Deferred(),
-			searchCriteria = "mimeType = '" + contentType + "' and not trashed",
 			retrievePageOfFiles = function (request, result) {
 				request.execute(function (resp) {
 					result = result.concat(resp.items);
@@ -195,11 +194,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.resolve(result);
 					}
 				});
-			},
-			initialRequest = window.gapi.client.drive.files.list({
-				'q': searchCriteria
-			});
-		retrievePageOfFiles(initialRequest, []);
+			};
+		searchCriteria = searchCriteria || "mimeType = '" + contentType + "' and not trashed";
+		retrievePageOfFiles(gapi.client.drive.files.list({ 'q': searchCriteria }), []);
 		return deferred.promise();
 	};
 

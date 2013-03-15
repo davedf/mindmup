@@ -24,7 +24,8 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
 				if (file) {
 					added = template.clone().appendTo(parent);
 					added.find('a[data-mm-role=file-link]').attr('href', "/map/g1" + file.id).text(file.title.replace(/\.mup$/, ''));
-					added.find('[data-mm-role=modification-status]').text('By ' + file.lastModifyingUserName + ' on ' + file.modifiedDate);
+					added.find('[data-mm-role=modification-status]').text('By ' + file.lastModifyingUserName + ' on ' +
+						new Date(file.modifiedDate).toLocaleString());
 				}
             });
         },
