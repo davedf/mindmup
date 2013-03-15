@@ -56,7 +56,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				request = gapi.client.request({
 					'path': '/upload/drive/v2/files' + (googleId ? "/" + googleId : ""),
 					'method': (googleId ? 'PUT' : 'POST'),
-					'params': {'uploadType': 'multipart'},
+					'params': {'uploadType': 'multipart', 'useContentAsIndexableText': true},
 					'headers': {
 						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
 					},
