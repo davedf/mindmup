@@ -332,6 +332,19 @@ var content = function (contentAggregate) {
 		});
 		return true;
 	};
+	contentAggregate.moveRelative = function (ideaId, relativeMovement) {
+		var parentIdea = contentAggregate.findParent(ideaId),
+			current_rank = parentIdea && parentIdea.findChildRankById(ideaId),
+			sibling_ranks = current_rank && _.sortBy(sameSideSiblingRanks(parentIdea, current_rank), Math.abs),
+			currentIndex = sibling_ranks && sibling_ranks.indexOf(current_rank),
+			/* we call positionBefore, so movement down is actually 2 spaces, not 1 */
+			newIndex = currentIndex + (relativeMovement > 0 ? relativeMovement + 1 : relativeMovement),
+			beforeSibling = (newIndex >= 0) && parentIdea && sibling_ranks && parentIdea.ideas[sibling_ranks[newIndex]];
+		if (newIndex < 0 || !parentIdea) {
+			return false;
+		}
+		return contentAggregate.positionBefore(ideaId, beforeSibling && beforeSibling.id, parentIdea);
+	};
 	contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
 		var new_rank, after_rank, sibling_ranks, candidate_siblings, before_rank, max_rank, current_rank;
@@ -965,6 +978,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		self.redo = function (source) {
 			analytic('redo', source);
 			idea.redo();
+		};
+		self.moveRelative = function (source, relativeMovement) {
+			analytic('moveRelative', source);
+			idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
 		};
 	}());
 	//Todo - clean up this shit below
@@ -1666,7 +1683,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			90: mapModel.undo.bind(mapModel, 'keyboard'),
 			89: mapModel.redo.bind(mapModel, 'keyboard'),
 			187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
-			189: mapModel.scaleDown.bind(mapModel, 'keyboard')
+			189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
+			38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
+			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1)
 		},
 			onKeydown = function (evt) {
 				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
