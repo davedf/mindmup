@@ -1583,7 +1583,6 @@ Kinetic.Stage.prototype.isRectVisible = function (rect, offset) {
 
 MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 	'use strict';
-	console.log('imageRendering', imageRendering);
 	var layer = new Kinetic.Layer(),
 		nodeByIdeaId = {},
 		connectorByFromIdeaId_ToIdeaId = {},
