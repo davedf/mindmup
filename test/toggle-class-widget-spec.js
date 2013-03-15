@@ -27,4 +27,11 @@ describe("toggle-class-widget", function () {
 		expect(target.hasClass(className)).toBeTruthy();
 		expect(nonChanged.hasClass(className)).toBeFalsy();
 	});
+	it('handles multiple classes (whitespace separated)', function () {
+		link.data('mm-class','image-disabled image-enabled');
+		target.addClass('image-enabled');
+		link.click();
+		expect(target.hasClass('image-disabled')).toBeTruthy();
+		expect(target.hasClass('image-enabled')).toBeFalsy();
+	});
 });

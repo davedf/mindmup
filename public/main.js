@@ -38,7 +38,15 @@ MM.main = function (config) {
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('body').classCachingWidget('cached-classes', localStorage);
-		jQuery('#container').mapWidget(activityLog, mapModel, isTouch(), isTouch() && !jQuery('body').hasClass('image-render-disabled'));
+
+		if (!jQuery('body').hasClass('image-render-checked')){
+			if (isTouch()){
+				jQuery('body').addClass('image-render')
+			}
+			jQuery('body').addClass('image-render-checked');
+		}
+
+		jQuery('#container').mapWidget(activityLog, mapModel, isTouch(), jQuery('body').hasClass('image-render'));
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();

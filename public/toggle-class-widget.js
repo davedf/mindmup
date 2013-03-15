@@ -12,11 +12,7 @@ $.fn.toggleClassWidget = function () {
 	element.click(function () {
 		var target = $($(this).data('mm-target')),
 			targetClass = $(this).data('mm-class');
-		if (target.hasClass(targetClass)) {
-			target.removeClass(targetClass);
-		} else {
-			target.addClass(targetClass);
-		}
+		target.toggleClass(targetClass);
 	});
 	return element;
 };

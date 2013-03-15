@@ -96,7 +96,7 @@ div.topbar-color-picker {
   outline: none;
 }
 .menulink { margin-right: 20px; margin-top:10px;}
-#gplus-share { 
+#gplus-share {
   border:0;height:16px;background-image: url('//ssl.gstatic.com/images/icons/gplus-16.png');
  background-position:left center;
  background-repeat:no-repeat;
@@ -137,7 +137,7 @@ div.topbar-color-picker {
 }
 .colorPicker_hexWrap { display: none }
 div.colorPicker-picker { display: inline; float: left; background: none }
-#modalImport input[type='file']{ 
+#modalImport input[type='file']{
 	opacity:0;
 	position:absolute;
 	width:0px;
@@ -195,4 +195,14 @@ span.repo-g, span.repo-a {
 }
 body.ipad {
   margin: 1px; /* ios performance fix for scrolling on ipad */
+}
+
+.image-render-visible {
+	display: none;
+}
+.image-render .image-render-visible {
+	display: block;
+}
+.image-render .image-render-hidden {
+	display: none;
 }
