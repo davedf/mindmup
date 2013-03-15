@@ -1,5 +1,5 @@
 /*global jQuery, Kinetic, MAPJS, window*/
-jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
+jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRendering) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -7,7 +7,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled) {
 				container: 'container',
 				draggable: true
 			}),
-			mediator = new MAPJS.KineticMediator(mapModel, stage),
+			mediator = new MAPJS.KineticMediator(mapModel, stage, imageRendering),
 			setStageDimensions = function () {
 				stage.setWidth(element.width());
 				stage.setHeight(element.height());

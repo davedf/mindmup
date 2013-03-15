@@ -38,7 +38,7 @@ MM.main = function (config) {
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('body').classCachingWidget('cached-classes', localStorage);
-		jQuery('#container').mapWidget(activityLog, mapModel, isTouch());
+		jQuery('#container').mapWidget(activityLog, mapModel, isTouch(), isTouch() && !jQuery('body').hasClass('image-render-disabled'));
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
 		jQuery('#topbar .updateStyle').colorPicker();

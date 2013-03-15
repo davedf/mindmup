@@ -1581,8 +1581,9 @@ Kinetic.Stage.prototype.isRectVisible = function (rect, offset) {
 	);
 };
 
-MAPJS.KineticMediator = function (mapModel, stage) {
+MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 	'use strict';
+	console.log('imageRendering', imageRendering);
 	var layer = new Kinetic.Layer(),
 		nodeByIdeaId = {},
 		connectorByFromIdeaId_ToIdeaId = {},
@@ -1645,7 +1646,9 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			opacity: 1
 		});
 
-		node = Kinetic.IdeaProxy(node, stage, layer);
+		if (imageRendering) {
+			node = Kinetic.IdeaProxy(node, stage, layer);
+		}
 		/* in kinetic 4.3 cannot use click because click if fired on dragend */
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dragstart', function () {
@@ -1799,7 +1802,11 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			y: zoomPoint.y + (stage.attrs.y - zoomPoint.y) * targetScale / currentScale,
 			duration: 0.1,
 			easing: 'ease-in-out',
-			callback: stage.fire.bind(stage, ':scaleChangeComplete')
+			callback: function () {
+				if (imageRendering) {
+					stage.fire(':scaleChangeComplete');
+				}
+			}
 		});
 	});
 	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
