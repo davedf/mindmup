@@ -193,3 +193,6 @@ span.repo-g, span.repo-a {
 .hidden-topbar #toggleTopbar .icon-hand-up {
 	display: none;
 }
+body.ios {
+  margin: 1px; /* ios performance fix */
+}
