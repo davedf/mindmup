@@ -1473,7 +1473,6 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 			cacheImage();
 		},
 		nodeImageDrawFunc;
-
 	container.attrs.x = idea.attrs.x;
 	container.attrs.y = idea.attrs.y;
 	idea.attrs.x = 0;
@@ -1485,6 +1484,8 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 		height: idea.getHeight() + 20
 	});
 	nodeImageDrawFunc = nodeimage.getDrawFunc().bind(nodeimage);
+	nodeimage.on('dblclick dbltap', idea.fire.bind(idea, ':nodeEditRequested'));
+
 	nodeimage.setDrawFunc(function (canvas) {
 		cacheImage();
 		nodeImageDrawFunc(canvas);
