@@ -332,6 +332,19 @@ var content = function (contentAggregate) {
 		});
 		return true;
 	};
+	contentAggregate.moveRelative = function (ideaId, relativeMovement) {
+		var parentIdea = contentAggregate.findParent(ideaId),
+			current_rank = parentIdea && parentIdea.findChildRankById(ideaId),
+			sibling_ranks = current_rank && _.sortBy(sameSideSiblingRanks(parentIdea, current_rank), Math.abs),
+			currentIndex = sibling_ranks && sibling_ranks.indexOf(current_rank),
+			/* we call positionBefore, so movement down is actually 2 spaces, not 1 */
+			newIndex = currentIndex + (relativeMovement > 0 ? relativeMovement + 1 : relativeMovement),
+			beforeSibling = (newIndex >= 0) && parentIdea && sibling_ranks && parentIdea.ideas[sibling_ranks[newIndex]];
+		if (newIndex < 0 || !parentIdea) {
+			return false;
+		}
+		return contentAggregate.positionBefore(ideaId, beforeSibling && beforeSibling.id, parentIdea);
+	};
 	contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
 		var new_rank, after_rank, sibling_ranks, candidate_siblings, before_rank, max_rank, current_rank;
@@ -682,6 +695,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		idea,
 		isInputEnabled,
 		currentlySelectedIdeaId,
+		markedIdeaId,
 		getRandomTitle = function (titles) {
 			return titles[Math.floor(titles.length * Math.random())];
 		},
@@ -966,6 +980,18 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			analytic('redo', source);
 			idea.redo();
 		};
+		self.moveRelative = function (source, relativeMovement) {
+			analytic('moveRelative', source);
+			idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
+		};
+		self.mark = function (source) {
+			analytic('mark', source);
+			markedIdeaId = currentlySelectedIdeaId;
+		};
+		self.moveMarked = function (source) {
+			analytic('moveMarked', source);
+			idea.changeParent(markedIdeaId, currentlySelectedIdeaId);
+		};
 	}());
 	//Todo - clean up this shit below
 	(function () {
@@ -1040,11 +1066,11 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	}());
 };
-/*global Kinetic, MAPJS*/
+/*global _, Kinetic, MAPJS*/
 /*jslint nomen: true*/
 (function () {
 	'use strict';
-	var horizontalConnector, calculateConnector;
+	var horizontalConnector, calculateConnector, calculateConnectorInner;
 	Kinetic.Connector = function (config) {
 		var oldTransitionTo;
 		this.shapeFrom = config.shapeFrom;
@@ -1060,42 +1086,51 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		this._setDrawFuncs();
 	};
-	horizontalConnector = function (parent, child) {
-		var childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0.1 : 0.9,
+	horizontalConnector = function (parentX, parentY, parentWidth, parentHeight,
+			childX, childY, childWidth, childHeight) {
+		var childHorizontalOffset = parentX < childX ? 0.1 : 0.9,
 			parentHorizontalOffset = 1 - childHorizontalOffset;
 		return {
 			from: {
-				x: parent.attrs.x + parentHorizontalOffset * parent.getWidth(),
-				y: parent.attrs.y + 0.5 * parent.getHeight()
+				x: parentX + parentHorizontalOffset * parentWidth,
+				y: parentY + 0.5 * parentHeight
 			},
 			to: {
-				x: child.attrs.x + childHorizontalOffset * child.getWidth(),
-				y: child.attrs.y + 0.5 * child.getHeight()
+				x: childX + childHorizontalOffset * childWidth,
+				y: childY + 0.5 * childHeight
 			},
 			controlPointOffset: 0
 		};
 	};
 	calculateConnector = function (parent, child) {
+		return calculateConnectorInner(parent.attrs.x, parent.attrs.y, parent.getWidth(), parent.getHeight(),
+			child.attrs.x, child.attrs.y, child.getWidth(), child.getHeight());
+	};
+	calculateConnectorInner = _.memoize(function (parentX, parentY, parentWidth, parentHeight,
+			childX, childY, childWidth, childHeight) {
+		console.log('calculateConnectorInner');
 		var tolerance = 10,
-			childMid = child.attrs.y + child.getHeight() * 0.5,
-			parentMid = parent.attrs.y + parent.getHeight() * 0.5,
+			childMid = childY + childHeight * 0.5,
+			parentMid = parentY + parentHeight * 0.5,
 			childHorizontalOffset;
-		if (Math.abs(parentMid - childMid) + tolerance < Math.max(child.getHeight(), parent.getHeight()) * 0.75) {
-			return horizontalConnector(parent, child);
+		if (Math.abs(parentMid - childMid) + tolerance < Math.max(childHeight, parentHeight * 0.75)) {
+			return horizontalConnector(parentX, parentY, parentWidth, parentHeight, childX, childY, childWidth, childHeight);
 		}
-		childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0 : 1;
+		childHorizontalOffset = parentX < childX ? 0 : 1;
 		return {
 			from: {
-				x: parent.attrs.x + 0.5 * parent.getWidth(),
-				y: parent.attrs.y + 0.5 * parent.getHeight()
+				x: parentX + 0.5 * parentWidth,
+				y: parentY + 0.5 * parentHeight
 			},
 			to: {
-				x: child.attrs.x + childHorizontalOffset * child.getWidth(),
-				y: child.attrs.y + 0.5 * child.getHeight()
+				x: childX + childHorizontalOffset * childWidth,
+				y: childY + 0.5 * childHeight
 			},
 			controlPointOffset: 0.75
 		};
-	};
+	}, function () {
+		return _.toArray(arguments).join(',');
+	});
 	Kinetic.Connector.prototype = {
 		isVisible: function (offset) {
 			var stage = this.getStage(),
@@ -1156,9 +1191,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		var ENTER_KEY_CODE = 13,
 			ESC_KEY_CODE = 27,
 			self = this,
-			setStageDraggable = function (isDraggable) {
-				self.getStage().setDraggable(isDraggable);
-			},
 			unformattedText = joinLines(config.text),
 			oldSetText,
 			oldTransitionTo;
@@ -1177,10 +1209,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		this.classType = 'Idea';
 		this.on('dblclick dbltap', self.fire.bind(self, ':nodeEditRequested'));
-		if (config.level > 1) {
-			this.on('mouseover touchstart', setStageDraggable.bind(null, false));
-			this.on('mouseout touchend', setStageDraggable.bind(null, true));
-		}
 		this.oldDrawFunc = this.getDrawFunc();
 		this.setDrawFunc(function (canvas) {
 			if (self.isVisible()) {
@@ -1198,6 +1226,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				transition.duration = 0.01;
 			}
 			oldTransitionTo(transition);
+		};
+		this.getNodeAttrs = function () {
+			return self.attrs;
 		};
 		this.drawCollapsedBG = function (canvas, offset) {
 			var context = canvas.getContext(),
@@ -1397,6 +1428,124 @@ Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (con
 	animation.start();
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
+/*global _, Kinetic, MAPJS, Image, setTimeout, jQuery */
+Kinetic.IdeaProxy = function (idea, stage, layer) {
+	'use strict';
+	var nodeimage,
+		emptyImage,
+		imageRendered,
+		container = new Kinetic.Container({opacity: 0, draggable: true}),
+		removeImage = function () {
+			nodeimage.setImage(emptyImage);
+			imageRendered = false;
+		},
+		cacheImage = function () {
+			if (!idea.isVisible()) {
+				removeImage();
+				return;
+			}
+			if (imageRendered) {
+				return;
+			}
+			imageRendered = true;
+			var scale = stage.attrs.scale.x, x = -scale, y = -scale,
+				unscaledWidth = idea.getWidth() + 20,
+				unscaledHeight = idea.getHeight() + 20,
+				width = (unscaledWidth * scale),
+				height = (unscaledHeight * scale);
+			idea.attrs.scale.x = scale;
+			idea.attrs.scale.y = scale;
+			idea.toImage({
+				x: x,
+				y: y,
+				width: width,
+				height: height,
+				callback: function (img) {
+					nodeimage.setImage(img);
+					nodeimage.attrs.width = unscaledWidth;
+					nodeimage.attrs.height = unscaledHeight;
+					layer.draw();
+				}
+			});
+		},
+		reRender = function () {
+			imageRendered = false;
+			cacheImage();
+		},
+		nodeImageDrawFunc;
+
+	container.attrs.x = idea.attrs.x;
+	container.attrs.y = idea.attrs.y;
+	idea.attrs.x = 0;
+	idea.attrs.y = 0;
+	nodeimage = new Kinetic.Image({
+		x: -1,
+		y: -1,
+		width: idea.getWidth() + 20,
+		height: idea.getHeight() + 20
+	});
+	nodeImageDrawFunc = nodeimage.getDrawFunc().bind(nodeimage);
+	nodeimage.setDrawFunc(function (canvas) {
+		cacheImage();
+		nodeImageDrawFunc(canvas);
+	});
+
+	container.add(nodeimage);
+
+
+	container.getNodeAttrs = function () {
+		return idea.attrs;
+	};
+	container.isVisible = function (offset) {
+		return stage && stage.isRectVisible(new MAPJS.Rectangle(container.attrs.x, container.attrs.y, container.getWidth(), container.getHeight()), offset);
+	};
+	idea.isVisible = function (offset) {
+		return stage && stage.isRectVisible(new MAPJS.Rectangle(container.attrs.x, container.attrs.y, container.getWidth(), container.getHeight()), offset);
+	};
+
+
+	idea.getLayer = function () {
+		return layer;
+	};
+	idea.getStage = function () {
+		return stage;
+	};
+	idea.getAbsolutePosition =  function () {
+		return container.getAbsolutePosition();
+	};
+	stage.on(':scaleChangeComplete', function () {
+		reRender();
+	});
+	container.transitionToAndDontStopCurrentTransitions = function (config) {
+		var transition = new Kinetic.Transition(container, config),
+			animation = new Kinetic.Animation();
+		animation.func = transition._onEnterFrame.bind(transition);
+		animation.node = container.getLayer();
+		transition.onFinished = animation.stop.bind(animation);
+		transition.start();
+		animation.start();
+	};
+	_.each(['getHeight', 'getWidth'], function (fname) {
+		container[fname] = function () {
+			return idea && idea[fname] && idea[fname].apply(idea, arguments);
+		};
+	});
+	_.each([':textChanged', ':editing', ':nodeEditRequested'], function (fname) {
+		idea.on(fname, function (event) {
+			container.fire(fname, event);
+			reRender();
+		});
+	});
+	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode'], function (fname) {
+		container[fname] = function () {
+			var result = idea && idea[fname] && idea[fname].apply(idea, arguments);
+			reRender();
+			return result;
+		};
+	});
+	return container;
+};
+
 /*global _, window, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
 if (Kinetic.Stage.prototype.isRectVisible) {
@@ -1492,13 +1641,15 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			y: n.y,
 			text: n.title,
 			mmStyle: n.style,
-			opacity: 0
+			opacity: 1
 		});
+
+		node = Kinetic.IdeaProxy(node, stage, layer);
 		/* in kinetic 4.3 cannot use click because click if fired on dragend */
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dragstart', function () {
 			node.moveToTop();
-			node.attrs.shadow.offset = {
+			node.getNodeAttrs().shadow.offset = {
 				x: 8,
 				y: 8
 			};
@@ -1511,7 +1662,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			);
 		});
 		node.on('dragend', function () {
-			node.attrs.shadow.offset = {
+			node.getNodeAttrs().shadow.offset = {
 				x: 4,
 				y: 4
 			};
@@ -1530,13 +1681,20 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 		});
 		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
 
-		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
-		nodeByIdeaId[n.id] = node;
+		if (n.level > 1) {
+			node.on('mouseover touchstart', stage.setDraggable.bind(stage, false));
+			node.on('mouseout touchend', stage.setDraggable.bind(stage, true));
+
+		}
 		layer.add(node);
 		node.transitionToAndDontStopCurrentTransitions({
 			opacity: 1,
 			duration: 0.4
 		});
+
+		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
+		nodeByIdeaId[n.id] = node;
+
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
 		var node = nodeByIdeaId[ideaId],
@@ -1639,7 +1797,8 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			x: zoomPoint.x + (stage.attrs.x - zoomPoint.x) * targetScale / currentScale,
 			y: zoomPoint.y + (stage.attrs.y - zoomPoint.y) * targetScale / currentScale,
 			duration: 0.1,
-			easing: 'ease-in-out'
+			easing: 'ease-in-out',
+			callback: stage.fire.bind(stage, ':scaleChangeComplete')
 		});
 	});
 	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
@@ -1657,16 +1816,22 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
 			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
 			32: mapModel.editNode.bind(mapModel, 'keyboard'),
-			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
+			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
+			67: mapModel.mark.bind(mapModel, 'keyboard'),
+			80: mapModel.moveMarked.bind(mapModel, 'keyboard')
 		}, shiftKeyboardEventHandlers = {
 			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
-			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
+			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
 		}, metaKeyboardEventHandlers = {
 			48: resetStage,
 			90: mapModel.undo.bind(mapModel, 'keyboard'),
 			89: mapModel.redo.bind(mapModel, 'keyboard'),
 			187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
-			189: mapModel.scaleDown.bind(mapModel, 'keyboard')
+			189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
+			38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
+			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
+			88: mapModel.mark.bind(mapModel, 'keyboard'),
+			86: mapModel.moveMarked.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
 				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
@@ -1678,17 +1843,16 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
 				moveStage(-1 * deltaX, deltaY);
-				if (event.preventDefault) { /* stop the back button */
+				if (event.preventDefault) { // stop the back button
 					event.preventDefault();
 				}
 			};
-		jQuery(document).keydown(onKeydown);
 		jQuery(window).mousewheel(onScroll);
 		mapModel.addEventListener('inputEnabledChanged', function (isInputEnabled) {
 			jQuery(document)[isInputEnabled ? 'bind' : 'unbind']('keydown', onKeydown);
 			jQuery(window)[isInputEnabled ? 'mousewheel' : 'unmousewheel'](onScroll);
 		});
-
+		jQuery(document).keydown(onKeydown);
 	}());
 };
 MAPJS.KineticMediator.dimensionProvider = _.memoize(function (title) {
