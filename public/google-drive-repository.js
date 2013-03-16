@@ -59,7 +59,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				request = gapi.client.request({
 					'path': '/upload/drive/v2/files' + (googleId ? "/" + googleId : ""),
 					'method': (googleId ? 'PUT' : 'POST'),
-					'params': {'uploadType': 'multipart', 'useContentAsIndexableText': true},
+					'params': {'uploadType': 'multipart', 'useContentAsIndexableText': (data.length < 131072)}, /* google refuses indexable text larger than 128k, see https://developers.google.com/drive/file */
 					'headers': {
 						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
 					},
