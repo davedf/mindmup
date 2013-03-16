@@ -13,6 +13,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				return mapId.substr(2);
 			}
 		},
+		mindMupId = function (googleId) {
+			return "g1" + (googleId || "");
+		},
 		checkAuth = function (showDialog) {
 			var deferred = jQuery.Deferred();
 			gapi.auth.authorize(
@@ -83,7 +86,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						}
 					} else {
 						if (!googleId) {
-							mapInfo.mapId = "g1" + resp.id;
+							mapInfo.mapId = mindMupId(resp.id);
 						}
 						deferred.resolve(mapInfo);
 					}
@@ -99,7 +102,6 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				jQuery.ajax(
 					file.downloadUrl,
 					{
-						dataType: 'json',
 						success: deferred.resolve,
 						error: function (resp) {
 							deferred.reject('network-error', resp);
@@ -118,6 +120,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					'fileId': fileId
 				});
 			request.execute(function (resp) {
+				var mimeType = resp.mimeType;
 				if (resp.error) {
 					if (resp.error.code === 403) {
 						deferred.reject('network-error');
@@ -127,7 +130,15 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.reject(resp.error);
 					}
 				} else {
-					downloadFile(resp).then(deferred.resolve, deferred.reject);
+					downloadFile(resp).then(function (content) {
+						if (mimeType === "application/json") {
+							deferred.resolve(content, true);
+						} else if (mimeType === "application/x-freemind") {
+							deferred.resolve(MM.freemindImport(content), false);
+						} else {
+							deferred.reject('format-error', "Unsupported format " + mimeType);
+						}
+					}, deferred.reject);
 				}
 			});
 			return deferred.promise();
@@ -209,10 +220,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				var retry = function () {
 						startLoad(recursionCount++);
 					},
-					loadSucceeded = function (result) {
+					loadSucceeded = function (result, allowUpdate) {
 						clearTimeout(timeout);
 						var mapInfo = {
-							mapId: mapId,
+							mapId: mindMupId(allowUpdate && googleId),
 							idea: content(result)
 						};
 						deferred.resolve(mapInfo);

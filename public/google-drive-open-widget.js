@@ -3,6 +3,7 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
     'use strict';
     var modal = this,
         template = this.find('[data-mm-role=template]'),
+		query,
         parent = template.parent(),
         statusDiv = this.find('[data-mm-role=status]'),
 		showAlert = function (message, type) {
@@ -33,7 +34,7 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
 			parent.empty();
 			statusDiv.html("<i class='icon-spinner icon-spin'/> Retrieving files...");
 			googleDriveRepository.ready(showPopup).then(function () {
-				googleDriveRepository.retrieveAllFiles().then(loaded, function () { error("Problem loading files from Google"); });
+				googleDriveRepository.retrieveAllFiles(query).then(loaded, function () { error("Problem loading files from Google"); });
 			}, function (reason) {
 				if (reason === 'failed-authentication') {
 					error("Authentication failed, we were not able to access your Google Drive");
@@ -49,6 +50,13 @@ $.fn.googleDriveOpenWidget = function (googleDriveRepository) {
 			});
 		};
     template.detach();
+	modal.find('[data-mm-mimetype]').click(function () {
+		if ($(this).data('mm-mimetype')) {
+			query = "mimeType='" + $(this).data('mm-mimetype') + "' and not trashed";
+		} else {
+			query = undefined;
+		}
+	});
     modal.on('show', function () {
 		fileRetrieval(false);
     });

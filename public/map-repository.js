@@ -210,7 +210,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 				changed = true;
 			}
 		};
-	mapRepository.addEventListener('mapLoaded', function (idea) {
+	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 		if (!mapLoaded) {
 			jQuery(window).bind('beforeunload', function () {
 				if (changed && !saving) {
@@ -219,6 +219,9 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 			});
 			mapLoaded = true;
 		} else {
+			toggleChange();
+		}
+		if (mapId.length < 3) { /* imported, no repository ID */
 			toggleChange();
 		}
 		idea.addEventListener('changed', function (command, args) {
