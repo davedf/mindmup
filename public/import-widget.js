@@ -1,13 +1,14 @@
-/*global $, content, MM*/
+/*global $, content, MM, window*/
 $.fn.importWidget = function (activityLog, mapRepository) {
 	'use strict';
 	var element = this,
+		uploadType,
 		statusDiv = element.find('[data-mm-role=status]'),
 		fileInput = element.find('input[type=file]'),
 		selectButton = element.find('[data-mm-role=select-file]'),
 		start = function (filename) {
-			activityLog.log('Map', 'import:start', filename);
-			statusDiv.html("<i class='icon-spinner'/> Uploading " + filename);
+			activityLog.log('Map', 'import:start ' + uploadType, filename);
+			statusDiv.html("<i class='icon-spinner icon-spin'/> Uploading " + filename);
 		},
 		parseFile = function (file_content, type) {
 			if (type === 'mm') {
@@ -28,6 +29,7 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 		},
 		success = function (file_content, type) {
 			var idea, json_content;
+			statusDiv.html("<i class='icon-spinner icon-spin'/> Processing file");
 			if (type !== 'mup' && type !== 'mm') {
 				fail('unsupported format ' + type);
 			}
@@ -41,9 +43,17 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			statusDiv.empty();
 			element.modal('hide');
 			mapRepository.setMap({ idea: idea });
+		},
+		shouldUseFileReader = function () {
+			return (window.File && window.FileReader && window.FileList && window.Blob && (!$('body').hasClass('disable-filereader')));
 		};
-
-	fileInput.background_upload('/import', start, success, fail);
+	if (shouldUseFileReader()) {
+		fileInput.file_reader_upload(start, success, fail);
+		uploadType = 'FileReader';
+	} else {
+		fileInput.background_upload('/import', start, success, fail);
+		uploadType = 'Remote Upload';
+	}
 	element.on('shown', function () {
 		fileInput.css('opacity', 0).css('position', 'absolute').offset(selectButton.offset()).width(selectButton.outerWidth())
 			.height(selectButton.outerHeight());
