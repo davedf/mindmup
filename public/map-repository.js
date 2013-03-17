@@ -221,7 +221,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		} else {
 			toggleChange();
 		}
-		if (mapId.length < 3) { /* imported, no repository ID */
+		if (!mapId || mapId.length < 3) { /* imported, no repository ID */
 			toggleChange();
 		}
 		idea.addEventListener('changed', function (command, args) {
