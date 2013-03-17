@@ -14,6 +14,18 @@ describe("Freemind Import", function () {
 	it('converts single freemind xml into mindmup json, removing IDs', function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" TEXT="A"></node></map>')).toEqual({'title': 'A'});
 	});
+	it('converts BACKGROUND_COLOR attribute into background style', function () {
+		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" BACKGROUND_COLOR="#cc3300" TEXT="A"></node></map>').style).
+			toEqual({'background': '#cc3300'});
+	});
+	it('converts FOLDED=true attribute into collapsed style', function () {
+		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="true" TEXT="A"></node></map>').style).
+			toEqual({'collapsed': 'true'});
+	});
+	it('ignores FOLDED=false', function () {
+		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="false" TEXT="A"></node></map>').style).
+			toBeUndefined();
+	});
 	it('converts complex freemind xml into mindmup json', function () {
 		expect(MM.freemindImport(complex_xml)).toEqual(complex_json_without_ids);
 	});
