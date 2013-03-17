@@ -16,7 +16,7 @@ Dependencies
 - This app is designed to run in the Heroku cloud or as a standalone [Sinatra application](https://github.com/sinatra/sinatra/). 
 - It depends on the [MapJS](http://github.com/mindmup/mapjs) javascript canvas for client side rendering, and imports a compiled
 single-file version of that project as /public/mapjs-compiled.js
-- It uses Amazon S3 AWS service to store maps
+- It uses Google Drive and Amazon S3 AWS service to store maps
 - It uses Google analytics to track feature votes, usage patterns and report error rates
 - It uses JotForm to send e-mails and submit user feedback
 - It uses Google URL shortener to produce short links for sharing
@@ -26,7 +26,7 @@ Configuration
 
 The server depends on the following environment variables:
 - GOOGLE_SHORTENER_API_KEY _Google shortener API key_
-- GOOGLE_CLIENT_ID _Google drive Client Id_
+- GOOGLE_CLIENT_ID _Google Drive Client Id_
 - GOOGLE_ANALYTICS_ACCOUNT _Google analytics ID to use for tracking. Don't use the production IDs in staging. Not used in dev and testing_
 - S3_BUCKET_NAME _Only the name of S3 Bucket where files are located (eg mindmup)_
 - S3_KEY_ID _AWS Access key ID that has write access for the bucket_
@@ -79,5 +79,13 @@ in this project. For server testing, there are a few RSpec tests that should run
 
 The tests don't depend on the .env file intentionally. Supply your own config as part of the test if needed.
 
+All JavaScript widgets are tested using Jasmine, here are two ways of running tests:
 
+- Visual: Open test/SpecRunner.html in a browser, this will run all Jasmine tests
+
+- Automated: Using [PhantomJs](phantomjs.org), in the test folder, run
+
+    sh runtests.sh
+
+Please note that the CI server uses phantomjs, so make sure that tests run with phantom before committing. 
 
