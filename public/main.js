@@ -39,8 +39,8 @@ MM.main = function (config) {
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('body').classCachingWidget('cached-classes', localStorage);
 
-		if (!jQuery('body').hasClass('image-render-checked')){
-			if (isTouch()){
+		if (!jQuery('body').hasClass('image-render-checked')) {
+			if (isTouch() || jQuery('body').hasClass('gecko')) {
 				jQuery('body').addClass('image-render')
 			}
 			jQuery('body').addClass('image-render-checked');
