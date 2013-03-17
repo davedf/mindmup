@@ -43,7 +43,7 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			mapRepository.setMap({ idea: idea });
 		};
 
-	fileInput.json_upload('/import', start, success, fail);
+	fileInput.background_upload('/import', start, success, fail);
 	element.on('shown', function () {
 		fileInput.css('opacity', 0).css('position', 'absolute').offset(selectButton.offset()).width(selectButton.outerWidth())
 			.height(selectButton.outerHeight());

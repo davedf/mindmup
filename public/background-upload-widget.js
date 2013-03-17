@@ -1,5 +1,5 @@
 /*global $ */
-$.fn.json_upload = function (action, start, complete, fail) {
+$.fn.background_upload = function (action, start, complete, fail) {
     'use strict';
     var element = this,
         sequence = $('iframe').length,
