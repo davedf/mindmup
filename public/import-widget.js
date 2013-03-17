@@ -6,13 +6,26 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 		statusDiv = element.find('[data-mm-role=status]'),
 		fileInput = element.find('input[type=file]'),
 		selectButton = element.find('[data-mm-role=select-file]'),
+		spinner = function (text) {
+			statusDiv.html("<i class='icon-spinner icon-spin'/> " + text);
+		},
 		start = function (filename) {
 			activityLog.log('Map', 'import:start ' + uploadType, filename);
-			statusDiv.html("<i class='icon-spinner icon-spin'/> Uploading " + filename);
+			spinner("Uploading " + filename);
 		},
 		parseFile = function (file_content, type) {
+			var counter = 0,
+				expected;
 			if (type === 'mm') {
-				return MM.freemindImport(file_content);
+				return MM.freemindImport(file_content,
+					function (total) {  expected = total; },
+					function () {
+						var pct = (100 * counter / expected).toFixed(2) + "%";
+						if (counter % 1000 === 0) {
+							spinner("Converted " + pct);
+						}
+						counter++;
+					});
 			}
 			if (type === 'mup') {
 				return JSON.parse(file_content);
@@ -28,8 +41,8 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			);
 		},
 		success = function (file_content, type) {
-			var idea, json_content;
-			statusDiv.html("<i class='icon-spinner icon-spin'/> Processing file");
+			var idea, json_content, counter;
+			spinner("Processing file");
 			if (type !== 'mup' && type !== 'mm') {
 				fail('unsupported format ' + type);
 			}
@@ -38,7 +51,15 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			} catch (e) {
 				fail('invalid file content', e);
 			}
-			idea = content(json_content);
+			spinner("Initialising map");
+			counter = 0;
+			idea = content(json_content, function () {
+				if (counter % 1000 === 0) {
+					spinner("Initialised " + counter + " nodes");
+				}
+				counter++;
+			});
+			spinner("Done");
 			activityLog.log('Map', 'import:complete');
 			statusDiv.empty();
 			element.modal('hide');
