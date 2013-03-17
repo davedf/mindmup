@@ -4,7 +4,8 @@ MM.freemindImport = function (xml) {
 	var xmlToJson = function (xml_node) {
 		var node = $(xml_node),
 			result = {"title" : node.attr("TEXT") },
-			children = _.map(node.children('node'), xmlToJson),
+			childNodes = node.children('node'),
+			children = _.map(childNodes, xmlToJson),
 			child_obj = {},
 			style = {},
 			index = 1;
@@ -18,7 +19,11 @@ MM.freemindImport = function (xml) {
 			result.style = style;
 		}
 		if (children.length > 0) {
-			_.each(children, function (child) { child_obj[index] = child; index += 1; });
+			_.each(children, function (child) {
+				var position = $(childNodes[index - 1]).attr('POSITION') === 'left' ? -1 : 1;
+				child_obj[position * index] = child;
+				index += 1;
+			});
 			result.ideas = child_obj;
 		}
 		return result;

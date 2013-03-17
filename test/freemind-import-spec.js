@@ -3,14 +3,14 @@ describe("Freemind Import", function () {
 	'use strict';
 	var complex_xml = '<map version="0.7.1"><node ID="1" TEXT="A">' +
 		'<node ID="2" TEXT="B"></node>' +
-		'<node ID="3" TEXT="C"></node>' +
+		'<node ID="3" TEXT="C" POSITION="left"></node>' +
 		'</node></map>',
 		complex_xml_with_other_stuff = '<map version="0.7.1">' +
 		'<node ID="1" TEXT="A"><!-- comment -->' +
 		'<node ID="2" TEXT="B"><ignore/></node>' +
-		'<node ID="3" TEXT="C"></node>' +
+		'<node ID="3" TEXT="C" POSITION="left"></node>' +
 		'</node></map>',
-		complex_json_without_ids = {'title' : 'A', 'ideas' : { 1  : {'title' : 'B'}, 2  : {'title' : 'C'}}};
+		complex_json_without_ids = {'title' : 'A', 'ideas' : { 1  : {'title' : 'B'}, '-2'  : {'title' : 'C'}}};
 	it('converts single freemind xml into mindmup json, removing IDs', function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" TEXT="A"></node></map>')).toEqual({'title': 'A'});
 	});
@@ -26,7 +26,7 @@ describe("Freemind Import", function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="false" TEXT="A"></node></map>').style).
 			toBeUndefined();
 	});
-	it('converts complex freemind xml into mindmup json', function () {
+	it('converts freemind xml with multilevel child nodes into mindmup json, using left-right positions for absolute ranks', function () {
 		expect(MM.freemindImport(complex_xml)).toEqual(complex_json_without_ids);
 	});
 	it('ignores any non-node tags in XML', function () {
