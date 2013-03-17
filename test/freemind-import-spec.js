@@ -19,8 +19,12 @@ describe("Freemind Import", function () {
 			toEqual({'background': '#cc3300'});
 	});
 	it('converts FOLDED=true attribute into collapsed style', function () {
-		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="true" TEXT="A"></node></map>').style).
+		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="true" TEXT="A"><node ID="2" TEXT="B"></node></node></map>').style).
 			toEqual({'collapsed': 'true'});
+	});
+	it('ignores FOLDED on leaf nodes', function () {
+		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="true" TEXT="A"></node></map>').style).
+			toEqual({});
 	});
 	it('ignores FOLDED=false', function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" FOLDED="false" TEXT="A"></node></map>').style).
@@ -34,6 +38,16 @@ describe("Freemind Import", function () {
 	});
 	it('converts xml entities into string equivalents while parsing xml', function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" TEXT="Text&quot;&lt;&gt;&quot;&lt;&gt;More"></node></map>')).toEqual({'title' : 'Text"<>"<>More'});
+	});
+	it('collapses non-leaf children of collapsed nodes', function () {
+		var result = MM.freemindImport('<map version="0.7.1">' +
+			'<node ID="1" TEXT="A" FOLDED="true">' +
+			'<node ID="2" TEXT="B">' +
+			'<node ID="3" TEXT="C" FOLDED="true"></node>' +
+			'</node></node></map>');
+		expect(result.style.collapsed).toBeTruthy();
+		expect(result.ideas[1].style.collapsed).toBeTruthy();
+		expect(result.ideas[1].ideas[1].style.collapsed).toBeFalsy();
 	});
 	it('reports initial number of nodes and progress through callbacks', function () {
 		var start = jasmine.createSpy('start'),
