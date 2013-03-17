@@ -1,4 +1,4 @@
-/*global MM, jQuery, describe, it, beforeEach, expect*/
+/*global jasmine, MM, jQuery, describe, it, beforeEach, expect*/
 describe("Freemind Import", function () {
 	'use strict';
 	var complex_xml = '<map version="0.7.1"><node ID="1" TEXT="A">' +
@@ -34,5 +34,12 @@ describe("Freemind Import", function () {
 	});
 	it('converts xml entities into string equivalents while parsing xml', function () {
 		expect(MM.freemindImport('<map version="0.7.1"><node ID="1" TEXT="Text&quot;&lt;&gt;&quot;&lt;&gt;More"></node></map>')).toEqual({'title' : 'Text"<>"<>More'});
+	});
+	it('reports initial number of nodes and progress through callbacks', function () {
+		var start = jasmine.createSpy('start'),
+			progress = jasmine.createSpy('progress');
+		MM.freemindImport(complex_xml, start, progress);
+		expect(start).toHaveBeenCalledWith(3);
+		expect(progress.callCount).toEqual(3);
 	});
 });

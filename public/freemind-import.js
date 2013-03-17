@@ -1,5 +1,5 @@
 /*global MM, $, _*/
-MM.freemindImport = function (xml) {
+MM.freemindImport = function (xml, start, progress) {
 	'use strict';
 	var xmlToJson = function (xml_node) {
 		var node = $(xml_node),
@@ -26,8 +26,14 @@ MM.freemindImport = function (xml) {
 			});
 			result.ideas = child_obj;
 		}
+		if (progress) {
+			progress();
+		}
 		return result;
 	},
-		xmlDoc = $.parseXML(xml);
-	return xmlToJson($(xmlDoc).find('map').children('node').first());
+		xmlDoc = $($.parseXML(xml));
+	if (start) {
+		start(xmlDoc.find('node').length);
+	}
+	return xmlToJson(xmlDoc.find('map').children('node').first());
 }
