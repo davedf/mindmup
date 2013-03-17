@@ -7,8 +7,7 @@ MindMup is a zero-friction mind map canvas. Our aim is to create the most produc
 all the distractions and providing powerful editing shortcuts. 
 
 This git project is the server-side portion of MindMup. It provides a web interface that serves maps, allows users to edit and save them,
-provides menus and feedback forms and links to analytics. All maps are public, and each time anyone saves a map the changed version
-gets a unique URL. You can see an example of this live on http://www.mindmup.com. 
+provides menus and feedback forms and links to analytics. You can see an example of this live on http://www.mindmup.com. 
 
 Dependencies
 -------------
