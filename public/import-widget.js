@@ -1,4 +1,4 @@
-/*global $, content*/
+/*global $, content, MM*/
 $.fn.importWidget = function (activityLog, mapRepository) {
 	'use strict';
 	var element = this,
@@ -9,12 +9,13 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			activityLog.log('Map', 'import:start', filename);
 			statusDiv.html("<i class='icon-spinner'/> Uploading " + filename);
 		},
-		success = function (json_content) {
-			var idea = content(json_content);
-			activityLog.log('Map', 'import:complete');
-			statusDiv.empty();
-			element.modal('hide');
-			mapRepository.setMap({ idea: idea });
+		parseFile = function (file_content, type) {
+			if (type === 'mm') {
+				return MM.freemindImport(file_content);
+			}
+			if (type === 'mup') {
+				return JSON.parse(file_content);
+			}
 		},
 		fail = function (error, detail) {
 			activityLog.log('Map', 'import:fail', error);
@@ -24,7 +25,24 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 					'<strong>' + error + '</strong>' +
 					'</div>'
 			);
+		},
+		success = function (file_content, type) {
+			var idea, json_content;
+			if (type !== 'mup' && type !== 'mm') {
+				fail('unsupported format ' + type);
+			}
+			try {
+				json_content = parseFile(file_content, type);
+			} catch (e) {
+				fail('invalid file content', e);
+			}
+			idea = content(json_content);
+			activityLog.log('Map', 'import:complete');
+			statusDiv.empty();
+			element.modal('hide');
+			mapRepository.setMap({ idea: idea });
 		};
+
 	fileInput.json_upload('/import', start, success, fail);
 	element.on('shown', function () {
 		fileInput.css('opacity', 0).css('position', 'absolute').offset(selectButton.offset()).width(selectButton.outerWidth())

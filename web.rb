@@ -112,9 +112,7 @@ post '/import' do
   uploaded_type= File.extname file[:filename]
   json_fail "unsupported file type #{uploaded_type}" unless allowed_types.include? uploaded_type
   result=File.readlines(file[:tempfile]).join  ' '
-  if uploaded_type=='.mm'
-    result=JSON.fast_generate(FreemindFormat.new().from_freemind(result))
-  end
+  content_type 'text/plain'
   result
 end
 get "/un" do

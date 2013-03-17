@@ -23,9 +23,10 @@ describe("Json Upload Widget", function () {
 		expect(hiddenFrame.length).toBe(1);
 		expect(hiddenFrame.css('display')).toBe('none');
 	});
-	function fakeUpload(content) {
+	function fakeUpload(content, fname) {
 		readDeps();
-		hiddenFrame[0].contentWindow.document.body.innerHTML = content;
+		input.prop('type', 'hidden').val('/testpath/' + fname);
+		hiddenFrame[0].contentWindow.document.body.innerText = content;
 		parentForm.submit();
 		hiddenFrame.load();
 	}
@@ -41,27 +42,25 @@ describe("Json Upload Widget", function () {
 		var spy = jasmine.createSpy('called');
 		input.json_upload('/', spy);
 		readDeps();
-		input.prop('type', 'hidden').val('/testpath/abc.def');
+		input.prop('type', 'hidden').val('/testpath/abc.mm');
 		parentForm.submit();
-		expect(spy).toHaveBeenCalledWith('abc.def');
+		expect(spy).toHaveBeenCalledWith('abc.mm');
 	});
-	it("executes the success callback with the parsed JSON body if the result is JSON", function () {
+	it("executes the success callback with the result body and file type", function () {
 		var spy = jasmine.createSpy('called');
 		input.json_upload('/', null, spy);
-		fakeUpload('{"a":"b"}');
-		expect(spy).toHaveBeenCalledWith({'a' : 'b'});
+		fakeUpload('somecontent', 'abc.mm');
+		expect(spy).toHaveBeenCalledWith('somecontent', 'mm');
 	});
-	it("executes the fail callback with the returned body is not JSON", function () {
-		var spy = jasmine.createSpy('called');
-		input.json_upload('/', null, null, spy);
-		fakeUpload('ab');
-		expect(spy).toHaveBeenCalledWith('invalid server response', 'ab');
-	});
-	it("executes the fail callback with the returned body is JSON containing an error message", function () {
-		var spy = jasmine.createSpy('called');
-		input.json_upload('/', null, null, spy);
-		fakeUpload('{"error":"fake error"}');
-		expect(spy).toHaveBeenCalledWith('fake error');
+	it("executes the fail callback if unsupported type", function () {
+		var begin = jasmine.createSpy('begin'),
+			success = jasmine.createSpy('success'),
+			fail = jasmine.createSpy('fail');
+		input.json_upload('/', begin, success, fail);
+		fakeUpload('somecontent', 'abc.txt');
+		expect(fail).toHaveBeenCalledWith('unsupported type txt');
+		expect(begin).not.toHaveBeenCalled();
+		expect(success).not.toHaveBeenCalled();
 	});
 	it("does not execute any callbacks if the frame loads but the form was not submitted - firefox bug check", function () {
 		var begin = jasmine.createSpy('begin'),
