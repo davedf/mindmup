@@ -182,6 +182,11 @@ span.repo-g, span.repo-a {
 #listBookmarks a .btn-inline {
 	margin-left:15px;
 }
+.gecko #listBookmarks a .btn-inline {
+  position: relative;
+	top:-17px;
+  left: 15px;
+}
 .hidden-topbar #topbar .navbar-inner {
 	visibility:hidden;
 }
