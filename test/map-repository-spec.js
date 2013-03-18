@@ -20,7 +20,7 @@ describe("Map Repository", function () {
 			{
 				loadMap: function (mapId) {
 					var deferred = jQuery.Deferred();
-					deferred.resolve(stubMapInfo(mapId));
+					deferred.resolve('{ "title": "hello" }', mapId, 'application/json');
 					return deferred.promise();
 				},
 				saveMap: function (saveMapinfo) {
@@ -104,14 +104,13 @@ describe("Map Repository", function () {
 
 			underTest.loadMap('foo');
 
-			expect(listener).toHaveBeenCalledWith(stubMapInfo('foo').idea, 'foo');
+			expect(JSON.stringify(listener.mostRecentCall.args[0])).toBe('{"title":"hello","id":1}');
+			expect(listener.mostRecentCall.args[1]).toBe('foo');
 		});
 	});
 	describe("saveMap", function () {
-		var loadedMapInfo;
 		beforeEach(function () {
-			loadedMapInfo = stubMapInfo('loadedMapId');
-			underTest.setMap(loadedMapInfo);
+			underTest.setMap('{}', 'loadedMapId', 'application/json');
 		});
 		it("should use first repository to load as a fallback option", function () {
 			spyOn(repo1, 'saveMap').andCallThrough();
@@ -171,25 +170,25 @@ describe("Map Repository", function () {
 			expect(listener).toHaveBeenCalled();
 		});
 		it("should dispatch mapSaved event if saveMap succeeds and mapId not changed", function () {
-			var listener = jasmine.createSpy();
+			var listener = jasmine.createSpy(),
+				mapInfo = stubMapInfo('newMapId');
 			underTest.addEventListener('mapSaved', listener);
 
 			underTest.publishMap();
 
-			expect(listener).toHaveBeenCalledWith('loadedMapId', loadedMapInfo.idea, false);
+			expect(listener).toHaveBeenCalledWith('loadedMapId', mapInfo.idea, false);
 		});
 		it("should dispatch mapSaved and mapSavedAsNew event if saveMap succeeds and mapId has changed", function () {
-			var listener = jasmine.createSpy();
+			var listener = jasmine.createSpy(),
+				mapInfo = stubMapInfo('newMapId');
 			underTest.addEventListener('mapSaved', listener);
 			repo1.saveMap = function (saveMapinfo) {
-				var deferred = jQuery.Deferred();
-				deferred.resolve(stubMapInfo('newMapId'));
-				return deferred.promise();
+				return jQuery.Deferred().resolve(mapInfo).promise();
 			};
 
 			underTest.publishMap();
 
-			expect(listener).toHaveBeenCalledWith('newMapId', loadedMapInfo.idea, true);
+			expect(listener).toHaveBeenCalledWith('newMapId', mapInfo.idea, true);
 		});
 
 	});
