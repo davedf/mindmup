@@ -186,8 +186,10 @@ var content = function (contentAggregate, progressCallback) {
 		if (siblingsBefore.length === 0) { return false; }
 		return parentIdea.ideas[_.max(siblingsBefore, Math.abs)].id;
 	};
-
-
+	contentAggregate.clone = function (subIdeaId) {
+		var toClone = (subIdeaId && subIdeaId != contentAggregate.id && contentAggregate.findSubIdeaById(subIdeaId)) || contentAggregate;
+		return JSON.parse(JSON.stringify(toClone));
+	};
 	/*** private utility methods ***/
 	contentAggregate.findParent = function (subIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
@@ -205,6 +207,30 @@ var content = function (contentAggregate, progressCallback) {
 	};
 
 	/**** aggregate command processing methods ****/
+	contentAggregate.paste = function (parentIdeaId, jsonToPaste) {
+		var pasteParent = (parentIdeaId === contentAggregate.id) ?  contentAggregate : contentAggregate.findSubIdeaById(parentIdeaId),
+			removeIds = function (json) {
+				var result = _.clone(json);
+				delete result.id;
+				if (json.ideas) {
+					result.ideas = {};
+					_.each(json.ideas, function (val, key) {
+						result.ideas[key] = removeIds(val);
+					});
+				}
+				return result;
+			},
+			newIdea = jsonToPaste && jsonToPaste.title && init(removeIds(jsonToPaste)),
+			newRank;
+		if (!pasteParent || !newIdea) {
+			return false;
+		}
+		newRank = appendSubIdea(pasteParent, newIdea);
+		notifyChange('paste', [parentIdeaId, jsonToPaste, newIdea.id], function () {
+			delete pasteParent.ideas[newRank];
+		});
+		return true;
+	};
 	contentAggregate.flip = function (ideaId) {
 		var new_rank, max_rank, current_rank = contentAggregate.findChildRankById(ideaId);
 		if (!current_rank) {
@@ -723,7 +749,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				moveNodes(newLayout.nodes,
 					currentLayout.nodes[contextNodeId].x - newLayout.nodes[contextNodeId].x,
 					currentLayout.nodes[contextNodeId].y - newLayout.nodes[contextNodeId].y
-				);
+					);
 			}
 			for (nodeId in currentLayout.connectors) {
 				newConnector = newLayout.connectors[nodeId];
@@ -838,6 +864,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.updateStyle = function (source, prop, value) {
 		analytic('updateStyle:' + prop, source);
+		/*jslint eqeq:true */
 		if (this.getSelectedStyle(prop) != value) {
 			idea.updateStyle(currentlySelectedIdeaId, prop, value);
 		}
@@ -893,7 +920,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.move = function (source, deltaX, deltaY) {
 		self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
-		analytic('mapMoveRequested', source);
+		analytic('move', source);
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -1008,13 +1035,18 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			analytic('moveRelative', source);
 			idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
 		};
-		self.mark = function (source) {
-			analytic('mark', source);
-			markedIdeaId = currentlySelectedIdeaId;
+		self.cut = function (source) {
+			analytic('cut', source);
+			self.clipBoard = idea.clone(currentlySelectedIdeaId);
+			idea.removeSubIdea(currentlySelectedIdeaId);
 		};
-		self.moveMarked = function (source) {
-			analytic('moveMarked', source);
-			idea.changeParent(markedIdeaId, currentlySelectedIdeaId);
+		self.copy = function (source) {
+			analytic('copy', source);
+			self.clipBoard = idea.clone(currentlySelectedIdeaId);
+		};
+		self.paste = function (source) {
+			analytic('paste', source);
+			idea.paste(currentlySelectedIdeaId, self.clipBoard);
 		};
 	}());
 	//Todo - clean up this shit below
@@ -1870,8 +1902,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
 			32: mapModel.editNode.bind(mapModel, 'keyboard'),
 			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
-			67: mapModel.mark.bind(mapModel, 'keyboard'),
-			80: mapModel.moveMarked.bind(mapModel, 'keyboard')
+			67: mapModel.cut.bind(mapModel, 'keyboard'),
+			80: mapModel.paste.bind(mapModel, 'keyboard'),
+			89: mapModel.copy.bind(mapModel, 'keyboard'),
+			85: mapModel.undo.bind(mapModel, 'keyboard')
 		}, shiftKeyboardEventHandlers = {
 			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
 			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
@@ -1883,8 +1917,9 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
 			38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
 			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
-			88: mapModel.mark.bind(mapModel, 'keyboard'),
-			86: mapModel.moveMarked.bind(mapModel, 'keyboard')
+			88: mapModel.cut.bind(mapModel, 'keyboard'),
+			67: mapModel.copy.bind(mapModel, 'keyboard'),
+			86: mapModel.paste.bind(mapModel, 'keyboard')
 		},
 			onKeydown = function (evt) {
 				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
