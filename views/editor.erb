@@ -1,11 +1,1 @@
 <div id="container"></div>
-<form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-  <input type="hidden" name="key" />
-  <input type="hidden" name="AWSAccessKeyId" />
-  <input type="hidden" name="acl" value="public-read" />
-  <input type="hidden" name="success_action_redirect" />
-  <input type="hidden" name="policy" />
-  <input type="hidden" name="signature" />
-  <input type="hidden" name="Content-Type" />
-  <input type="hidden" name="file" />
-</form>
