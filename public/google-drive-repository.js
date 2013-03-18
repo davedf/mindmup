@@ -132,7 +132,12 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				} else {
 					downloadFile(resp).then(function (content) {
 						if (mimeType === "application/json") {
+							if (typeof content === 'string') { /* chrome will automatically parse before this */
+								content = JSON.parse(content);
+							}
 							deferred.resolve(content, true);
+						} else if (mimeType === "application/octet-stream") {
+							deferred.resolve(JSON.parse(content), true);
 						} else if (mimeType === "application/x-freemind") {
 							deferred.resolve(MM.freemindImport(content), false);
 						} else {
