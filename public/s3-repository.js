@@ -1,10 +1,9 @@
 /*jslint forin: true*/
-/*global content, jQuery, MM, observable, setTimeout, window */
+/*global content, FormData, jQuery, MM, observable, setTimeout, window */
 MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis) {
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent;
-	MM.S3MapRepository.version = '1';
 	this.recognises = function (mapId) {
 		return mapId && mapId[0] === "a";
 	};
@@ -18,7 +17,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 				};
 				deferred.resolve(mapInfo);
 			},
-			mapUrl = s3Url + folder + mapId + ".json",
+			mapUrl = s3Url + folder + mapId + '.json',
 			loadMapUsingProxy = function () {
 				activityLog.log('Map', 'ProxyLoad', mapId);
 				jQuery.ajax(
@@ -32,7 +31,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 		);
 		return deferred.promise();
 	};
-	this.description = "S3_iFrame";
+	this.description = "S3_CORS";
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
@@ -41,21 +40,35 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 				publishing = false;
 				deferred.reject();
 			},
-			submitS3Form = function (result) {
-				var name;
+			submitS3Form = function (publishingConfig) {
+				var formData = new FormData();
 				publishing = false;
-				jQuery('#s3form [name="file"]').val(JSON.stringify(mapInfo.idea));
-				for (name in result) {
-					jQuery('#s3form [name=' + name + ']').val(result[name]);
-				}
-				//Not actually saved, but needs to happen now as form will redirect after
-				dispatchEvent('mapSaved', result.s3UploadIdentifier, mapInfo.idea);
-				jQuery('#s3form').submit();
+				['key', 'AWSAccessKeyId', 'policy', 'signature'].forEach(function (parameter) {
+					formData.append(parameter, publishingConfig[parameter]);
+				});
+				formData.append('acl', 'public-read');
+				formData.append('Content-Type', 'text/plain');
+				formData.append('file', JSON.stringify(mapInfo.idea));
+				jQuery.ajax({
+					url: s3Url,
+					type: 'POST',
+					processData: false,
+					contentType: false,
+					data: formData
+				}).done(function (evt) {
+					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
+					deferred.resolve(mapInfo);
+				}).fail(function (evt) {
+					deferred.reject({
+						type: 's3-save-error',
+						responseText: evt.responseText
+					});
+				});
 			},
 			fetchPublishingConfig = function () {
 				activityLog.log('Fetching publishing config');
 				jQuery.ajax(
-					'/publishingConfig',
+					'/publishingConfig?no_redirect=true',
 					{
 						dataType: 'json',
 						cache: false,
