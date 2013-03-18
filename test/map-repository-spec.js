@@ -104,7 +104,8 @@ describe("Map Repository", function () {
 
 			underTest.loadMap('foo');
 
-			expect(listener).toHaveBeenCalledWith(stubMapInfo('foo').idea, 'foo');
+			expect(JSON.stringify(listener.mostRecentCall.args[0])).toBe('{"title":"hello","id":1}');
+			expect(listener.mostRecentCall.args[1]).toBe('foo');
 		});
 	});
 	describe("saveMap", function () {
