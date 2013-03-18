@@ -1,4 +1,4 @@
-/*global content, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi, btoa, XMLHttpRequest */
+/*global content, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	observable(this);
@@ -144,8 +144,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			return deferred.promise();
 		},
 		authenticate = function (showAuthenticationDialogs) {
-			var self = this,
-				deferred = jQuery.Deferred(),
+			var deferred = jQuery.Deferred(),
 				failureReason = showAuthenticationDialogs ? 'failed-authentication' : 'not-authenticated';
 			checkAuth(showAuthenticationDialogs).then(deferred.resolve, function () {
 				deferred.reject(failureReason);
@@ -280,7 +279,5 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
-
 	};
 };
-
