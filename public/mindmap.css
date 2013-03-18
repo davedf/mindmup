@@ -32,6 +32,11 @@ body {
 	padding: 0px; /* cancel default bootstrap padding on mobile screens, we use full screen */
 }
 }
+@media (max-width: 768px) {
+  .hidden-tablet-portait {
+    display: none !important;
+  }
+}
 @media (max-height: 320px) {
 .hidden-phone-landscape {
   display: none;
@@ -39,6 +44,11 @@ body {
 }
 @media (max-width: 400px) {
 	.map-changed .changed-phone-hidden {
+		display: none !important;
+	}
+}
+@media (max-width: 1024px) {
+	.map-changed .changed-tablet-hidden {
 		display: none !important;
 	}
 }
