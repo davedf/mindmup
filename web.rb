@@ -53,7 +53,7 @@ get '/fb' do
 	redirect "http://facebook.com/mindmupapp"
 end
 get '/trouble' do
- erb :trouble, :layout => false
+ erb :trouble
 end
 get '/default' do
   @mapid=settings.default_map
@@ -95,7 +95,7 @@ get "/publishingConfig" do
   signer=S3PolicySigner.new
   @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name,
                                @s3_key, @s3_result_url, settings.s3_max_upload_size*1024, @s3_content_type, settings.s3_form_expiry
-  erb :s3UploadConfig, :layout => false
+  erb :s3UploadConfig
 end
 
 get '/browserok/:mapid' do
@@ -116,7 +116,7 @@ post '/import' do
   result
 end
 get "/un" do
-  erb :unsupported, :layout=> false
+  erb :unsupported
 end
 include Sinatra::UserAgentHelpers
 helpers do
@@ -124,7 +124,7 @@ helpers do
     if (browser_supported? || user_accepted_browser?)
       erb :editor
     else
-      erb :unsupported, :layout => false
+      erb :unsupported
     end
   end
   def user_accepted_browser?
