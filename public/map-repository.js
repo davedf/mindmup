@@ -1,5 +1,4 @@
-/*jslint forin: true nomen: true, plusplus: true*/
-/*global _, content, jQuery, MM, observable, setTimeout, window, document*/
+/*global _, content, jQuery, MM, observable, window, document*/
 MM.MapRepository = function (activityLog, alert, repositories) {
 	// order of repositories is important, the first repository is default
 	'use strict';
@@ -31,9 +30,21 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			}
 			return repositories[0];
 		},
-		mapLoaded = function (newMapInfo) {
-			mapInfo = _.clone(newMapInfo);
-			dispatchEvent('mapLoaded', newMapInfo.idea, newMapInfo.mapId);
+		mapLoaded = function (fileContent, mapId, mimeType) {
+			var json, idea;
+			if (mimeType === 'application/json') {
+				json = typeof fileContent === 'string' ? JSON.parse(fileContent) : fileContent;
+			} else if (mimeType === 'application/octet-stream') {
+				json = JSON.parse(fileContent);
+			} else if (mimeType === 'application/x-freemind') {
+				json = MM.freemindImport(fileContent);
+			}
+			idea = content(json);
+			mapInfo = {
+				idea: idea,
+				mapId: mapId
+			};
+			dispatchEvent('mapLoaded', idea, mapId);
 		};
 	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
@@ -112,7 +123,7 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 			return startedFromNew(idea) && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		},
 		wasRelevantOnLoad;
-	mapRepository.addEventListener('mapLoading', function (mapUrl, mapId) {
+	mapRepository.addEventListener('mapLoading', function (mapUrl) {
 		activityLog.log('loading map [' + mapUrl + ']');
 	});
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
@@ -192,7 +203,7 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 			callback
 		);
 	});
-	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
+	mapRepository.addEventListener('mapLoadingFailed', function () {
 		showErrorAlert('Unfortunately, there was a problem loading the map.', 'An automated error report was sent and we will look into this as soon as possible');
 	});
 	mapRepository.addEventListener('mapSavingFailed', function () {
@@ -242,7 +253,7 @@ MM.MapRepository.mapLocationChange = function (mapRepository) {
 	'use strict';
 	mapRepository.addEventListener('mapSaved', function (newMapId, idea, idHasChanged) {
 		if (idHasChanged) {
-			document.location = "/map/" + newMapId;
+			document.location = '/map/' + newMapId;
 		}
 	});
 };

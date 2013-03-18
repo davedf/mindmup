@@ -40,7 +40,7 @@ MM.main = function (config) {
 
 		if (!jQuery('body').hasClass('image-render-checked')) {
 			if (isTouch() || jQuery('body').hasClass('gecko')) {
-				jQuery('body').addClass('image-render')
+				jQuery('body').addClass('image-render');
 			}
 			jQuery('body').addClass('image-render-checked');
 		}

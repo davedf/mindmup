@@ -1,4 +1,4 @@
-/*global content, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
+/*global jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	observable(this);
@@ -6,7 +6,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		driveLoaded,
 		isAuthorised,
 		recognises = function (mapId) {
-			return mapId && mapId[0] === "g";
+			return mapId && mapId[0] === 'g';
 		},
 		googleMapId = function (mapId) {
 			if (recognises(mapId)) {
@@ -14,7 +14,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			}
 		},
 		mindMupId = function (googleId) {
-			return "g1" + (googleId || "");
+			return 'g1' + (googleId || '');
 		},
 		checkAuth = function (showDialog) {
 			var deferred = jQuery.Deferred();
@@ -40,10 +40,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			var	googleId =  googleMapId(mapInfo.mapId),
 				deferred = jQuery.Deferred(),
 				boundary = '-------314159265358979323846',
-				delimiter = "\r\n--" + boundary + "\r\n",
-				close_delim = "\r\n--" + boundary + "--",
+				delimiter = '\r\n--' + boundary + '\r\n',
+				closeDelim = '\r\n--' + boundary + '--',
 				metadata = {
-					'title': mapInfo.idea.title + ".mup",
+					'title': mapInfo.idea.title + '.mup',
 					'mimeType': contentType
 				},
 				data = JSON.stringify(mapInfo.idea),
@@ -55,13 +55,13 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					'Content-Type: ' + contentType + '\r\n' +
 					'\r\n' +
 					data +
-					close_delim,
+					closeDelim,
 				request = gapi.client.request({
-					'path': '/upload/drive/v2/files' + (googleId ? "/" + googleId : ""),
+					'path': '/upload/drive/v2/files' + (googleId ? '/' + googleId : ''),
 					'method': (googleId ? 'PUT' : 'POST'),
 					'params': {'uploadType': 'multipart', 'useContentAsIndexableText': (data.length < 131072)}, /* google refuses indexable text larger than 128k, see https://developers.google.com/drive/file */
 					'headers': {
-						'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+						'Content-Type': 'multipart/mixed; boundary=\'' + boundary + '\''
 					},
 					'body': multipartRequestBody
 				});
@@ -115,7 +115,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			return deferred.promise();
 		},
 		loadFile = function (fileId) {
-			var deferred = jQuery.Deferred(),
+			var allowUpdate = { 'application/json': true, 'application/octet-stream': true, 'application/x-freemind': false },
+				deferred = jQuery.Deferred(),
 				request = gapi.client.drive.files.get({
 					'fileId': fileId
 				});
@@ -131,17 +132,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					}
 				} else {
 					downloadFile(resp).then(function (content) {
-						if (mimeType === "application/json") {
-							if (typeof content === 'string') { /* chrome will automatically parse before this */
-								content = JSON.parse(content);
-							}
-							deferred.resolve(content, true);
-						} else if (mimeType === "application/octet-stream") {
-							deferred.resolve(JSON.parse(content), true);
-						} else if (mimeType === "application/x-freemind") {
-							deferred.resolve(MM.freemindImport(content), false);
+						if (allowUpdate[mimeType] === undefined) {
+							deferred.reject('format-error', 'Unsupported format ' + mimeType);
 						} else {
-							deferred.reject('format-error', "Unsupported format " + mimeType);
+							deferred.resolve(content, mimeType, allowUpdate[resp.mimeType]);
 						}
 					}, deferred.reject);
 				}
@@ -160,7 +154,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			if (window.gapi && window.gapi.client) {
 				onComplete();
 			} else {
-				window.googleClientLoaded = function () { onComplete(); };
+				window.googleClientLoaded = onComplete;
 				jQuery('<script src="https://apis.google.com/js/client.js?onload=googleClientLoaded"></script>').appendTo('body');
 			}
 		},
@@ -179,7 +173,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			}
 			return deferred.promise();
 		};
-	this.description = "Google";
+	this.description = 'Google';
 
 	this.ready = function (showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred();
@@ -210,7 +204,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					}
 				});
 			};
-		searchCriteria = searchCriteria || "mimeType = '" + contentType + "' and not trashed";
+		searchCriteria = searchCriteria || 'mimeType = \'' + contentType + '\' and not trashed';
 		retrievePageOfFiles(gapi.client.drive.files.list({ 'q': searchCriteria }), []);
 		return deferred.promise();
 	};
@@ -224,13 +218,9 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				var retry = function () {
 						startLoad(recursionCount++);
 					},
-					loadSucceeded = function (result, allowUpdate) {
+					loadSucceeded = function (content, mimeType, allowUpdate) {
 						clearTimeout(timeout);
-						var mapInfo = {
-							mapId: mindMupId(allowUpdate && googleId),
-							idea: content(result)
-						};
-						deferred.resolve(mapInfo);
+						deferred.resolve(content, mindMupId(allowUpdate && googleId), mimeType);
 					},
 					loadFailed = function (reason, error) {
 						clearTimeout(timeout);

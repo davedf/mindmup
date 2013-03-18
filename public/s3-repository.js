@@ -1,21 +1,17 @@
 /*jslint forin: true*/
-/*global content, FormData, jQuery, MM, observable, setTimeout, window */
-MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis) {
+/*global FormData, jQuery, MM, setTimeout */
+MM.S3MapRepository = function (s3Url, folder, activityLog) {
 	'use strict';
-	observable(this);
-	var dispatchEvent = this.dispatchEvent;
+	this.description = 'S3_CORS';
+
 	this.recognises = function (mapId) {
-		return mapId && mapId[0] === "a";
+		return mapId && mapId[0] === 'a';
 	};
 
 	this.loadMap = function (mapId) {
 		var deferred = jQuery.Deferred(),
 			onMapLoaded = function (result) {
-				var mapInfo = {
-					mapId: mapId,
-					idea: content(result)
-				};
-				deferred.resolve(mapInfo);
+				deferred.resolve(result, mapId, 'application/json');
 			},
 			mapUrl = s3Url + folder + mapId + '.json',
 			loadMapUsingProxy = function () {
@@ -31,15 +27,10 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 		);
 		return deferred.promise();
 	};
-	this.description = "S3_CORS";
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
 			publishing = true,
-			saveTimeoutOccurred = function () {
-				publishing = false;
-				deferred.reject();
-			},
 			submitS3Form = function (publishingConfig) {
 				var formData = new FormData();
 				publishing = false;
@@ -55,10 +46,11 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 					processData: false,
 					contentType: false,
 					data: formData
-				}).done(function (evt) {
+				}).done(function () {
 					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
 					deferred.resolve(mapInfo);
 				}).fail(function (evt) {
+					publishing = false;
 					deferred.reject({
 						type: 's3-save-error',
 						responseText: evt.responseText
@@ -73,7 +65,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 						dataType: 'json',
 						cache: false,
 						success: submitS3Form,
-						error: function (result) {
+						error: function () {
 							if (publishing) {
 								setTimeout(fetchPublishingConfig, 1000);
 							}
@@ -81,7 +73,6 @@ MM.S3MapRepository = function (s3Url, folder, activityLog, networkTimeoutMillis)
 					}
 				);
 			};
-		setTimeout(saveTimeoutOccurred, networkTimeoutMillis);
 		fetchPublishingConfig();
 		return deferred.promise();
 	};
