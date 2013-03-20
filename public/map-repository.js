@@ -1,4 +1,4 @@
-/*global _, content, jQuery, MM, observable, window, document*/
+/*global _, content, jQuery, MM, observable, window, document, setTimeout*/
 MM.MapRepository = function (activityLog, alert, repositories) {
 	// order of repositories is important, the first repository is default
 	'use strict';
@@ -45,6 +45,12 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				mapId: mapId
 			};
 			dispatchEvent('mapLoaded', idea, mapId);
+		},
+		shouldRetry = function (retries) {
+			var times = MM.retryTimes(retries);
+			return function (status) {
+				return times() && status === 'network-error';
+			};
 		};
 	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
@@ -56,8 +62,9 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	this.setMap = mapLoaded;
 
 	this.loadMap = function (mapId) {
-		var repository = chooseRepository([mapId]),
-			mapLoadFailed = function (reason) {
+		var timeout,
+			repository = chooseRepository([mapId]),
+			mapLoadFailed = function (reason, recursionCount) {
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId);
 					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
@@ -73,7 +80,8 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				}
 			};
 		dispatchEvent('mapLoading', mapId);
-		repository.loadMap(mapId).then(mapLoaded, mapLoadFailed);
+		MM.retry(repository.loadMap.bind(repository, mapId), shouldRetry(5), MM.linearBackoff()).then(mapLoaded, mapLoadFailed);
+
 	};
 
 	this.publishMap = function (repositoryType) {
@@ -104,7 +112,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				}
 			};
 		dispatchEvent('mapSaving', repository.description);
-		repository.saveMap(_.clone(mapInfo)).then(mapSaved, mapSaveFailed);
+		MM.retry(repository.saveMap.bind(repository, _.clone(mapInfo)), shouldRetry(5), MM.linearBackoff()).then(mapSaved, mapSaveFailed);
 	};
 };
 
@@ -222,6 +230,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 			}
 		};
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
+		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
 		if (!mapLoaded) {
 			jQuery(window).bind('beforeunload', function () {
 				if (changed && !saving) {
@@ -256,4 +265,41 @@ MM.MapRepository.mapLocationChange = function (mapRepository) {
 			document.location = '/map/' + newMapId;
 		}
 	});
+};
+
+MM.retry = function (task, shouldRetry, backoff) {
+	'use strict';
+	var deferred = jQuery.Deferred(),
+		attemptTask = function () {
+			task().then(
+				deferred.resolve,
+				function () {
+					if (!shouldRetry || shouldRetry.apply(undefined, arguments)) {
+						if (backoff) {
+							setTimeout(attemptTask, backoff());
+						} else {
+							attemptTask();
+						}
+					} else {
+						deferred.reject.apply(deferred, arguments);
+					}
+				}
+			);
+		};
+	attemptTask();
+	return deferred.promise();
+};
+MM.retryTimes = function (retries) {
+	'use strict';
+	return function () {
+		return retries--;
+	};
+};
+MM.linearBackoff = function () {
+	'use strict';
+	var calls = 0;
+	return function () {
+		calls++;
+		return 1000 * calls;
+	};
 };
