@@ -211,68 +211,27 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 
 	this.loadMap = function (mapId, showAuthenticationDialogs) {
 		var deferred = jQuery.Deferred(),
-			maxRetrys = 5,
-			timeout,
 			googleId = googleMapId(mapId),
-			startLoad = function (recursionCount) {
-				var retry = function () {
-						startLoad(recursionCount++);
-					},
-					loadSucceeded = function (content, mimeType, allowUpdate) {
-						clearTimeout(timeout);
+			readySucceeded = function () {
+				loadFile(googleId).then(
+					function (content, mimeType, allowUpdate) {
 						deferred.resolve(content, mindMupId(allowUpdate && googleId), mimeType);
 					},
-					loadFailed = function (reason, error) {
-						clearTimeout(timeout);
-						if (error) {
-							dispatchEvent('networkError', error);
-						}
-						if (recursionCount < maxRetrys && reason === 'network-error') {
-							setTimeout(retry, recursionCount * 1000);
-						} else {
-							deferred.reject(reason);
-						}
-					};
-				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
-				loadFile(googleId).then(loadSucceeded, loadFailed);
-			},
-			readySucceeded = function () {
-				startLoad(0);
+					deferred.reject
+				);
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();
 	};
 
 	this.saveMap = function (mapInfo, showAuthenticationDialogs) {
-		var deferred = jQuery.Deferred(),
-			timeout,
-			maxRetrys = 5,
-			startSave = function (recursionCount) {
-				var retry = function () {
-						startSave(recursionCount++);
-					},
-					saveSucceeded = function (savedMapInfo) {
-						clearTimeout(timeout);
-						deferred.resolve(savedMapInfo);
-					},
-					saveFailed = function (reason, error) {
-						clearTimeout(timeout);
-						if (error) {
-							dispatchEvent('networkError', error);
-						}
-						if (recursionCount < maxRetrys && reason === 'network-error') {
-							setTimeout(retry, recursionCount * 1000);
-						} else {
-							deferred.reject(reason);
-						}
-					};
-				timeout = setTimeout(deferred.reject, networkTimeoutMillis);
-				saveFile(mapInfo).then(saveSucceeded, saveFailed);
+		var deferred = jQuery.Deferred();
+		this.ready(showAuthenticationDialogs).then(
+			function () {
+				saveFile(mapInfo).then(deferred.resolve, deferred.reject);
 			},
-			readySucceeded = function () {
-				startSave(0);
-			};
-		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
+			deferred.reject
+		);
 		return deferred.promise();
 	};
 };

@@ -1,8 +1,8 @@
 /*jslint nomen: true*/
-/*global content, _, jasmine, observable, beforeEach, describe, expect, it, jasmine, jQuery, spyOn, MM*/
+/*global content, _, jasmine, observable, beforeEach, afterEach, describe, expect, it, jasmine, jQuery, spyOn, MM, sinon*/
 describe("Map Repository", function () {
 	'use strict';
-	var repo1, repo2, underTest,
+	var repo1, repo2, underTest, clock,
 		dummy = function () {},
 		qstub = function (functions) {
 			var ret = {};
@@ -15,9 +15,11 @@ describe("Map Repository", function () {
 			return {mapId: mapId, idea: qstub(['addEventListener'])};
 		};
 	beforeEach(function () {
+		clock = sinon.useFakeTimers();
 		MM.MapRepository.mapLocationChange = function () {};
-		var protoRepo = observable(
-			{
+		var loadMapDeferred,
+			saveMapDeferred,
+			protoRepo = observable({
 				loadMap: function (mapId) {
 					var deferred = jQuery.Deferred();
 					deferred.resolve('{ "title": "hello" }', mapId, 'application/json');
@@ -28,12 +30,14 @@ describe("Map Repository", function () {
 					deferred.resolve(stubMapInfo(saveMapinfo.mapId));
 					return deferred.promise();
 				}
-			}
-		),
+			}),
 			repoActions = ['recognises'];
 		repo1 = _.extend(qstub(repoActions), protoRepo);
 		repo2 = _.extend(qstub(repoActions), protoRepo);
 		underTest = new MM.MapRepository(qstub(['error', 'log']), qstub(['hide', 'show']), [repo1, repo2]);
+	});
+	afterEach(function () {
+		clock.restore();
 	});
 	describe("loadMap", function () {
 		it("should check each repository to see if it recognises the mapId", function () {
@@ -106,6 +110,30 @@ describe("Map Repository", function () {
 
 			expect(JSON.stringify(listener.mostRecentCall.args[0])).toBe('{"title":"hello","id":1}');
 			expect(listener.mostRecentCall.args[1]).toBe('foo');
+		});
+		it("should use retry", function () {
+			spyOn(MM, "retry").andCallThrough();
+			underTest.loadMap('foo');
+			expect(MM.retry).toHaveBeenCalled();
+		});
+		it("should not retry if not network-error ", function () {
+			var callCount = 0;
+			repo1.loadMap = function (mapId) {
+				callCount++;
+				return jQuery.Deferred().reject('errorMsg').promise();
+			};
+			underTest.loadMap('foo');
+			expect(callCount).toBe(1);
+		});
+		it("should call and then retry 5 times if it is a network-error ", function () {
+			var callCount = 0;
+			repo1.loadMap = function (mapId) {
+				callCount++;
+				return jQuery.Deferred().reject('network-error').promise();
+			};
+			underTest.loadMap('foo');
+			clock.tick(120001);
+			expect(callCount).toBe(6);
 		});
 	});
 	describe("saveMap", function () {
@@ -190,6 +218,71 @@ describe("Map Repository", function () {
 
 			expect(listener).toHaveBeenCalledWith('newMapId', mapInfo.idea, true);
 		});
-
+		it("should use retry", function () {
+			spyOn(MM, "retry").andCallThrough();
+			underTest.publishMap();
+			expect(MM.retry).toHaveBeenCalled();
+		});
+		it("should not retry if not network-error ", function () {
+			var callCount = 0;
+			repo1.saveMap = function (saveMapinfo) {
+				callCount++;
+				return jQuery.Deferred().reject('errorMsg').promise();
+			};
+			underTest.publishMap();
+			expect(callCount).toBe(1);
+		});
+		it("should call and then retry 5 times if it is a network-error ", function () {
+			var callCount = 0;
+			repo1.saveMap = function (saveMapinfo) {
+				callCount++;
+				return jQuery.Deferred().reject('network-error').promise();
+			};
+			underTest.publishMap();
+			clock.tick(120001);
+			expect(callCount).toBe(6);
+		});
+	});
+	describe("MM.retry", function () {
+		var buildTaskToFailTimes = function (failTimes) {
+			var retryCount = 0;
+			return function () {
+				var deferred = jQuery.Deferred();
+				if (failTimes) {
+					failTimes--;
+					retryCount++;
+					deferred.reject(retryCount);
+				} else {
+					deferred.resolve(retryCount);
+				}
+				return deferred.promise();
+			};
+		};
+		it("should retry until task succeeds then resolve", function () {
+			var retryCount = 0;
+			MM.retry(buildTaskToFailTimes(4), MM.retryTimes(4)).then(function (r) { retryCount = r; });
+			expect(retryCount).toBe(4);
+		});
+		it("should reject once the task retries exceeded", function () {
+			var retryCount = 0;
+			MM.retry(buildTaskToFailTimes(5), MM.retryTimes(4)).fail(function (r) {retryCount = r; });
+			expect(retryCount).toBe(5);
+		});
+		it("should setTimeout if backoff supplied", function () {
+			var retryCount = 0;
+			MM.retry(buildTaskToFailTimes(1), MM.retryTimes(1), function () { return 1000; })
+				.then(function (r) { retryCount = r; });
+			clock.tick(999);
+			expect(retryCount).toBe(0);
+			clock.tick(2);
+			expect(retryCount).toBe(1);
+		});
+	});
+	describe("MM.linearBackoff", function () {
+		it("should return increasing number of seconds with each call", function () {
+			var underTest = MM.linearBackoff();
+			expect(underTest()).toBe(1000);
+			expect(underTest()).toBe(2000);
+		});
 	});
 });
