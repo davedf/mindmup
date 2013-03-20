@@ -30,10 +30,8 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 
 	this.saveMap = function (mapInfo) {
 		var deferred = jQuery.Deferred(),
-			publishing = true,
 			submitS3Form = function (publishingConfig) {
 				var formData = new FormData();
-				publishing = false;
 				['key', 'AWSAccessKeyId', 'policy', 'signature'].forEach(function (parameter) {
 					formData.append(parameter, publishingConfig[parameter]);
 				});
@@ -50,30 +48,23 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
 					deferred.resolve(mapInfo);
 				}).fail(function (evt) {
-					publishing = false;
 					deferred.reject({
 						type: 's3-save-error',
 						responseText: evt.responseText
 					});
 				});
-			},
-			fetchPublishingConfig = function () {
-				activityLog.log('Fetching publishing config');
-				jQuery.ajax(
-					'/publishingConfig?no_redirect=true',
-					{
-						dataType: 'json',
-						cache: false,
-						success: submitS3Form,
-						error: function () {
-							if (publishing) {
-								setTimeout(fetchPublishingConfig, 1000);
-							}
-						}
-					}
-				);
 			};
-		fetchPublishingConfig();
+		activityLog.log('Fetching publishing config');
+		jQuery.ajax(
+			'/publishingConfig?no_redirect=true',
+			{
+				dataType: 'json',
+				cache: false
+			}
+		).then(
+			submitS3Form,
+			deferred.reject.bind(deferred, 'network-error')
+		);
 		return deferred.promise();
 	};
 };
