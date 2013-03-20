@@ -100,12 +100,12 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				jQuery.ajax(
 					file.downloadUrl,
 					{
-						success: deferred.resolve,
-						error: function (resp) {
-							deferred.reject('network-error', resp);
-						},
+						progress: deferred.notify,
 						headers: {'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }
 					}
+				).then(
+					deferred.resolve,
+					deferred.reject.bind(deferred, 'network-error')
 				);
 			} else {
 				deferred.reject();
@@ -129,13 +129,16 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.reject(resp.error);
 					}
 				} else {
-					downloadFile(resp).then(function (content) {
-						if (allowUpdate[mimeType] === undefined) {
-							deferred.reject('format-error', 'Unsupported format ' + mimeType);
-						} else {
-							deferred.resolve(content, mimeType, allowUpdate[resp.mimeType]);
-						}
-					}, deferred.reject);
+					downloadFile(resp).then(
+						function (content) {
+							if (allowUpdate[mimeType] === undefined) {
+								deferred.reject('format-error', 'Unsupported format ' + mimeType);
+							} else {
+								deferred.resolve(content, mimeType, allowUpdate[resp.mimeType]);
+							}
+						},
+						deferred.reject
+					).progress(deferred.notify);
 				}
 			});
 			return deferred.promise();
@@ -216,7 +219,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 						deferred.resolve(content, mindMupId(allowUpdate && googleId), mimeType);
 					},
 					deferred.reject
-				);
+				).progress(deferred.notify);
 			};
 		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
 		return deferred.promise();

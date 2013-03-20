@@ -55,7 +55,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			repository = chooseRepository([mapId]),
 			mapLoadFailed = function (reason, recursionCount) {
 				var retryWithDialog = function () {
-					dispatchEvent('mapLoading', mapId);
+					dispatchEvent('mapLoading', mapId, 0);
 					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
 				};
 				if (reason === 'no-access-allowed') {
@@ -68,8 +68,21 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 					dispatchEvent('mapLoadingFailed', mapId, reason);
 				}
 			};
-		dispatchEvent('mapLoading', mapId);
-		MM.retry(repository.loadMap.bind(repository, mapId), shouldRetry(5), MM.linearBackoff()).then(mapLoaded, mapLoadFailed);
+		dispatchEvent('mapLoading', mapId, 0);
+		MM.retry(
+			repository.loadMap.bind(repository, mapId),
+			shouldRetry(5),
+			MM.linearBackoff()
+		).then(
+			mapLoaded,
+			mapLoadFailed
+		).progress(
+			function (evt) {
+				var done = (evt && evt.loaded) || 0,
+					total = (evt && evt.total) || 1;
+				dispatchEvent('mapLoading', mapId, Math.round(100 * done / total));
+			}
+		);
 
 	};
 
@@ -119,8 +132,8 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 			return startedFromNew(idea) && idea.find(isNodeRelevant).length > 5 && idea.find(isNodeIrrelevant).length < 3;
 		},
 		wasRelevantOnLoad;
-	mapRepository.addEventListener('mapLoading', function (mapUrl) {
-		activityLog.log('loading map [' + mapUrl + ']');
+	mapRepository.addEventListener('mapLoading', function (mapUrl, percentDone) {
+		activityLog.log('loading map [' + mapUrl + '] (' + percentDone + '%)');
 	});
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 		activityLog.log('Map', 'View', mapId);
@@ -165,8 +178,9 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 			alert.hide(alertId);
 			alertId = alert.show(title, message, 'error');
 		};
-	mapRepository.addEventListener('mapLoading', function () {
-		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i>');
+	mapRepository.addEventListener('mapLoading', function (mapUrl, percentDone) {
+		alert.hide(alertId);
+		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i> (' + percentDone + '%)');
 	});
 	mapRepository.addEventListener('authRequired', function (providerName, authCallback) {
 		showAlertWithCallBack(
@@ -271,6 +285,8 @@ MM.retry = function (task, shouldRetry, backoff) {
 						deferred.reject.apply(deferred, arguments);
 					}
 				}
+			).progress(
+				deferred.notify
 			);
 		};
 	attemptTask();
@@ -290,3 +306,19 @@ MM.linearBackoff = function () {
 		return 1000 * calls;
 	};
 };
+
+(function ($, window) {
+	'use strict';
+    //patch ajax settings to call a progress callback
+    var oldXHR = $.ajaxSettings.xhr;
+    $.ajaxSettings.xhr = function () {
+        var xhr = oldXHR();
+        if (xhr instanceof window.XMLHttpRequest) {
+            xhr.addEventListener('progress', this.progress, false);
+        }
+        if (xhr.upload) {
+            xhr.upload.addEventListener('progress', this.progress, false);
+        }
+        return xhr;
+    };
+}(jQuery, window));
