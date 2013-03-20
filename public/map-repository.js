@@ -53,7 +53,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	this.loadMap = function (mapId) {
 		var timeout,
 			repository = chooseRepository([mapId]),
-			mapLoadFailed = function (reason, recursionCount) {
+			mapLoadFailed = function (reason, label) {
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId, 0);
 					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
@@ -65,7 +65,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				} else if (reason === 'not-authenticated') {
 					dispatchEvent('authRequired', repository.description, retryWithDialog);
 				} else {
-					dispatchEvent('mapLoadingFailed', mapId, reason);
+					dispatchEvent('mapLoadingFailed', mapId, reason, label);
 				}
 			};
 		dispatchEvent('mapLoading', mapId, 0);
@@ -139,8 +139,8 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 		activityLog.log('Map', 'View', mapId);
 		wasRelevantOnLoad = isMapRelevant(idea);
 	});
-	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason) {
-		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason));
+	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason, label) {
+		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason) + ' label [' + label + ']');
 	});
 	mapRepository.addEventListener('mapSaving', activityLog.log.bind(activityLog, 'Map', 'Save Attempted'));
 	mapRepository.addEventListener('mapSaved', function (id, idea) {
