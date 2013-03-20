@@ -70,7 +70,7 @@ describe("Map Repository", function () {
 
 			underTest.loadMap('foo');
 
-			expect(listener).toHaveBeenCalledWith('foo');
+			expect(listener).toHaveBeenCalledWith('foo', 0);
 
 		});
 		it("should dispatch mapLoadingFailed event if loadmap fails", function () {
