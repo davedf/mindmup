@@ -30,6 +30,13 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			}
 			return repositories[0];
 		},
+		setMap = function (idea, mapId) {
+			mapInfo = {
+				idea: idea,
+				mapId: mapId
+			};
+			dispatchEvent('mapLoaded', idea, mapId);
+		},
 		mapLoaded = function (fileContent, mapId, mimeType) {
 			var json, idea;
 			if (mimeType === 'application/json') {
@@ -40,11 +47,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				json = MM.freemindImport(fileContent);
 			}
 			idea = content(json);
-			mapInfo = {
-				idea: idea,
-				mapId: mapId
-			};
-			dispatchEvent('mapLoaded', idea, mapId);
+			setMap(idea, mapId);
 		},
 		shouldRetry = function (retries) {
 			var times = MM.retryTimes(retries);
@@ -59,7 +62,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 	_.each(repositories, addListeners);
 
-	this.setMap = mapLoaded;
+	this.setMap = setMap;
 
 	this.loadMap = function (mapId) {
 		var timeout,

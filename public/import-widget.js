@@ -63,7 +63,7 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			activityLog.log('Map', 'import:complete');
 			statusDiv.empty();
 			element.modal('hide');
-			mapRepository.setMap({ idea: idea });
+			mapRepository.setMap(idea);
 		},
 		shouldUseFileReader = function () {
 			return (window.File && window.FileReader && window.FileList && window.Blob && (!$('body').hasClass('disable-filereader')));

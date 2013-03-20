@@ -138,7 +138,7 @@ describe("Map Repository", function () {
 	});
 	describe("saveMap", function () {
 		beforeEach(function () {
-			underTest.setMap('{}', 'loadedMapId', 'application/json');
+			underTest.setMap(content({}), 'loadedMapId');
 		});
 		it("should use first repository to load as a fallback option", function () {
 			spyOn(repo1, 'saveMap').andCallThrough();
