@@ -86,6 +86,7 @@ div.topbar-color-picker {
 .map-unchanged .visible-map-changed {
   display: none;
 }
+#toolbarEdit .btn-group { margin-left:5px; }
 #toolbarEdit button { margin-top:5px; }
 .ideaInput {
   position: absolute;
