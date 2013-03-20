@@ -1,9 +1,7 @@
 /*global jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
-	observable(this);
-	var dispatchEvent = this.dispatchEvent,
-		driveLoaded,
+	var driveLoaded,
 		isAuthorised,
 		recognises = function (mapId) {
 			return mapId && mapId[0] === 'g';
