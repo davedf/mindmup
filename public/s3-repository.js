@@ -56,7 +56,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 			};
 		activityLog.log('Fetching publishing config');
 		jQuery.ajax(
-			'/publishingConfig?no_redirect=true',
+			'/publishingConfig',
 			{
 				dataType: 'json',
 				cache: false
