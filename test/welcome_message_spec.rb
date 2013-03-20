@@ -8,7 +8,7 @@ describe 'Welcome message banner' do
     local_session={}
     get "/",{}, {'rack.session'=>local_session}
     welcome_div=Nokogiri::HTML(last_response.body).css('#welcome_message')[0]
-    welcome_div.text.should include 'We are still in Beta'
+    welcome_div.text.should include 'Welcome to MindMup'
     local_session['welcome'].should == 1
   end
   it "shows the second welcome message about keyboard shortcuts if Beta was already shown" do
