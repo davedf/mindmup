@@ -923,6 +923,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
 		analytic('move', source);
 	};
+	this.resetView = function (source) {
+		self.dispatchEvent('mapViewResetRequested');
+		analytic('resetView', source);
+	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
 				return currentLayout.nodes[id].x >= currentLayout.nodes[idea.id].x;
@@ -1873,6 +1877,9 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			}
 		});
 	});
+	mapModel.addEventListener('mapViewResetRequested', function () {
+		resetStage();
+	});
 	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
 		moveStage(deltaX, deltaY);
 	});
@@ -1962,7 +1969,8 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 /*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
-	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo'],
+	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo',
+			'copy', 'cut', 'paste', 'resetView'],
 		changeMethodNames = ['updateStyle'];
 	return this.each(function () {
 		var element = jQuery(this);

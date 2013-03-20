@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <title>MindMup: Zero-Friction Free Online Mind Mapping</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="keywords" content="mind mapping, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
-    <meta name="description" content="MindMup is a zero friction free online mind mapping tool. MindMup is free and aims to create the most productive online mind mapping canvas out there" />
+    <meta name="keywords" content="mind mapping, mind map, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
+    <meta name="description" content="Zero-friction, free online mind mapping. Opensource mindmapping software. The most productive online mind map canvas on the Web. Supports Freemind mindmap import/export." />
     <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
     <% if settings.online? then %>
       <link href="//mindmup.s3.amazonaws.com/lib/bootstrap-combined.min.css" rel="stylesheet" />
@@ -31,35 +31,33 @@
             <li><a data-mm-repository='g' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Google Drive">Google&nbsp;Drive</a></li>	
           </ul>
         </div>
-        <div class="toolbar" id="toolbarEdit">
-          <ul class="unstyled">
-            <li>
+        <div class="btn-toolbar" id="toolbarEdit">
               <div class="btn-group">
-                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;in" data-category="Toolbar Click" data-event-type="Zoom in" class="btn scaleUp"><i class="icon-zoom-in"></i></button>
-                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;out" data-category="Toolbar Click" data-event-type="Zoom out" class="btn scaleDown"><i class="icon-zoom-out"></i></button>
-                <button data-title="Keyboard shortcuts" data-category="Toolbar Click" data-event-type="Keyboard shortcuts" class="btn keyboardShortcuts">
-                  <img style="height:18px;" src="//<%=settings.s3_website%>/lib/img/keyboard_20px.png">
-                </button>
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;in" data-category="Toolbar Click" data-event-type="Zoom in" class="btn  scaleUp"><i class="icon-zoom-in"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;out" data-category="Toolbar Click" data-event-type="Zoom out" class="btn  scaleDown"><i class="icon-zoom-out"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Reset view (Center + original size)" data-category="Toolbar Click" data-event-type="Zoom reset" class="btn  resetView"><i class="icon-circle-blank"></i></button>
               </div>
-            </li>
-            <li>
               <div class="btn-group">
-                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add child" data-category="Toolbar Click" data-event-type="Add idea" class="btn btn-small addSubIdea"><i class="icon-signout" ></i></button>
-                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert sibling" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn btn-small addSiblingIdea"><i class="icon-download-alt" ></i></button>
-                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert intermediate parent" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn btn-small insertIntermediate"><i class="icon-signin" ></i></button>
+                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add child" data-category="Toolbar Click" data-event-type="Add idea" class="btn  addSubIdea"><i class="icon-signout" ></i></button>
+                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert sibling" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn  addSiblingIdea"><i class="icon-download-alt" ></i></button>
+                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert intermediate parent" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn  insertIntermediate"><i class="icon-signin" ></i></button>
               </div>
-            </li>
-            <li>
               <div class="btn-group">
-                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit node" data-category="Toolbar Click" data-event-type="Edit idea" class="btn btn-small editNode"><i class="icon-pencil"></i></button>
-                <button class="btn btn-small" rel="tooltip" data-title="Node color" data-category="Toolbar Click" data-event-type="Node Color">
+                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit node" data-category="Toolbar Click" data-event-type="Edit idea" class="btn  editNode"><i class="icon-pencil"></i></button>
+                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse node" data-category="Toolbar Click" data-event-type="Collapse idea" class="btn  toggleCollapse"><i class="icon-leaf"></i></button>
+                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete node" data-category="Toolbar Click" data-event-type="Delete idea" class="btn  removeSubIdea"><i class="icon-remove"></i></button>
+              </div>
+              <div class="btn-group">
+                <button rel="tooltip" data-placement="bottom" data-title="Copy" data-category="Toolbar Click" data-event-type="Copy" class="btn  copy"><i class="icon-copy"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Paste" data-category="Toolbar Click" data-event-type="Paste" class="btn paste"><i class="icon-paste"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Cut" data-category="Toolbar Click" data-event-type="Cut" class="btn cut"><i class="icon-cut"></i></button>
+              </div>
+              <div class="btn-group">
+                <button class="btn " rel="tooltip" data-title="Node color" data-category="Toolbar Click" data-event-type="Node Color">
                   <input data-mm-target-property='background' class='updateStyle hide' type="hidden" value="" />&nbsp;
                 </button>
-                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse node" data-category="Toolbar Click" data-event-type="Collapse idea" class="btn btn-small toggleCollapse"><i class="icon-leaf"></i></button>
-                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete node" data-category="Toolbar Click" data-event-type="Delete idea" class="btn btn-small removeSubIdea"><i class="icon-remove"></i></button>
               </div>
-              </li>
-              <li>
+          </div>
 			  <div class="btn-group hidden-map-changed">
 				  <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
 				  <ul class="dropdown-menu">
@@ -67,11 +65,14 @@
 					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
 					  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
 				  </ul>
-              </div>
-            </li>
-          </ul>
         </div>
+
         <%= erb :share %>
+
+                <a class="pull-right small" data-title="Keyboard shortcuts" data-category="Toolbar Click" data-event-type="Keyboard shortcuts" target="_blank" href="http://blog.mindmup.com/p/keyboard-shortcuts.html">
+                  keyboard shortcuts
+                </a>
+        
       </div>
     </div>
     <%= erb :about %>
