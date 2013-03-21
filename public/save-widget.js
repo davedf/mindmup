@@ -1,4 +1,4 @@
-/*global window, $, _, jQuery*/
+/*global document, window, $, _, jQuery*/
 jQuery.fn.saveWidget = function (mapRepository) {
 	'use strict';
 	var mapChanged = false,
@@ -29,6 +29,10 @@ jQuery.fn.saveWidget = function (mapRepository) {
 		mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 			var repository = (mapId && mapId[0]);
 			if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
+			if (document.location.hash === '#google-drive') {
+				repository = 'g';
+				element.find('[data-mm-role=publish]').attr('data-mm-repository', repository);
+			}
 			element.find('[data-mm-role=currentrepo]').removeClass('repo-a repo-g').addClass('repo-' + repository);
 			idea.addEventListener('changed', mapChangedListener);
 			mapChanged = false;

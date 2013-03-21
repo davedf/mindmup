@@ -40,9 +40,14 @@ get '/' do
   end
 end
 get '/gd' do
-  state = params[:state]
+
   begin
-    mapid = "g1" + JSON.parse(params[:state])['ids'][0]
+    state = JSON.parse(params[:state])
+    if state['action']=='create' then
+      mapid = "new#google-drive"
+    else
+      mapid = "g1" + state['ids'][0]
+    end
     redirect "/map/"+mapid
   rescue Exception=>e
     puts e
