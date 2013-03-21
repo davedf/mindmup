@@ -48,10 +48,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
 					deferred.resolve(mapInfo);
 				}).fail(function (evt) {
-					deferred.reject({
-						type: 's3-save-error',
-						responseText: evt.responseText
-					});
+					deferred.reject('s3-save-error',evt.responseText);
 				});
 			};
 		activityLog.log('Fetching publishing config');

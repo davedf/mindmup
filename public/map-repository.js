@@ -54,6 +54,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		var timeout,
 			repository = chooseRepository([mapId]),
 			mapLoadFailed = function (reason, label) {
+				label = label ? label + '[' + repository.description + ']' : repository.description;
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId, 0);
 					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
@@ -92,7 +93,8 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
 				mapInfo = savedMapInfo;
 			},
-			mapSaveFailed = function (reason) {
+			mapSaveFailed = function (reason, label) {
+				label = label ? label + '[' + repository.description + ']' : repository.description;
 				var retryWithDialog = function () {
 					dispatchEvent('mapSaving', repository.description);
 					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
@@ -105,11 +107,11 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed);
 					});
 				} else if (reason === 'failed-authentication') {
-					dispatchEvent('authorisationFailed', repository.description, retryWithDialog);
+					dispatchEvent('authorisationFailed', label, retryWithDialog);
 				} else if (reason === 'not-authenticated') {
-					dispatchEvent('authRequired', repository.description, retryWithDialog);
+					dispatchEvent('authRequired', label, retryWithDialog);
 				} else {
-					dispatchEvent('mapSavingFailed', reason, repository.description);
+					dispatchEvent('mapSavingFailed', reason, label);
 				}
 			};
 		dispatchEvent('mapSaving', repository.description);

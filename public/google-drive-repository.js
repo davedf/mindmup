@@ -108,7 +108,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					deferred.reject.bind(deferred, 'network-error')
 				);
 			} else {
-				deferred.reject();
+				deferred.reject('no-file-url');
 			}
 			return deferred.promise();
 		},
