@@ -244,6 +244,7 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		};
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
+		changed = false;
 		if (!mapLoaded) {
 			jQuery(window).bind('beforeunload', function () {
 				if (changed && !saving) {
