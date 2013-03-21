@@ -54,11 +54,11 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		var timeout,
 			repository = chooseRepository([mapId]),
 			mapLoadFailed = function (reason, label) {
-				label = label ? label + '[' + repository.description + ']' : repository.description;
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId, 0);
 					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
-				};
+				}, repositoryName = repository.description ? ' [' + repository.description + ']' : '';
+				label = label ? label + repositoryName : repositoryName;
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapLoadingUnAuthorized', mapId, reason);
 				} else if (reason === 'failed-authentication') {
@@ -94,11 +94,11 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				mapInfo = savedMapInfo;
 			},
 			mapSaveFailed = function (reason, label) {
-				label = label ? label + '[' + repository.description + ']' : repository.description;
 				var retryWithDialog = function () {
 					dispatchEvent('mapSaving', repository.description);
 					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
-				};
+				}, repositoryName = repository.description ? ' [' + repository.description + ']' : '';
+				label = label ? label + repositoryName : repositoryName;
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapSavingUnAuthorized', function () {
 						dispatchEvent('mapSaving');
@@ -142,7 +142,11 @@ MM.MapRepository.activityTracking = function (mapRepository, activityLog) {
 		wasRelevantOnLoad = isMapRelevant(idea);
 	});
 	mapRepository.addEventListener('mapLoadingFailed', function (mapUrl, reason, label) {
-		activityLog.error('Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason) + ' label [' + label + ']');
+		var message = 'Error loading map document [' + mapUrl + '] ' + JSON.stringify(reason);
+		if (label) {
+			message = message + ' label [' + label + ']';
+		}
+		activityLog.error(message);
 	});
 	mapRepository.addEventListener('mapSaving', activityLog.log.bind(activityLog, 'Map', 'Save Attempted'));
 	mapRepository.addEventListener('mapSaved', function (id, idea) {
