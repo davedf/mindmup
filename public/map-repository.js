@@ -205,6 +205,9 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 			authCallback
 		);
 	});
+	mapRepository.addEventListener('mapSaved', function () {
+		alert.hide(alertId);
+	});
 	mapRepository.addEventListener('mapLoaded', function () {
 		alert.hide(alertId);
 	});
