@@ -181,7 +181,10 @@ $.fn.commandLineWidget = function (keyBinding, mapModel) {
 			.keyup("Esc", hide)
 			.change(commit)
 			.typeahead({
-				source: colors
+				source: colors,
+				highlighter: function (item) {
+					return '<span style="background-color:' + item + ';" >&nbsp;</span>&nbsp;' + item;
+				}
 			});
 	});
 	return element;
