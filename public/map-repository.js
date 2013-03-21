@@ -221,8 +221,14 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapLoadingFailed', function () {
 		showErrorAlert('Unfortunately, there was a problem loading the map.', 'An automated error report was sent and we will look into this as soon as possible');
 	});
-	mapRepository.addEventListener('mapSavingFailed', function () {
-		showErrorAlert('Unfortunately, there was a problem saving the map.', 'Please try again later. We have sent an error report and we will look into this as soon as possible');
+	mapRepository.addEventListener('mapSavingFailed', function (reason) {
+		var messages = {
+			'file-too-large': ['Unfortunately, the file is too large for the selected storage provider.', 'Please select a different storage provider from the save dropdown menu'],
+			'network-error': ['There was a problem communicating with the server.', 'Please try again later, or select a different storage provider from the save dropdown menu']
+		},
+			message = messages[reason] || ['Unfortunately, there was a problem saving the map.', 'Please try again later. We have sent an error report and we will look into this as soon as possible'];
+
+		showErrorAlert(message[0], message[1]);
 	});
 };
 MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {

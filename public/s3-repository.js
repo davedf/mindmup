@@ -48,7 +48,15 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
 					deferred.resolve(mapInfo);
 				}).fail(function (evt) {
-					deferred.reject('s3-save-error',evt.responseText);
+					var errorReason = 's3-save-error',
+						errorLabel = (evt && evt.responseText) || 'network-error',
+						errorReasonMap = {'EntityTooLarge': 'file-too-large'};
+
+					if (evt && evt.responseXML) {
+						errorReason = jQuery(evt.responseXML).find('Error Code').text() || errorReason;
+						errorLabel = jQuery(evt.responseXML).find('Error Message').text() || errorLabel;
+					}
+					deferred.reject(errorReasonMap[errorReason] || errorReason, errorLabel);
 				});
 			};
 		activityLog.log('Fetching publishing config');
