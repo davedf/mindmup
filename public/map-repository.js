@@ -53,10 +53,16 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 	this.loadMap = function (mapId) {
 		var timeout,
 			repository = chooseRepository([mapId]),
+			progressEvent = function (evt) {
+				var done = (evt && evt.loaded) || 0,
+					total = (evt && evt.total) || 1,
+					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + "%" : evt);
+				dispatchEvent('mapLoading', mapId, message);
+			},
 			mapLoadFailed = function (reason, label) {
 				var retryWithDialog = function () {
-					dispatchEvent('mapLoading', mapId, 0);
-					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed);
+					dispatchEvent('mapLoading', mapId);
+					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed).progress(progressEvent);
 				}, repositoryName = repository.description ? ' [' + repository.description + ']' : '';
 				label = label ? label + repositoryName : repositoryName;
 				if (reason === 'no-access-allowed') {
@@ -69,7 +75,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 					dispatchEvent('mapLoadingFailed', mapId, reason, label);
 				}
 			};
-		dispatchEvent('mapLoading', mapId, 0);
+		dispatchEvent('mapLoading', mapId);
 		MM.retry(
 			repository.loadMap.bind(repository, mapId),
 			shouldRetry(5),
@@ -77,14 +83,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		).then(
 			mapLoaded,
 			mapLoadFailed
-		).progress(
-			function (evt) {
-				var done = (evt && evt.loaded) || 0,
-					total = (evt && evt.total) || 1;
-				dispatchEvent('mapLoading', mapId, Math.round(100 * done / total));
-			}
-		);
-
+		).progress(progressEvent);
 	};
 
 	this.publishMap = function (repositoryType) {
@@ -93,18 +92,24 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
 				mapInfo = savedMapInfo;
 			},
+			progressEvent = function (evt) {
+				var done = (evt && evt.loaded) || 0,
+					total = (evt && evt.total) || 1,
+					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + "%" : evt);
+				dispatchEvent('mapSaving', repository.description, message);
+			},
 			mapSaveFailed = function (reason, label) {
 				var retryWithDialog = function () {
 					dispatchEvent('mapSaving', repository.description);
-					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed);
-				}, repositoryName = repository.description ? ' [' + repository.description + ']' : '';
+					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed).progress(progressEvent);
+				}, repositoryName = repository.description || '';
 				label = label ? label + repositoryName : repositoryName;
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapSavingUnAuthorized', function () {
-						dispatchEvent('mapSaving');
+						dispatchEvent('mapSaving', repository.description, 'Creating a new file');
 						var saveAsNewInfo = _.clone(mapInfo);
 						saveAsNewInfo.mapId = 'new';
-						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed);
+						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed).progress(progressEvent);
 					});
 				} else if (reason === 'failed-authentication') {
 					dispatchEvent('authorisationFailed', label, retryWithDialog);
@@ -115,7 +120,7 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				}
 			};
 		dispatchEvent('mapSaving', repository.description);
-		MM.retry(repository.saveMap.bind(repository, _.clone(mapInfo)), shouldRetry(5), MM.linearBackoff()).then(mapSaved, mapSaveFailed);
+		MM.retry(repository.saveMap.bind(repository, _.clone(mapInfo)), shouldRetry(5), MM.linearBackoff()).then(mapSaved, mapSaveFailed).progress(progressEvent);
 	};
 };
 
@@ -184,9 +189,13 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 			alert.hide(alertId);
 			alertId = alert.show(title, message, 'error');
 		};
-	mapRepository.addEventListener('mapLoading', function (mapUrl, percentDone) {
+	mapRepository.addEventListener('mapLoading', function (mapUrl, progressMessage) {
 		alert.hide(alertId);
-		alertId = alert.show('Please wait, loading the map...', '<i class="icon-spinner icon-spin"></i> (' + percentDone + '%)');
+		alertId = alert.show('<i class="icon-spinner icon-spin"></i>&nbsp;Please wait, loading the map...', (progressMessage || ''));
+	});
+	mapRepository.addEventListener('mapSaving', function (repositoryName, progressMessage) {
+		alert.hide(alertId);
+		alertId = alert.show('<i class="icon-spinner icon-spin"></i>&nbsp;Please wait, saving the map...', (progressMessage || ''));
 	});
 	mapRepository.addEventListener('authRequired', function (providerName, authCallback) {
 		showAlertWithCallBack(

@@ -16,6 +16,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		},
 		checkAuth = function (showDialog) {
 			var deferred = jQuery.Deferred();
+			deferred.notify('Authenticating with Google');
 			gapi.auth.authorize(
 				{
 					'client_id': clientId,
@@ -64,6 +65,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					'body': multipartRequestBody
 				});
 			try {
+				deferred.notify('sending to Google Drive');
 				request.execute(function (resp) {
 					if (resp.error) {
 						if (resp.error.code === 403) {
@@ -78,7 +80,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 									saveFile(mapInfo).then(deferred.resolve, deferred.reject);
 								},
 								deferred.reject
-							);
+							).progress(deferred.notify);
 						} else {
 							deferred.reject(resp.error);
 						}
@@ -148,7 +150,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 				failureReason = showAuthenticationDialogs ? 'failed-authentication' : 'not-authenticated';
 			checkAuth(showAuthenticationDialogs).then(deferred.resolve, function () {
 				deferred.reject(failureReason);
-			});
+			}).progress(deferred.notify);
 			return deferred.promise();
 		},
 		loadApi = function (onComplete) {
@@ -162,13 +164,15 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		makeReady = function (showAuthenticationDialogs) {
 			var deferred = jQuery.Deferred();
 			if (driveLoaded) {
-				authenticate(showAuthenticationDialogs).then(deferred.resolve, deferred.reject);
+				authenticate(showAuthenticationDialogs).then(deferred.resolve, deferred.reject).progress(deferred.notify);
 			} else {
+				deferred.notify('Loading Google APIs');
 				loadApi(function () {
+					deferred.notify('Loading Google Drive APIs');
 					gapi.client.setApiKey(apiKey);
 					gapi.client.load('drive', 'v2', function () {
 						driveLoaded = true;
-						authenticate(showAuthenticationDialogs).then(deferred.resolve, deferred.reject);
+						authenticate(showAuthenticationDialogs).then(deferred.resolve, deferred.reject).progress(deferred.notify);
 					});
 				});
 			}
@@ -181,7 +185,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		if (driveLoaded && isAuthorised) {
 			deferred.resolve();
 		} else {
-			makeReady(showAuthenticationDialogs).then(deferred.resolve, deferred.reject);
+			makeReady(showAuthenticationDialogs).then(deferred.resolve, deferred.reject).progress(deferred.notify);
 		}
 		return deferred.promise();
 	};
@@ -221,7 +225,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 					deferred.reject
 				).progress(deferred.notify);
 			};
-		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject);
+		this.ready(showAuthenticationDialogs).then(readySucceeded, deferred.reject).progress(deferred.notify);
 		return deferred.promise();
 	};
 
@@ -229,10 +233,10 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 		var deferred = jQuery.Deferred();
 		this.ready(showAuthenticationDialogs).then(
 			function () {
-				saveFile(mapInfo).then(deferred.resolve, deferred.reject);
+				saveFile(mapInfo).then(deferred.resolve, deferred.reject).progress(deferred.notify);
 			},
 			deferred.reject
-		);
+		).progress(deferred.notify);
 		return deferred.promise();
 	};
 };
