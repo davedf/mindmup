@@ -301,6 +301,7 @@ MM.retry = function (task, shouldRetry, backoff) {
 				deferred.resolve,
 				function () {
 					if (!shouldRetry || shouldRetry.apply(undefined, arguments)) {
+						deferred.notify("Network problem... will retry shortly");
 						if (backoff) {
 							setTimeout(attemptTask, backoff());
 						} else {
