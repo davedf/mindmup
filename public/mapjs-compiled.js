@@ -731,7 +731,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			connectors: {}
 		},
 		idea,
-		isInputEnabled,
+		isInputEnabled = true,
 		currentlySelectedIdeaId,
 		markedIdeaId,
 		getRandomTitle = function (titles) {
@@ -840,7 +840,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.selectNode = function (id) {
-		if (id !== currentlySelectedIdeaId) {
+		if (isInputEnabled && id !== currentlySelectedIdeaId) {
 			if (currentlySelectedIdeaId) {
 				self.dispatchEvent('nodeSelectionChanged', currentlySelectedIdeaId, false);
 			}
@@ -858,40 +858,48 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.collapse = function (source, doCollapse) {
 		analytic('collapse:' + doCollapse, source);
-		var node = currentlySelectedIdea();
-		if (node.ideas && _.size(node.ideas) > 0) {
-			idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
+		if (isInputEnabled) {
+			var node = currentlySelectedIdea();
+			if (node.ideas && _.size(node.ideas) > 0) {
+				idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
+			}
 		}
 	};
 	this.updateStyle = function (source, prop, value) {
-		analytic('updateStyle:' + prop, source);
 		/*jslint eqeq:true */
-		if (this.getSelectedStyle(prop) != value) {
+		if (isInputEnabled && this.getSelectedStyle(prop) != value) {
+			analytic('updateStyle:' + prop, source);
 			idea.updateStyle(currentlySelectedIdeaId, prop, value);
 		}
 	};
 	this.addSubIdea = function (source) {
 		analytic('addSubIdea', source);
-		ensureNodeIsExpanded(source, currentlySelectedIdeaId);
-		idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle(titlesToRandomlyChooseFrom));
+		if (isInputEnabled) {
+			ensureNodeIsExpanded(source, currentlySelectedIdeaId);
+			idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle(titlesToRandomlyChooseFrom));
+		}
 	};
 	this.insertIntermediate = function (source) {
-		if (currentlySelectedIdeaId === idea.id) {
-			return false;
+		if (!isInputEnabled || currentlySelectedIdeaId === idea.id) {
+			return;
 		}
 		idea.insertIntermediate(currentlySelectedIdeaId, getRandomTitle(intermediaryTitlesToRandomlyChooseFrom));
 		analytic('insertIntermediate', source);
 	};
 	this.addSiblingIdea = function (source) {
 		analytic('addSiblingIdea', source);
-		var parent = idea.findParent(currentlySelectedIdeaId) || idea;
-		idea.addSubIdea(parent.id, getRandomTitle(titlesToRandomlyChooseFrom));
+		if (isInputEnabled) {
+			var parent = idea.findParent(currentlySelectedIdeaId) || idea;
+			idea.addSubIdea(parent.id, getRandomTitle(titlesToRandomlyChooseFrom));
+		}
 	};
 	this.removeSubIdea = function (source) {
 		analytic('removeSubIdea', source);
-		var parent = idea.findParent(currentlySelectedIdeaId);
-		if (idea.removeSubIdea(currentlySelectedIdeaId)) {
-			self.selectNode(parent.id);
+		if (isInputEnabled) {
+			var parent = idea.findParent(currentlySelectedIdeaId);
+			if (idea.removeSubIdea(currentlySelectedIdeaId)) {
+				self.selectNode(parent.id);
+			}
 		}
 	};
 	this.updateTitle = function (ideaId, title) {
@@ -900,6 +908,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	this.editNode = function (source, shouldSelectAll) {
 		if (source) {
 			analytic('editNode', source);
+		}
+		if (!isInputEnabled) {
+			return false;
 		}
 		var title = currentlySelectedIdea().title;
 		if (intermediaryTitlesToRandomlyChooseFrom.indexOf(title) !== -1 ||
@@ -916,16 +927,22 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		self.scale(source, 0.8);
 	};
 	this.scale = function (source, scaleMultiplier, zoomPoint) {
-		self.dispatchEvent('mapScaleChanged', scaleMultiplier, zoomPoint);
-		analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
+		if (isInputEnabled) {
+			self.dispatchEvent('mapScaleChanged', scaleMultiplier, zoomPoint);
+			analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
+		}
 	};
 	this.move = function (source, deltaX, deltaY) {
-		self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
-		analytic('move', source);
+		if (isInputEnabled) {
+			self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
+			analytic('move', source);
+		}
 	};
 	this.resetView = function (source) {
-		self.dispatchEvent('mapViewResetRequested');
-		analytic('resetView', source);
+		if (isInputEnabled) {
+			self.dispatchEvent('mapViewResetRequested');
+			analytic('resetView', source);
+		}
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -946,6 +963,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				isRoot = currentlySelectedIdeaId === idea.id,
 				targetRank = isRoot ? -Infinity : Infinity,
 				targetNode;
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeLeft', source);
 			if (isRootOrLeftHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
@@ -965,6 +985,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		self.selectNodeRight = function (source) {
 			var node, rank, minimumPositiveRank = Infinity;
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeRight', source);
 			if (isRootOrRightHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
@@ -988,6 +1011,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				nodesAbove,
 				closestNode,
 				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeUp', source);
 			if (previousSibling) {
 				self.selectNode(previousSibling);
@@ -1010,6 +1036,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				nodesBelow,
 				closestNode,
 				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeDown', source);
 			if (nextSibling) {
 				self.selectNode(nextSibling);
@@ -1030,28 +1059,40 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		self.undo = function (source) {
 			analytic('undo', source);
-			idea.undo();
+			if (isInputEnabled) {
+				idea.undo();
+			}
 		};
 		self.redo = function (source) {
 			analytic('redo', source);
-			idea.redo();
+			if (isInputEnabled) {
+				idea.redo();
+			}
 		};
 		self.moveRelative = function (source, relativeMovement) {
 			analytic('moveRelative', source);
-			idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
+			if (isInputEnabled) {
+				idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
+			}
 		};
 		self.cut = function (source) {
 			analytic('cut', source);
-			self.clipBoard = idea.clone(currentlySelectedIdeaId);
-			idea.removeSubIdea(currentlySelectedIdeaId);
+			if (isInputEnabled) {
+				self.clipBoard = idea.clone(currentlySelectedIdeaId);
+				idea.removeSubIdea(currentlySelectedIdeaId);
+			}
 		};
 		self.copy = function (source) {
 			analytic('copy', source);
-			self.clipBoard = idea.clone(currentlySelectedIdeaId);
+			if (isInputEnabled) {
+				self.clipBoard = idea.clone(currentlySelectedIdeaId);
+			}
 		};
 		self.paste = function (source) {
 			analytic('paste', source);
-			idea.paste(currentlySelectedIdeaId, self.clipBoard);
+			if (isInputEnabled) {
+				idea.paste(currentlySelectedIdeaId, self.clipBoard);
+			}
 		};
 	}());
 	//Todo - clean up this shit below
@@ -1668,14 +1709,6 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 				stage.draw();
 			}
 		},
-		getTargetShape = function (evt) {
-			var is;
-			if (evt.offsetX && evt.offsetY) {
-				is = stage.getIntersection({x: evt.offsetX, y: evt.offsetY});
-				return is && is.shape;
-			}
-			return false;
-		},
 		resetStage = function () {
 			stage.transitionTo({
 				x: 0.5 * stage.getWidth(),
@@ -1687,20 +1720,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 				duration: 0.5,
 				easing: 'ease-in-out'
 			});
-		},
-		resetstageOnClick = function (evt) {
-			if (!getTargetShape(evt)) {
-				resetStage();
-			}
-		},
-		stageCenteringEvents = function (isInputEnabled) {
-			jQuery(document)[isInputEnabled ? 'on' : 'off']('dblclick', stage.simulate.bind(stage, 'dblclick'));
-			stage[isInputEnabled ? 'on' : 'off']('dbltap dblclick', resetstageOnClick);
 		};
-
 	stage.add(layer);
-	mapModel.addEventListener('inputEnabledChanged', stageCenteringEvents);
-	stageCenteringEvents(true);
 	mapModel.addEventListener('nodeCreated', function (n) {
 		var node = new Kinetic.Idea({
 			level: n.level,
@@ -1746,10 +1767,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		});
 		node.on(':textChanged', function (event) {
 			mapModel.updateTitle(n.id, event.text);
-			mapModel.dispatchEvent('inputEnabledChanged', true);
+			mapModel.setInputEnabled(true);
 		});
 		node.on(':editing', function () {
-			mapModel.dispatchEvent('inputEnabledChanged', false);
+			mapModel.setInputEnabled(false);
 		});
 		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
 
@@ -1898,58 +1919,6 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			}
 		});
 	}());
-	(function () {
-		var keyboardEventHandlers = {
-			13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
-			8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-			9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
-			37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
-			38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
-			39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
-			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
-			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-			32: mapModel.editNode.bind(mapModel, 'keyboard'),
-			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
-			67: mapModel.cut.bind(mapModel, 'keyboard'),
-			80: mapModel.paste.bind(mapModel, 'keyboard'),
-			89: mapModel.copy.bind(mapModel, 'keyboard'),
-			85: mapModel.undo.bind(mapModel, 'keyboard')
-		}, shiftKeyboardEventHandlers = {
-			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
-			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
-		}, metaKeyboardEventHandlers = {
-			48: resetStage,
-			90: mapModel.undo.bind(mapModel, 'keyboard'),
-			89: mapModel.redo.bind(mapModel, 'keyboard'),
-			187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
-			189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
-			38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
-			40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
-			88: mapModel.cut.bind(mapModel, 'keyboard'),
-			67: mapModel.copy.bind(mapModel, 'keyboard'),
-			86: mapModel.paste.bind(mapModel, 'keyboard')
-		},
-			onKeydown = function (evt) {
-				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
-						(evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers))[evt.which];
-				if (eventHandler) {
-					eventHandler();
-					evt.preventDefault();
-				}
-			},
-			onScroll = function (event, delta, deltaX, deltaY) {
-				moveStage(-1 * deltaX, deltaY);
-				if (event.preventDefault) { // stop the back button
-					event.preventDefault();
-				}
-			};
-		jQuery(window).mousewheel(onScroll);
-		mapModel.addEventListener('inputEnabledChanged', function (isInputEnabled) {
-			jQuery(document)[isInputEnabled ? 'bind' : 'unbind']('keydown', onKeydown);
-			jQuery(window)[isInputEnabled ? 'mousewheel' : 'unmousewheel'](onScroll);
-		});
-		jQuery(document).keydown(onKeydown);
-	}());
 };
 MAPJS.KineticMediator.dimensionProvider = _.memoize(function (title) {
 	'use strict';
@@ -2058,7 +2027,7 @@ MAPJS.PNGExporter = function (mapRepository) {
 		});
 	};
 };
-/*global jQuery, Kinetic, MAPJS, window*/
+/*global jQuery, Kinetic, MAPJS, window, document*/
 jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRendering) {
 	'use strict';
 	return this.each(function () {
@@ -2089,17 +2058,71 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				var result = (lastGesture && lastGesture.type !== gesture.type && (gesture.timeStamp - lastGesture.timeStamp < 250));
 				lastGesture = gesture;
 				return !result;
+			},
+			keyboardEventHandlers = {
+				13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
+				8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+				9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
+				37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
+				38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
+				39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
+				40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
+				46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
+				32: mapModel.editNode.bind(mapModel, 'keyboard'),
+				191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
+				67: mapModel.cut.bind(mapModel, 'keyboard'),
+				80: mapModel.paste.bind(mapModel, 'keyboard'),
+				89: mapModel.copy.bind(mapModel, 'keyboard'),
+				85: mapModel.undo.bind(mapModel, 'keyboard')
+			},
+			shiftKeyboardEventHandlers = {
+				9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
+				38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
+			},
+			metaKeyboardEventHandlers = {
+				48: mapModel.resetView.bind(mapModel, 'keyboard'),
+				90: mapModel.undo.bind(mapModel, 'keyboard'),
+				89: mapModel.redo.bind(mapModel, 'keyboard'),
+				187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
+				189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
+				38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
+				40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
+				88: mapModel.cut.bind(mapModel, 'keyboard'),
+				67: mapModel.copy.bind(mapModel, 'keyboard'),
+				86: mapModel.paste.bind(mapModel, 'keyboard')
+			},
+			onKeydown = function (evt) {
+				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
+						(evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers))[evt.which];
+				if (/input|textarea|select/i.test(evt.target.nodeName)) {
+					return;
+				}
+				if (eventHandler) {
+					eventHandler();
+					evt.preventDefault();
+				}
+			},
+			onScroll = function (event, delta, deltaX, deltaY) {
+				mapModel.move('mousewheel', -1 * deltaX, deltaY);
+				if (event.preventDefault) { // stop the back button
+					event.preventDefault();
+				}
 			};
+		mapModel.addEventListener('inputEnabledChanged', function (canInput) {
+			stage.setDraggable(!canInput);
+		});
+		jQuery(document).keydown(onKeydown);
 		activityLog.log('Creating canvas Size ' + element.width() + ' ' + element.height());
 		setStageDimensions();
 		stage.attrs.x = 0.5 * stage.getWidth();
 		stage.attrs.y = 0.5 * stage.getHeight();
-		//stage.attrs.y = Math.max(-minY + $('#topbar').outerHeight() + 5, 0.5 * stage.getHeight());
 		jQuery(window).resize(setStageDimensions);
 		jQuery('.modal')
 			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
-		if (touchEnabled) {
+		if (!touchEnabled) {
+			jQuery(window).mousewheel(onScroll);
+		} else {
 			element.find('canvas').hammer().on("pinch", function (event) {
 				if (discrete(event)) {
 					mapModel.scale('touch', event.gesture.scale, {
@@ -2112,7 +2135,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 					mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
 				}
 			}).on("doubletap", function (event) {
-				simulateTouch("dbltap", event);
+				mapModel.resetView();
 			}).on("touch", function (evt) {
 				jQuery('.topbar-color-picker:visible').hide();
 				jQuery('.ideaInput:visible').blur();
