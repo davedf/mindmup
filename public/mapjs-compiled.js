@@ -890,6 +890,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		analytic('addSiblingIdea', source);
 		if (isInputEnabled) {
 			var parent = idea.findParent(currentlySelectedIdeaId) || idea;
+			ensureNodeIsExpanded(source, parent.id);
 			idea.addSubIdea(parent.id, getRandomTitle(titlesToRandomlyChooseFrom));
 		}
 	};
