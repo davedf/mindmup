@@ -1,4 +1,4 @@
-/*global jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
+/*global _, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
 MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	var driveLoaded,
@@ -67,6 +67,7 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 			try {
 				deferred.notify('sending to Google Drive');
 				request.execute(function (resp) {
+					var retriable  = [404, 500, 502, 503, 504];
 					if (resp.error) {
 						if (resp.error.code === 403) {
 							if (resp.error.reason && (resp.error.reason === 'rateLimitExceeded' || resp.error.reason === 'userRateLimitExceeded')) {
@@ -81,6 +82,8 @@ MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, con
 								},
 								deferred.reject
 							).progress(deferred.notify);
+						} else if (_.contains(retriable, resp.error.code)) {
+							deferred.reject('network-error');
 						} else {
 							deferred.reject(resp.error);
 						}
