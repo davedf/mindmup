@@ -20,10 +20,10 @@ $.fn.commandLineWidget = function (keyBinding, mapModel) {
 				/*jslint newcap:true*/
 				var value = input && input.val(),
 					color = value && Color(value.toLowerCase());
+				hide();
 				if (valid(color, value)) {
 					mapModel.updateStyle('cmdline', 'background', color.hexString());
 				}
-				hide();
 			},
 			colors = [
 				"aliceblue",
