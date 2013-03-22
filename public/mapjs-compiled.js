@@ -1165,18 +1165,24 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			}
 			updateCurrentDroppable(undefined);
 		};
-		self.nodeDragEnd = function (id, x, y) {
+		self.nodeDragEnd = function (id, x, y, shouldCopy) {
 			var nodeBeingDragged = currentLayout.nodes[id],
 				nodeId,
 				node,
 				rootNode = currentLayout.nodes[idea.id],
-				verticallyClosestNode = { id: null, y: Infinity };
+				verticallyClosestNode = { id: null, y: Infinity },
+				clone;
 			updateCurrentDroppable(undefined);
 			self.dispatchEvent('nodeMoved', nodeBeingDragged);
 			for (nodeId in currentLayout.nodes) {
 				node = currentLayout.nodes[nodeId];
 				if (canDropOnNode(id, x, y, node)) {
-					if (!idea.changeParent(id, nodeId)) {
+					if (shouldCopy) {
+						clone = idea.clone(id);
+						if (!clone || !idea.paste(nodeId, clone)) {
+							self.dispatchEvent('nodeMoved', nodeBeingDragged, 'failed');
+						}
+					} else if (!idea.changeParent(id, nodeId)) {
 						self.dispatchEvent('nodeMoved', nodeBeingDragged, 'failed');
 					}
 					return;
@@ -1773,7 +1779,9 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 					stage.fire(':scaleChangeComplete');
 				}
 			});
-		};
+		},
+		isShiftPressed;
+	jQuery(document).bind('keyup keydown', function (e) {isShiftPressed = e.shiftKey; });
 	stage.add(layer);
 
 	mapModel.addEventListener('nodeEditRequested', function (nodeId, shouldSelectAll) {
@@ -1826,7 +1834,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			mapModel.nodeDragEnd(
 				n.id,
 				node.attrs.x,
-				node.attrs.y
+				node.attrs.y,
+				isShiftPressed
 			);
 			if (n.level > 1) {
 				stage.setDraggable(true);
