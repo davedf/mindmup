@@ -42,4 +42,13 @@ MM.freemindImport = function (xml, start, progress) {
 		start(xmlDoc.find('node').length);
 	}
 	return xmlToJson(xmlDoc.find('map').children('node').first());
-}
+};
+
+/*jslint nomen: true*/
+MM.freemindExport = function (idea) {
+	'use strict';
+	var formatNode = function (idea) {
+		return '<node ID="' + idea.id + '" TEXT="' + idea.title.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '">' + (_.size(idea.ideas) > 0 ? _.map(_.sortBy(idea.ideas, function (val, key) { return parseFloat(key); }), formatNode).join('') : '') + '</node>';
+	};
+	return '<map version="0.7.1">' + formatNode(idea) + '</map>';
+};
