@@ -1115,6 +1115,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				idea.setStyleMap(currentlySelectedIdeaId, self.clipBoard.style);
 			}
 		};
+		self.moveUp = function (source) { self.moveRelative(source, -1); };
+		self.moveDown = function (source) { self.moveRelative(source, 1); };
+
 	}());
 	//Todo - clean up this shit below
 	(function () {
@@ -1384,6 +1387,12 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self.getLayer().draw();
 			var canvasPosition = jQuery(self.getLayer().getCanvas().getElement()).offset(),
 				ideaInput,
+				onStageMoved = _.throttle(function () {
+					ideaInput.css({
+						top: canvasPosition.top + self.getAbsolutePosition().y,
+						left: canvasPosition.left + self.getAbsolutePosition().x
+					});
+				}, 10),
 				updateText = function (newText) {
 					self.setStyle(self.attrs);
 					self.getStage().draw();
@@ -1400,19 +1409,15 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				onCancelEdit = function () {
 					updateText(unformattedText);
 				},
-				scale = self.getStage().getScale().x || 1,
-				onStageMoved = _.throttle(function () {
-					ideaInput.css({
-						top: canvasPosition.top + self.getAbsolutePosition().y,
-						left: canvasPosition.left + self.getAbsolutePosition().x
-					});
-				}, 10);
+				scale = self.getStage().getScale().x || 1;
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
 					width: self.getWidth() * scale,
-					height: self.getHeight() * scale
+					height: self.getHeight() * scale,
+					'padding-top': 5 * scale + 'px',
+					'font-size': self.attrs.fontSize * scale + 'pt'
 				})
 				.val(unformattedText)
 				.appendTo('body')
@@ -1445,30 +1450,47 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			} else if (ideaInput[0].setSelectionRange) {
 				ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
 			}
+
 			self.getStage().on('xChange yChange', onStageMoved);
 		};
 	};
 }());
+Kinetic.Idea.prototype.getScale = function () {
+	var stage = this.getStage();
+	return (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || (this.attrs && this.attrs.scale && this.attrs.scale.x) || 1;
+};
 
-Kinetic.Idea.prototype.setStyle = function (config) {
+
+Kinetic.Idea.prototype.setupShadows = function (config) {
 	'use strict';
-	var isDroppable = this.isDroppable,
+	var scale = this.getScale(),
 		isSelected = this.isSelected,
-		isRoot = this.level === 1,
-		defaultBg = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'].background,
-		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 : 4,
+		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 * scale : 4 * scale,
 		normalShadow = {
 			color: 'black',
-			blur: 10,
+			blur: 10 * scale,
 			offset: [offset, offset],
-			opacity: 0.4
+			opacity: 0.4 * scale
 		},
 		selectedShadow = {
 			color: 'black',
 			blur: 0,
 			offset: [offset, offset],
 			opacity: 1
-		},
+		};
+	if (this.attrs && this.attrs.shadow) {
+		this.setShadow(isSelected ? selectedShadow : normalShadow);
+	} else if (config) {
+		config.shadow = isSelected ? selectedShadow : normalShadow;
+	}
+};
+
+Kinetic.Idea.prototype.setStyle = function (config) {
+	'use strict';
+	var isDroppable = this.isDroppable,
+		isRoot = this.level === 1,
+		isSelected = this.isSelected,
+		defaultBg = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'].background,
 		validColor = function (color, defaultColor) {
 			if (!color) {
 				return defaultColor;
@@ -1503,12 +1525,9 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 			colorStops: [0, tintedBackground, 1, background]
 		};
 	}
+
+	this.setupShadows(config);
 	config.align = 'center';
-	if (this.attrs && this.attrs.shadow) {
-		this.setShadow(isSelected ? selectedShadow : normalShadow);
-	} else {
-		config.shadow = isSelected ? selectedShadow : normalShadow;
-	}
 	config.cornerRadius = 10;
 	if (luminosity < 0.5) {
 		config.textFill = '#EEEEEE';
@@ -1633,9 +1652,6 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	idea.getAbsolutePosition =  function () {
 		return container.getAbsolutePosition();
 	};
-	stage.on(':scaleChangeComplete', function () {
-		reRender();
-	});
 	container.transitionToAndDontStopCurrentTransitions = function (config) {
 		var transition = new Kinetic.Transition(container, config),
 			animation = new Kinetic.Animation();
@@ -1656,7 +1672,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 			reRender();
 		});
 	});
-	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode'], function (fname) {
+	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows'], function (fname) {
 		container[fname] = function () {
 			var result = idea && idea[fname] && idea[fname].apply(idea, arguments);
 			reRender();
@@ -1735,16 +1751,15 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 					x: 1,
 					y: 1
 				},
-				duration: 0.5,
+				duration: 0.05,
 				easing: 'ease-in-out',
 				callback: function () {
-					if (imageRendering) {
-						stage.fire(':scaleChangeComplete');
-					}
+					stage.fire(':scaleChangeComplete');
 				}
 			});
 		};
 	stage.add(layer);
+
 	mapModel.addEventListener('nodeEditRequested', function (nodeId, shouldSelectAll) {
 		var node = nodeByIdeaId[nodeId];
 		if (node) {
@@ -1759,7 +1774,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			text: n.title,
 			mmStyle: n.style,
 			opacity: 1
-		});
+		}),
+			getScale = function () {
+				return (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || 1;
+			};
 
 		if (imageRendering) {
 			node = Kinetic.IdeaProxy(node, stage, layer);
@@ -1768,10 +1786,12 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dblclick dbltap', mapModel.editNode.bind(mapModel, 'mouse', false));
 		node.on('dragstart', function () {
+			var scale = getScale();
+
 			node.moveToTop();
 			node.getNodeAttrs().shadow.offset = {
-				x: 8,
-				y: 8
+				x: 8 * scale,
+				y: 8 * scale
 			};
 		});
 		node.on('dragmove', function () {
@@ -1782,9 +1802,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			);
 		});
 		node.on('dragend', function () {
+			var scale = getScale();
 			node.getNodeAttrs().shadow.offset = {
-				x: 4,
-				y: 4
+				x: 4 * scale,
+				y: 4 * scale
 			};
 			mapModel.nodeDragEnd(
 				n.id,
@@ -1814,10 +1835,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			opacity: 1,
 			duration: 0.4
 		});
-
-
+		stage.on(':scaleChangeComplete', function () {
+			node.setupShadows();
+		});
 		nodeByIdeaId[n.id] = node;
-
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
 		var node = nodeByIdeaId[ideaId],
@@ -1918,12 +1939,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			},
 			x: zoomPoint.x + (stage.attrs.x - zoomPoint.x) * targetScale / currentScale,
 			y: zoomPoint.y + (stage.attrs.y - zoomPoint.y) * targetScale / currentScale,
-			duration: 0.1,
+			duration: 0.01,
 			easing: 'ease-in-out',
 			callback: function () {
-				if (imageRendering) {
-					stage.fire(':scaleChangeComplete');
-				}
+				stage.fire(':scaleChangeComplete');
 			}
 		});
 	});
@@ -2056,7 +2075,7 @@ MAPJS.PNGExporter = function (mapRepository) {
 		});
 	};
 };
-/*global jQuery, Kinetic, MAPJS, window, document*/
+/*global _, jQuery, Kinetic, MAPJS, window, document*/
 jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRendering) {
 	'use strict';
 	return this.each(function () {
@@ -2089,47 +2108,27 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				return !result;
 			},
 			keyboardEventHandlers = {
-				13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
-				8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-				9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
-				37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
-				38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
-				39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
-				40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
-				46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-				32: mapModel.editNode.bind(mapModel, 'keyboard'),
-				191: mapModel.toggleCollapse.bind(mapModel, 'keyboard'),
-				67: mapModel.cut.bind(mapModel, 'keyboard'),
-				80: mapModel.paste.bind(mapModel, 'keyboard'),
-				89: mapModel.copy.bind(mapModel, 'keyboard'),
-				85: mapModel.undo.bind(mapModel, 'keyboard')
-			},
-			shiftKeyboardEventHandlers = {
-				9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
-				38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
-			},
-			metaKeyboardEventHandlers = {
-				48: mapModel.resetView.bind(mapModel, 'keyboard'),
-				90: mapModel.undo.bind(mapModel, 'keyboard'),
-				89: mapModel.redo.bind(mapModel, 'keyboard'),
-				187: mapModel.scaleUp.bind(mapModel, 'keyboard'),
-				189: mapModel.scaleDown.bind(mapModel, 'keyboard'),
-				38: mapModel.moveRelative.bind(mapModel, 'keyboard', -1),
-				40: mapModel.moveRelative.bind(mapModel, 'keyboard', 1),
-				88: mapModel.cut.bind(mapModel, 'keyboard'),
-				67: mapModel.copy.bind(mapModel, 'keyboard'),
-		//		86: mapModel.paste.bind(mapModel, 'keyboard')
-			},
-			onKeydown = function (evt) {
-				var eventHandler = ((evt.metaKey || evt.ctrlKey) ? metaKeyboardEventHandlers :
-						(evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers))[evt.which];
-				if (/input|textarea|select/i.test(evt.target.nodeName)) {
-					return;
-				}
-				if (eventHandler) {
-					eventHandler();
-					evt.preventDefault();
-				}
+				'return': 'addSiblingIdea',
+				'del backspace': 'removeSubIdea',
+				'tab': 'addSubIdea',
+				'left': 'selectNodeLeft',
+				'up': 'selectNodeUp',
+				'right': 'selectNodeRight',
+				'down': 'selectNodeDown',
+				'space': 'editNode',
+				'/ shift+up': 'toggleCollapse',
+				'c meta+x ctrl+x': 'cut',
+				'p meta+v ctrl+v': 'paste',
+				'y meta+c ctrl+c': 'copy',
+				'u meta+z ctrl+z': 'undo',
+				'shift+tab': 'insertIntermediate',
+				'meta+0 ctrl+0': 'resetView',
+				'r meta+shift+z meta+y ctrl+y': 'redo',
+				'meta+plus ctrl+plus': 'scaleUp',
+				'meta+minus ctrl+minus': 'scaleDown',
+				'meta+up ctrl+up': 'moveUp',
+				'meta+down ctrl+down': 'moveDown',
+				'ctrl+shift+v meta+shift+v': 'pasteStyle',
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
 				mapModel.move('mousewheel', -1 * deltaX, deltaY);
@@ -2137,15 +2136,16 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 					event.preventDefault();
 				}
 			};
+		jQuery.hotkeys.specialKeys[187] = 'plus';
+		jQuery.hotkeys.specialKeys[189] = 'minus';
+		_.each(keyboardEventHandlers, function (mappedFunction, keysPressed) {
+			jQuery(document).keydown(keysPressed, function (event) {
+				event.preventDefault();
+				mapModel[mappedFunction]('keyboard');
+			});
+		});
 		mapModel.addEventListener('inputEnabledChanged', function (canInput) {
 			stage.setDraggable(!canInput);
-		});
-		jQuery(document).keydown(onKeydown);
-		jQuery(document).keydown("ctrl+shift+v meta+shift+v", function () {
-			mapModel.pasteStyle('keyboard');
-		});
-		jQuery(document).keydown("ctrl+v meta+v", function () {
-			mapModel.paste('keyboard');
 		});
 		activityLog.log('Creating canvas Size ' + element.width() + ' ' + element.height());
 		setStageDimensions();
