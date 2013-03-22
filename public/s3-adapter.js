@@ -1,6 +1,6 @@
 /*jslint forin: true*/
-/*global FormData, jQuery, MM, setTimeout */
-MM.S3MapRepository = function (s3Url, folder, activityLog) {
+/*global FormData, jQuery, MM */
+MM.S3Adapter = function (s3Url, folder, activityLog) {
 	'use strict';
 	this.description = 'S3_CORS';
 
@@ -50,8 +50,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 				}).fail(function (evt) {
 					var errorReason = 's3-save-error',
 						errorLabel = (evt && evt.responseText) || 'network-error',
-						errorReasonMap = {'EntityTooLarge': 'file-too-large'};
-
+						errorReasonMap = { 'EntityTooLarge': 'file-too-large' };
 					if (evt && evt.responseXML) {
 						errorReason = jQuery(evt.responseXML).find('Error Code').text() || errorReason;
 						errorLabel = jQuery(evt.responseXML).find('Error Message').text() || errorLabel;
@@ -62,10 +61,7 @@ MM.S3MapRepository = function (s3Url, folder, activityLog) {
 		activityLog.log('Fetching publishing config');
 		jQuery.ajax(
 			'/publishingConfig',
-			{
-				dataType: 'json',
-				cache: false
-			}
+			{ dataType: 'json', cache: false }
 		).then(
 			submitS3Form,
 			deferred.reject.bind(deferred, 'network-error')

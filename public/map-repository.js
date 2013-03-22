@@ -1,21 +1,21 @@
 /*global _, content, jQuery, MM, observable, window, document, setTimeout*/
-MM.MapRepository = function (activityLog, alert, repositories) {
-	// order of repositories is important, the first repository is default
+MM.MapRepository = function (activityLog, alert, adapters) {
+	// order of adapters is important, the first adapter is default
 	'use strict';
 	observable(this);
 	var dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
-		chooseRepository = function (identifiers) {
+		chooseAdapter = function (identifiers) {
 			// order of identifiers is important, the first identifier takes precedence
-			var idIndex, repoIndex;
+			var idIndex, adapterIndex;
 			for (idIndex = 0; idIndex < identifiers.length; idIndex++) {
-				for (repoIndex = 0; repoIndex < repositories.length; repoIndex++) {
-					if (repositories[repoIndex].recognises(identifiers[idIndex])) {
-						return repositories[repoIndex];
+				for (adapterIndex = 0; adapterIndex < adapters.length; adapterIndex++) {
+					if (adapters[adapterIndex].recognises(identifiers[idIndex])) {
+						return adapters[adapterIndex];
 					}
 				}
 			}
-			return repositories[0];
+			return adapters[0];
 		},
 		setMap = function (idea, mapId) {
 			mapInfo = {
@@ -42,42 +42,41 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 				return times() && status === 'network-error';
 			};
 		};
+
 	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
-
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 
 	this.setMap = setMap;
 
 	this.loadMap = function (mapId) {
-		var timeout,
-			repository = chooseRepository([mapId]),
+		var adapter = chooseAdapter([mapId]),
 			progressEvent = function (evt) {
 				var done = (evt && evt.loaded) || 0,
 					total = (evt && evt.total) || 1,
-					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + "%" : evt);
+					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + '%' : evt);
 				dispatchEvent('mapLoading', mapId, message);
 			},
 			mapLoadFailed = function (reason, label) {
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId);
-					repository.loadMap(mapId, true).then(mapLoaded, mapLoadFailed).progress(progressEvent);
-				}, repositoryName = repository.description ? ' [' + repository.description + ']' : '';
-				label = label ? label + repositoryName : repositoryName;
+					adapter.loadMap(mapId, true).then(mapLoaded, mapLoadFailed).progress(progressEvent);
+				}, adapterName = adapter.description ? ' [' + adapter.description + ']' : '';
+				label = label ? label + adapterName : adapterName;
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapLoadingUnAuthorized', mapId, reason);
 				} else if (reason === 'failed-authentication') {
-					dispatchEvent('authorisationFailed', repository.description, retryWithDialog);
+					dispatchEvent('authorisationFailed', adapter.description, retryWithDialog);
 				} else if (reason === 'not-authenticated') {
-					dispatchEvent('authRequired', repository.description, retryWithDialog);
+					dispatchEvent('authRequired', adapter.description, retryWithDialog);
 				} else {
 					dispatchEvent('mapLoadingFailed', mapId, reason, label);
 				}
 			};
 		dispatchEvent('mapLoading', mapId);
 		MM.retry(
-			repository.loadMap.bind(repository, mapId),
+			adapter.loadMap.bind(adapter, mapId),
 			shouldRetry(5),
 			MM.linearBackoff()
 		).then(
@@ -86,8 +85,8 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 		).progress(progressEvent);
 	};
 
-	this.publishMap = function (repositoryType) {
-		var repository = chooseRepository([repositoryType, mapInfo.mapId]),
+	this.publishMap = function (adapterType) {
+		var adapter = chooseAdapter([adapterType, mapInfo.mapId]),
 			mapSaved = function (savedMapInfo) {
 				dispatchEvent('mapSaved', savedMapInfo.mapId, savedMapInfo.idea, (mapInfo.mapId !== savedMapInfo.mapId));
 				mapInfo = savedMapInfo;
@@ -95,21 +94,21 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 			progressEvent = function (evt) {
 				var done = (evt && evt.loaded) || 0,
 					total = (evt && evt.total) || 1,
-					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + "%" : evt);
-				dispatchEvent('mapSaving', repository.description, message);
+					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + '%' : evt);
+				dispatchEvent('mapSaving', adapter.description, message);
 			},
 			mapSaveFailed = function (reason, label) {
 				var retryWithDialog = function () {
-					dispatchEvent('mapSaving', repository.description);
-					repository.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed).progress(progressEvent);
-				}, repositoryName = repository.description || '';
-				label = label ? label + repositoryName : repositoryName;
+					dispatchEvent('mapSaving', adapter.description);
+					adapter.saveMap(_.clone(mapInfo), true).then(mapSaved, mapSaveFailed).progress(progressEvent);
+				}, adapterName = adapter.description || '';
+				label = label ? label + adapterName : adapterName;
 				if (reason === 'no-access-allowed') {
 					dispatchEvent('mapSavingUnAuthorized', function () {
-						dispatchEvent('mapSaving', repository.description, 'Creating a new file');
+						dispatchEvent('mapSaving', adapter.description, 'Creating a new file');
 						var saveAsNewInfo = _.clone(mapInfo);
 						saveAsNewInfo.mapId = 'new';
-						repository.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed).progress(progressEvent);
+						adapter.saveMap(saveAsNewInfo, true).then(mapSaved, mapSaveFailed).progress(progressEvent);
 					});
 				} else if (reason === 'failed-authentication') {
 					dispatchEvent('authorisationFailed', label, retryWithDialog);
@@ -119,8 +118,8 @@ MM.MapRepository = function (activityLog, alert, repositories) {
 					dispatchEvent('mapSavingFailed', reason, label);
 				}
 			};
-		dispatchEvent('mapSaving', repository.description);
-		MM.retry(repository.saveMap.bind(repository, _.clone(mapInfo)), shouldRetry(5), MM.linearBackoff()).then(mapSaved, mapSaveFailed).progress(progressEvent);
+		dispatchEvent('mapSaving', adapter.description);
+		MM.retry(adapter.saveMap.bind(adapter, _.clone(mapInfo)), shouldRetry(5), MM.linearBackoff()).then(mapSaved, mapSaveFailed).progress(progressEvent);
 	};
 };
 
@@ -301,7 +300,7 @@ MM.retry = function (task, shouldRetry, backoff) {
 				deferred.resolve,
 				function () {
 					if (!shouldRetry || shouldRetry.apply(undefined, arguments)) {
-						deferred.notify("Network problem... will retry shortly");
+						deferred.notify('Network problem... Will retry shortly');
 						if (backoff) {
 							setTimeout(attemptTask, backoff());
 						} else {
@@ -333,18 +332,17 @@ MM.linearBackoff = function () {
 	};
 };
 
-(function ($, window) {
+(function () {
 	'use strict';
-    //patch ajax settings to call a progress callback
-    var oldXHR = $.ajaxSettings.xhr;
-    $.ajaxSettings.xhr = function () {
-        var xhr = oldXHR();
-        if (xhr instanceof window.XMLHttpRequest) {
-            xhr.addEventListener('progress', this.progress, false);
-        }
-        if (xhr.upload) {
-            xhr.upload.addEventListener('progress', this.progress, false);
-        }
-        return xhr;
-    };
-}(jQuery, window));
+	var oldXHR = jQuery.ajaxSettings.xhr;
+	jQuery.ajaxSettings.xhr = function () {
+		var xhr = oldXHR();
+		if (xhr instanceof XMLHttpRequest) {
+			xhr.addEventListener('progress', this.progress, false);
+		}
+		if (xhr.upload) {
+			xhr.upload.addEventListener('progress', this.progress, false);
+		}
+		return xhr;
+	};
+}());

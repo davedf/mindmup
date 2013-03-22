@@ -1,5 +1,5 @@
-/*global _, jQuery, MM, observable, setTimeout, clearTimeout, window, gapi */
-MM.GoogleDriveRepository = function (clientId, apiKey, networkTimeoutMillis, contentType) {
+/*global _, jQuery, MM, window, gapi */
+MM.GoogleDriveAdapter = function (clientId, apiKey, networkTimeoutMillis, contentType) {
 	'use strict';
 	var driveLoaded,
 		isAuthorised,

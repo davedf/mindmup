@@ -25,9 +25,9 @@ MM.main = function (config) {
 		var activityLog = new MM.ActivityLog(10000), oldShowPalette,
 			alert = new MM.Alert(),
 			jotForm = new MM.JotForm(jQuery('#modalFeedback form'), alert),
-			s3Repository = new MM.S3MapRepository(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis),
-			googleRepository = new MM.GoogleDriveRepository(config.googleClientId, config.googleShortenerApiKey, config.networkTimeoutMillis, "application/json"),
-			mapRepository = new MM.MapRepository(activityLog, alert, [s3Repository, googleRepository]),
+			s3Adapter = new MM.S3Adapter(config.s3Url, config.s3Folder, activityLog, config.networkTimeoutMillis),
+			googleDriveAdapter = new MM.GoogleDriveAdapter(config.googleClientId, config.googleShortenerApiKey, config.networkTimeoutMillis, 'application/json'),
+			mapRepository = new MM.MapRepository(activityLog, alert, [s3Adapter, googleDriveAdapter]),
 			pngExporter = new MAPJS.PNGExporter(mapRepository),
 			mapModel = new MAPJS.MapModel(mapRepository,
 				MAPJS.KineticMediator.layoutCalculator,
@@ -37,14 +37,12 @@ MM.main = function (config) {
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
 		jQuery('body').classCachingWidget('cached-classes', localStorage);
-
 		if (!jQuery('body').hasClass('image-render-checked')) {
 			if (isTouch() || jQuery('body').hasClass('gecko')) {
 				jQuery('body').addClass('image-render');
 			}
 			jQuery('body').addClass('image-render-checked');
 		}
-
 		jQuery('#container').mapWidget(activityLog, mapModel, isTouch(), jQuery('body').hasClass('image-render'));
 		jQuery('#welcome_message[data-message]').welcomeMessageWidget(activityLog);
 		jQuery('#topbar').alertWidget(alert).mapToolbarWidget(mapModel);
@@ -64,7 +62,7 @@ MM.main = function (config) {
 		jQuery('#toolbarEdit .colorPicker-picker').parent('button').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
-		jQuery("#listBookmarks").bookmarkWidget(mapBookmarks, alert, !isTouch());
+		jQuery('#listBookmarks').bookmarkWidget(mapBookmarks, alert, !isTouch());
 		jQuery('#modalDownload').downloadWidget(pngExporter);
 		if (!isTouch()) {
 			jQuery('[rel=tooltip]').tooltip();
@@ -79,10 +77,9 @@ MM.main = function (config) {
 		jQuery('[data-mm-role="png-export"]').click(pngExporter.exportMap);
 		jQuery('[data-mm-role="toggle-class"]').toggleClassWidget();
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
-		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleRepository);
-		jQuery('body').commandLineWidget("Shift+Space Ctrl+Space", mapModel);
+		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
+		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
-
