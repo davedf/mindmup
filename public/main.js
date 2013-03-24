@@ -13,7 +13,7 @@ MM.main = function (config) {
 			urls.forEach(function (url) {
 				var js, fjs = d.getElementsByTagName(s)[0];
 				js = d.createElement(s);
-				js.src = url;
+				js.src = (document.location.protocol === 'file:' ? 'http:' : '') + url;
 				fjs.parentNode.insertBefore(js, fjs);
 			});
 		},
