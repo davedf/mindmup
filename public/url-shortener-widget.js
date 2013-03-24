@@ -26,6 +26,8 @@ jQuery.fn.urlShortenerWidget = function (googleShortenerApiKey, activityLog) {
 				}
 			});
 		};
-	fireShortener();
+	if (document.location.protocol !== 'file:') {
+		fireShortener();
+	}
 	return list;
 };
