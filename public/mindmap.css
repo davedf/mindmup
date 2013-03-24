@@ -9,7 +9,7 @@ html, body {
   margin-right: 20px;
 }
 #logo-img {
- background-image:url('http://mindmup.s3.amazonaws.com/lib/img/logo_32.png');
+ background-image:url('//mindmup.s3.amazonaws.com/lib/img/logo_32.png');
  background-position:left center;
  background-repeat:no-repeat;
  width: 40px;
@@ -132,13 +132,13 @@ div.topbar-color-picker {
 }
 
 .shareFacebook {
-	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/facebook_32.png');
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/facebook_32.png');
 }
 .shareEmail {
-	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/email_32.png');
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/email_32.png');
 }
 .shareTwitter {
-	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/twitter_32.png');
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/twitter_32.png');
 }
 .btn-inline {
 	border: 0px;
@@ -155,12 +155,12 @@ div.colorPicker-picker { display: inline; float: left; background: none }
 	height:0px;
 }
 .repo-g {
-	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/google_drive.png');
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/google_drive.png');
 	background-repeat: no-repeat;
 	background-position:left center;
 }
 .repo-a {
-	background-image: url('http://mindmup.s3.amazonaws.com/lib/img/logo_16.png');
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/logo_16.png');
 	background-repeat: no-repeat;
 	background-position:left center;
 }
