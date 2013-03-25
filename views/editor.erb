@@ -7,13 +7,9 @@
     <meta name="keywords" content="mind mapping, mind map, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
     <meta name="description" content="Zero-friction, free online mind mapping. Opensource mindmapping software. The most productive online mind map canvas on the Web. Supports Freemind mindmap import/export." />
     <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
-    <% if settings.online? then %>
-      <link href="//mindmup.s3.amazonaws.com/lib/bootstrap-combined.min.css" rel="stylesheet" />
-      <link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
-    <% else %>
-      <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
-      <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
-    <% end %>
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-responsive-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <link href="//mindmup.s3.amazonaws.com/lib/colorPicker.css" rel="stylesheet" />
     <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
