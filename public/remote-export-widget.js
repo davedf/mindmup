@@ -1,7 +1,8 @@
-/*global $, _, jQuery, MM*/
+/*global $, _, jQuery, MM, document*/
 jQuery.fn.remoteExportWidget = function (mapRepository) {
 	'use strict';
-	var loadedIdea;
+	var loadedIdea,
+		downloadAttrSupported = (document.createElement('a').hasOwnProperty('download'));
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 		loadedIdea = idea;
 	});
@@ -13,10 +14,20 @@ jQuery.fn.remoteExportWidget = function (mapRepository) {
 				'html': MM.exportIdeas.bind({}, loadedIdea, new MM.HtmlTableExporter()),
 				'txt': MM.exportIdeas.bind({}, loadedIdea, new MM.TabSeparatedTextExporter())
 			},
-			format = $(this).data('mm-format');
-		if (exportFunctions[format]) {
-			exportForm.find('[name=title]').val(loadedIdea.title + "." + format);
-			exportForm.find('[name=map]').val(exportFunctions[format](loadedIdea));
+			format = $(this).data('mm-format'),
+		    title = loadedIdea.title + "." + format,
+		    contents = exportFunctions[format] && exportFunctions[format](loadedIdea);
+		if (!contents) {
+			return false;
+		}
+		if (downloadAttrSupported && (!$('body').hasClass('force-remote'))) {
+			$(this).attr('download', title);
+			$(this).attr('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
+		} else {
+			$(this).attr('href', '#');
+			delete this.download;
+			exportForm.find('[name=title]').val(title);
+			exportForm.find('[name=map]').val(contents);
 			exportForm.submit();
 		}
 	});
