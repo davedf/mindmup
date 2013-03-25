@@ -1447,6 +1447,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 						e.preventDefault();
 						onCommit();
 						return; /* propagate to let the environment handle ctrl+s */
+					} else if (!e.shiftKey && e.which === 90 && (e.metaKey || e.ctrlKey)) {
+						if (ideaInput.val() === unformattedText) {
+							onCancelEdit();
+						}
 					}
 					e.stopPropagation();
 				})
@@ -1565,6 +1569,11 @@ Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	this.setStyle(this.attrs);
 	this.getLayer().draw();
 };
+Kinetic.Idea.prototype.getIsSelected = function () {
+	'use strict';
+	return this.isSelected;
+};
+
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	'use strict';
 	this.isSelected = isSelected;
@@ -1683,7 +1692,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 		transition.start();
 		animation.start();
 	};
-	_.each(['getHeight', 'getWidth'], function (fname) {
+	_.each(['getHeight', 'getWidth', 'getIsSelected'], function (fname) {
 		container[fname] = function () {
 			return idea && idea[fname] && idea[fname].apply(idea, arguments);
 		};
@@ -1704,7 +1713,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	return container;
 };
 
-/*global _, window, document, jQuery, Kinetic*/
+/*global _, window, document, jQuery, Kinetic, setTimeout*/
 var MAPJS = MAPJS || {};
 if (Kinetic.Stage.prototype.isRectVisible) {
 	throw ('isRectVisible already exists, should not mix in our methods');
@@ -1778,6 +1787,30 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 				callback: function () {
 					stage.fire(':scaleChangeComplete');
 				}
+			});
+		},
+		ensureSelectedNodeVisible = function (node) {
+			var scale = stage.getScale().x || 1,
+				offset = 100,
+				move = { x: 0, y: 0 };
+			if (!node.getIsSelected()) {
+				return;
+			}
+			if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
+				move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
+			} else if (node.getAbsolutePosition().x < offset) {
+				move.x  = offset - node.getAbsolutePosition().x;
+			}
+			if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
+				move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
+			} else if (node.getAbsolutePosition().y < offset) {
+				move.y = offset - node.getAbsolutePosition().y;
+			}
+			stage.transitionTo({
+				x: stage.attrs.x + move.x,
+				y: stage.attrs.y + move.y,
+				duration: 0.4,
+				easing: 'ease-in-out'
 			});
 		},
 		isShiftPressed;
@@ -1866,30 +1899,12 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		nodeByIdeaId[n.id] = node;
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
-		var node = nodeByIdeaId[ideaId],
-			scale = stage.getScale().x || 1,
-			offset = 100,
-			move = { x: 0, y: 0 };
+		var node = nodeByIdeaId[ideaId];
 		node.setIsSelected(isSelected);
 		if (!isSelected) {
 			return;
 		}
-		if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
-			move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
-		} else if (node.getAbsolutePosition().x < offset) {
-			move.x  = offset - node.getAbsolutePosition().x;
-		}
-		if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
-			move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
-		} else if (node.getAbsolutePosition().y < offset) {
-			move.y = offset - node.getAbsolutePosition().y;
-		}
-		stage.transitionTo({
-			x: stage.attrs.x + move.x,
-			y: stage.attrs.y + move.y,
-			duration: 0.4,
-			easing: 'ease-in-out'
-		});
+		ensureSelectedNodeVisible(node);
 	});
 	mapModel.addEventListener('nodeStyleChanged', function (n) {
 		var node = nodeByIdeaId[n.id];
@@ -1915,7 +1930,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			x: n.x,
 			y: n.y,
 			duration: 0.4,
-			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out'
+			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out',
+			callback: ensureSelectedNodeVisible.bind(undefined, node)
 		});
 	});
 	mapModel.addEventListener('nodeTitleChanged', function (n) {
