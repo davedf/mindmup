@@ -21,7 +21,7 @@
   <body class="map-unchanged <%=browser.body_class %>">
 	  <%=erb :topbar %>  
 	<div id="floating-toolbar" class="floating span2 well well-small hidden-phone hidden-touch hidden-collapsed-toolbar">
-      <button class="close pull-right" data-category="Toolbar Click" data-mm-key="ctrl+b meta+b" data-event-type="Expand/Collapse" data-mm-target="body" data-mm-class='collapsed-toolbar' data-mm-role="toggle-class" data-title="convert to menu (ctrl+b)" data-placement='left' rel='tooltip'><i class="toggle icon-resize-small"></i></button>
+      <button class="close pull-right" data-category="Toolbar Click" data-mm-key="ctrl+b meta+b" data-event-type="Expand/Collapse" data-mm-target="body" data-mm-class='collapsed-toolbar' data-mm-role="toggle-class" data-title="Convert to menu (Ctrl+b)" data-placement='left' rel='tooltip'><i class="toggle icon-resize-small"></i></button>
       <div class="toolbar-inner">
         <div data-mm-role="save" class="visible-map-changed pull-left btn-group">
           <button class="btn btn-primary" data-mm-role="publish" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
@@ -33,27 +33,27 @@
         </div>
         <div class="btn-toolbar" id="toolbarEdit">
               <div class="btn-group">
-                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;in" data-category="Toolbar Click" data-event-type="Zoom in" class="btn  scaleUp"><i class="icon-zoom-in"></i></button>
-                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;out" data-category="Toolbar Click" data-event-type="Zoom out" class="btn  scaleDown"><i class="icon-zoom-out"></i></button>
-                <button rel="tooltip" data-placement="bottom" data-title="Reset view (Center + original size)" data-category="Toolbar Click" data-event-type="Zoom reset" class="btn  resetView"><i class="icon-circle-blank"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;in&nbsp;(Ctrl&nbsp;+)" data-category="Toolbar Click" data-event-type="Zoom in" class="btn  scaleUp"><i class="icon-zoom-in"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;out&nbsp;(Ctrl&nbsp;-)" data-category="Toolbar Click" data-event-type="Zoom out" class="btn  scaleDown"><i class="icon-zoom-out"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Re-center view (Ctrl+0)" data-category="Toolbar Click" data-event-type="Zoom reset" class="btn  resetView"><i class="icon-circle-blank"></i></button>
               </div>
               <div class="btn-group">
-                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add child" data-category="Toolbar Click" data-event-type="Add idea" class="btn  addSubIdea"><i class="icon-signout" ></i></button>
-                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert sibling" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn  addSiblingIdea"><i class="icon-download-alt" ></i></button>
-                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert intermediate parent" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn  insertIntermediate"><i class="icon-signin" ></i></button>
+                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add child (Tab)" data-category="Toolbar Click" data-event-type="Add idea" class="btn  addSubIdea"><i class="icon-signout" ></i></button>
+                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert sibling (Enter)" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn  addSiblingIdea"><i class="icon-download-alt" ></i></button>
+                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert parent (Shift+Tab)" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn  insertIntermediate"><i class="icon-signin" ></i></button>
               </div>
               <div class="btn-group">
-                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit node" data-category="Toolbar Click" data-event-type="Edit idea" class="btn  editNode"><i class="icon-pencil"></i></button>
-                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse node" data-category="Toolbar Click" data-event-type="Collapse idea" class="btn  toggleCollapse"><i class="icon-leaf"></i></button>
-                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete node" data-category="Toolbar Click" data-event-type="Delete idea" class="btn  removeSubIdea"><i class="icon-remove"></i></button>
+                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit node (Spacebar)" data-category="Toolbar Click" data-event-type="Edit idea" class="btn  editNode"><i class="icon-pencil"></i></button>
+                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse node (/ or Shift+Up)" data-category="Toolbar Click" data-event-type="Collapse idea" class="btn  toggleCollapse"><i class="icon-leaf"></i></button>
+                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete node (Backspace)" data-category="Toolbar Click" data-event-type="Delete idea" class="btn  removeSubIdea"><i class="icon-remove"></i></button>
               </div>
               <div class="btn-group">
-                <button rel="tooltip" data-placement="bottom" data-title="Copy" data-category="Toolbar Click" data-event-type="Copy" class="btn  copy"><i class="icon-copy"></i></button>
-                <button rel="tooltip" data-placement="bottom" data-title="Paste" data-category="Toolbar Click" data-event-type="Paste" class="btn paste"><i class="icon-paste"></i></button>
-                <button rel="tooltip" data-placement="bottom" data-title="Cut" data-category="Toolbar Click" data-event-type="Cut" class="btn cut"><i class="icon-cut"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Copy (Ctrl+c)" data-category="Toolbar Click" data-event-type="Copy" class="btn  copy"><i class="icon-copy"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Paste (Ctrl+v)" data-category="Toolbar Click" data-event-type="Paste" class="btn paste"><i class="icon-paste"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Cut (Ctrl+x)" data-category="Toolbar Click" data-event-type="Cut" class="btn cut"><i class="icon-cut"></i></button>
               </div>
               <div class="btn-group">
-                <button class="btn " rel="tooltip" data-title="Node color" data-category="Toolbar Click" data-event-type="Node Color">
+                <button class="btn " rel="tooltip" data-title="Node color (Shift+Spacebar)" data-category="Toolbar Click" data-event-type="Node Color">
                   <input data-mm-target-property='background' class='updateStyle hide' type="hidden" value="" />&nbsp;
                 </button>
               </div>

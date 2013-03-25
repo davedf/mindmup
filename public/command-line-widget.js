@@ -1,14 +1,23 @@
-/*global $, window, Color */
+/*global $, window, Color*/
+
 $.fn.commandLineWidget = function (keyBinding, mapModel) {
 	'use strict';
 	var element = this;
 	element.keyup(keyBinding, function () {
 		var input,
-			valid = function (color, name) {
-				name = name.toUpperCase();
-				return color &&
-						(color.hexString().toUpperCase() === name.toUpperCase() ||
-						(color.keyword() && color.keyword().toUpperCase() === name.toUpperCase()));
+			validColor = function (value) {
+				/*jslint newcap:true*/
+				var color = value && Color(value.toLowerCase()),
+					valid = color &&
+						(color.hexString().toUpperCase() === value.toUpperCase() ||
+						(color.keyword() && color.keyword().toUpperCase() === value.toUpperCase()));
+				if (valid) {
+					return color;
+				}
+				if (value && value[0] !== '#') {
+					return validColor('#' + value);
+				}
+				return false;
 			},
 			hide = function () {
 				if (input) {
@@ -17,11 +26,10 @@ $.fn.commandLineWidget = function (keyBinding, mapModel) {
 				mapModel.setInputEnabled(true);
 			},
 			commit = function () {
-				/*jslint newcap:true*/
 				var value = input && input.val(),
-					color = value && Color(value.toLowerCase());
+					color = validColor(value.toLowerCase());
 				hide();
-				if (valid(color, value)) {
+				if (color) {
 					mapModel.updateStyle('cmdline', 'background', color.hexString());
 				}
 			},
@@ -188,4 +196,4 @@ $.fn.commandLineWidget = function (keyBinding, mapModel) {
 			});
 	});
 	return element;
-}
+};
