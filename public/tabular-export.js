@@ -1,5 +1,5 @@
 /*global MM, MAPJS, _, $*/
-MM.exportIdeas = function (contentAggregate, exporter, completeCallback) {
+MM.exportIdeas = function (contentAggregate, exporter) {
 	'use strict';
 	var traverse = function (iterator, idea, level) {
 		level = level || 0;
@@ -16,7 +16,7 @@ MM.exportIdeas = function (contentAggregate, exporter, completeCallback) {
 	if (exporter.begin) { exporter.begin(); }
 	traverse(exporter.each, contentAggregate);
 	if (exporter.end) { exporter.end(); }
-	if (completeCallback) { completeCallback(exporter.contents()); }
+	return exporter.contents();
 };
 MM.TabSeparatedTextExporter = function () {
 	'use strict';
@@ -26,7 +26,7 @@ MM.TabSeparatedTextExporter = function () {
 	};
 	this.each = function (idea, level) {
 		contents.push(
-			_.map(_.range(level), function () {return '\t'; }).join("") + idea.title
+			_.map(_.range(level), function () {return '\t'; }).join("") + idea.title.replace(/\t|\n|\r/g, ' ')
 		);
 	};
 };
@@ -34,10 +34,10 @@ MM.HtmlTableExporter = function () {
 	'use strict';
 	var result;
 	this.begin = function () {
-		result = $("<table>");
+		result = $("<table>").wrap('<div></div'); /*parent needed for html generation*/
 	};
 	this.contents = function () {
-		return result;
+		return $(result).parent().html();
 	};
 	this.each = function (idea, level) {
 		var row = $("<tr>").appendTo(result),
@@ -47,7 +47,7 @@ MM.HtmlTableExporter = function () {
 			cell.css('color', MAPJS.contrastForeground(idea.style.background));
 		}
 		if (level > 0) {
-			$("<td>").prependTo(row).text("&nbsp;").attr('colspan', level);
+			$("<td>").prependTo(row).html("&nbsp;").attr('colspan', level);
 		}
 	};
 };

@@ -54,12 +54,14 @@
                 </button>
               </div>
           </div>
-			  <div class="btn-group hidden-map-changed">
+			  <div class="btn-group">
 				  <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
 				  <ul class="dropdown-menu">
 					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
 					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
 					  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="html" data-category="Map" data-event-type="Export Html">HTML Table</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="txt" data-category="Map" data-event-type="Export CSV">Text (tab separated)</a> </li>
 				  </ul>
         </div>
 
@@ -79,9 +81,9 @@
     <%= erb :terms_and_conditions %>
     <%= erb :open_from_drive %>
     <div id="container"></div>
-	<form method="post" id="formExport" action="/export" class="hide">
+	<form method="post" id="formExport" action="/echo" class="hide">
 		<input type="hidden" name="map" />
-		<input type="hidden" name="format" />
+		<input type="hidden" name="title" />
 	</form>
     <div id="fb-root"></div>
     <%= erb :scripts %>

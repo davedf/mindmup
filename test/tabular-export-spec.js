@@ -8,16 +8,15 @@ describe("MM.exportIdeas", function () {
 			each = function () { calls.push('each'); },
 			end = function () { calls.push('end'); },
 			contents = function () { calls.push('contents'); return "from contents"; },
-			callback = jasmine.createSpy('complete');
-		MM.exportIdeas(aggregate, {'each': each, 'begin': begin, 'end': end, 'contents': contents}, callback);
+			result;
+		result = MM.exportIdeas(aggregate, {'each': each, 'begin': begin, 'end': end, 'contents': contents});
 		expect(calls).toEqual(['begin', 'each', 'end', 'contents']);
-		expect(callback).toHaveBeenCalledWith('from contents');
 	});
 	it("executes a callback for each idea, reverse depth-order, from parent to children", function () {
 		var aggregate = content({id: 1, ideas: {1: {id: 2, ideas: {7: {id: 3}}}}}),
 			calls = [],
 			each = function (idea) { calls.push(idea); };
-		MM.exportIdeas(aggregate, {'each': each});
+		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
 		expect(calls[0].id).toBe(1);
 		expect(calls[1].id).toBe(2);
 		expect(calls[2].id).toBe(3);
@@ -25,7 +24,7 @@ describe("MM.exportIdeas", function () {
 	it("passes a level with each callback", function () {
 		var aggregate = content({id: 1, ideas: {1: {id: 2, ideas: {1: {id: 3}}}}}),
 			each = jasmine.createSpy();
-		MM.exportIdeas(aggregate, {'each': each});
+		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
 		expect(each).toHaveBeenCalledWith(aggregate, 0);
 		expect(each).toHaveBeenCalledWith(aggregate.ideas[1], 1);
 		expect(each).toHaveBeenCalledWith(aggregate.ideas[1].ideas[1], 2);
@@ -34,7 +33,7 @@ describe("MM.exportIdeas", function () {
 		var aggregate = content({id: 1, title: 'root', ideas: {'-100': {title: '-100'}, '-1': {title: '-1'}, '1': {title: '1'}, '100': {title: '100'}}}),
 			calls = [],
 			each = function (idea) { calls.push(idea.title); };
-		MM.exportIdeas(aggregate, {'each': each});
+		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
 		expect(calls).toEqual(['root', '1', '100', '-1', '-100']);
 	});
 });
@@ -50,6 +49,11 @@ describe("MM.tabSeparatedTextExporter", function () {
 		tabExporter.each({title: 'foo'}, 0);
 		tabExporter.each({title: 'bar'}, 0);
 		expect(tabExporter.contents()).toBe("foo\nbar");
+	});
+	it("replaces tabs and newlines by spaces", function () {
+		var tabExporter = new MM.TabSeparatedTextExporter();
+		tabExporter.each({title: 'f\to\no\ro'}, 0);
+		expect(tabExporter.contents()).toBe("f o o o");
 	});
 });
 describe("MM.htmlTableExporter", function () {
@@ -72,7 +76,7 @@ describe("MM.htmlTableExporter", function () {
 		htmlExporter.each({title: 'foo'}, 4);
 		cells = $(htmlExporter.contents()).find('tr').first().children('td');
 		expect(cells.length).toBe(2);
-		expect(cells.first().text()).toBe('&nbsp;');
+		expect(cells.first().html()).toBe('&nbsp;');
 		expect(cells.first().attr('colspan')).toEqual('4');
 		expect(cells.last().text()).toBe('foo');
 	});
