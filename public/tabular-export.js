@@ -37,7 +37,9 @@ MM.HtmlTableExporter = function () {
 		result = $("<table>").wrap('<div></div'); /*parent needed for html generation*/
 	};
 	this.contents = function () {
-		return $(result).parent().html();
+		return '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"> </head><body>' +
+			$(result).parent().html() +
+			'</body></html>';
 	};
 	this.each = function (idea, level) {
 		var row = $("<tr>").appendTo(result),

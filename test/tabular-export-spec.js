@@ -64,10 +64,17 @@ describe("MM.htmlTableExporter", function () {
 		htmlExporter.begin();
 		htmlExporter.each({title: 'foo'}, 0);
 		htmlExporter.each({title: 'bar'}, 0);
-		results = $(htmlExporter.contents());
-		expect(results).toBe('table');
+		results = $(htmlExporter.contents()).filter('table');
 		expect(results.find('tr').first().children('td').first().text()).toBe('foo');
 		expect(results.find('tr').last().children('td').first().text()).toBe('bar');
+	});
+	it("adds a UTF header", function () {
+		var htmlExporter = new MM.HtmlTableExporter(),
+			result;
+		htmlExporter.begin();
+		result = $(htmlExporter.contents()).filter('meta');
+		expect(result.attr('http-equiv')).toBe('Content-Type');
+		expect(result.attr('content')).toBe('text/html; charset=utf-8');
 	});
 	it("indents with colspan if level > 0", function () {
 		var htmlExporter = new MM.HtmlTableExporter(),
