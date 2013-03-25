@@ -473,7 +473,7 @@ var content = function (contentAggregate, progressCallback) {
 	return observable(contentAggregate);
 };
 /*jslint nomen: true*/
-/*global _*/
+/*global _, Color*/
 var MAPJS = MAPJS || {};
 (function () {
 	'use strict';
@@ -597,6 +597,17 @@ var MAPJS = MAPJS || {};
 		result.width = margin + _.max(_.map(nodes, function (node) { return node.x + node.width; })) - result.left;
 		result.height = margin + _.max(_.map(nodes, function (node) { return node.y + node.height; })) - result.top;
 		return result;
+	};
+	MAPJS.contrastForeground = function (background) {
+		/*jslint newcap:true*/
+		var luminosity = Color(background).luminosity();
+		if (luminosity < 0.5) {
+			return '#EEEEEE';
+		}
+		if (luminosity < 0.9) {
+			return '#4F4F4F';
+		}
+		return '#000000';
 	};
 }());
 /*jslint forin: true, nomen: true*/
@@ -1447,11 +1458,25 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 						e.preventDefault();
 						onCommit();
 						return; /* propagate to let the environment handle ctrl+s */
+					} else if (!e.shiftKey && e.which === 90 && (e.metaKey || e.ctrlKey)) {
+						if (ideaInput.val() === unformattedText) {
+							onCancelEdit();
+						}
 					}
 					e.stopPropagation();
 				})
 				.blur(onCommit)
-				.focus()
+				.focus(function () {
+					if (shouldSelectAll) {
+						if (ideaInput[0].setSelectionRange) {
+							ideaInput[0].setSelectionRange(0, unformattedText.length);
+						} else {
+							ideaInput.select();
+						}
+					} else if (ideaInput[0].setSelectionRange) {
+						ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
+					}
+				})
 				.on('input', function () {
 					var text = new Kinetic.Idea({
 						text: ideaInput.val()
@@ -1459,12 +1484,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					ideaInput.width(Math.max(ideaInput.width(), text.getWidth() * scale));
 					ideaInput.height(Math.max(ideaInput.height(), text.getHeight() * scale));
 				});
+
 			self.stopEditing = onCancelEdit;
-			if (shouldSelectAll) {
-				ideaInput.select();
-			} else if (ideaInput[0].setSelectionRange) {
-				ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
-			}
+			ideaInput.focus();
 
 			self.getStage().on('xChange yChange', onStageMoved);
 		};
@@ -1521,8 +1543,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 		isRoot = this.level === 1,
 		isSelected = this.isSelected,
 		background = this.getBackground(),
-		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
-		luminosity = Color(tintedBackground).luminosity();
+		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString();
 	config.strokeWidth = 1;
 	config.padding = 8;
 	config.fontSize = 10;
@@ -1551,13 +1572,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 	this.setupShadows(config);
 	config.align = 'center';
 	config.cornerRadius = 10;
-	if (luminosity < 0.5) {
-		config.textFill = '#EEEEEE';
-	} else if (luminosity < 0.9) {
-		config.textFill = '#4F4F4F';
-	} else {
-		config.textFill = '#000000';
-	}
+	config.textFill = MAPJS.contrastForeground(tintedBackground);
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
@@ -1565,6 +1580,11 @@ Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	this.setStyle(this.attrs);
 	this.getLayer().draw();
 };
+Kinetic.Idea.prototype.getIsSelected = function () {
+	'use strict';
+	return this.isSelected;
+};
+
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	'use strict';
 	this.isSelected = isSelected;
@@ -1683,7 +1703,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 		transition.start();
 		animation.start();
 	};
-	_.each(['getHeight', 'getWidth'], function (fname) {
+	_.each(['getHeight', 'getWidth', 'getIsSelected'], function (fname) {
 		container[fname] = function () {
 			return idea && idea[fname] && idea[fname].apply(idea, arguments);
 		};
@@ -1704,7 +1724,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	return container;
 };
 
-/*global _, window, document, jQuery, Kinetic*/
+/*global _, window, document, jQuery, Kinetic, setTimeout*/
 var MAPJS = MAPJS || {};
 if (Kinetic.Stage.prototype.isRectVisible) {
 	throw ('isRectVisible already exists, should not mix in our methods');
@@ -1778,6 +1798,30 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 				callback: function () {
 					stage.fire(':scaleChangeComplete');
 				}
+			});
+		},
+		ensureSelectedNodeVisible = function (node) {
+			var scale = stage.getScale().x || 1,
+				offset = 100,
+				move = { x: 0, y: 0 };
+			if (!node.getIsSelected()) {
+				return;
+			}
+			if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
+				move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
+			} else if (node.getAbsolutePosition().x < offset) {
+				move.x  = offset - node.getAbsolutePosition().x;
+			}
+			if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
+				move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
+			} else if (node.getAbsolutePosition().y < offset) {
+				move.y = offset - node.getAbsolutePosition().y;
+			}
+			stage.transitionTo({
+				x: stage.attrs.x + move.x,
+				y: stage.attrs.y + move.y,
+				duration: 0.4,
+				easing: 'ease-in-out'
 			});
 		},
 		isShiftPressed;
@@ -1866,30 +1910,12 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		nodeByIdeaId[n.id] = node;
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
-		var node = nodeByIdeaId[ideaId],
-			scale = stage.getScale().x || 1,
-			offset = 100,
-			move = { x: 0, y: 0 };
+		var node = nodeByIdeaId[ideaId];
 		node.setIsSelected(isSelected);
 		if (!isSelected) {
 			return;
 		}
-		if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
-			move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
-		} else if (node.getAbsolutePosition().x < offset) {
-			move.x  = offset - node.getAbsolutePosition().x;
-		}
-		if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
-			move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
-		} else if (node.getAbsolutePosition().y < offset) {
-			move.y = offset - node.getAbsolutePosition().y;
-		}
-		stage.transitionTo({
-			x: stage.attrs.x + move.x,
-			y: stage.attrs.y + move.y,
-			duration: 0.4,
-			easing: 'ease-in-out'
-		});
+		ensureSelectedNodeVisible(node);
 	});
 	mapModel.addEventListener('nodeStyleChanged', function (n) {
 		var node = nodeByIdeaId[n.id];
@@ -1915,7 +1941,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			x: n.x,
 			y: n.y,
 			duration: 0.4,
-			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out'
+			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out',
+			callback: ensureSelectedNodeVisible.bind(undefined, node)
 		});
 	});
 	mapModel.addEventListener('nodeTitleChanged', function (n) {
@@ -2148,12 +2175,12 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				'u meta+z ctrl+z': 'undo',
 				'shift+tab': 'insertIntermediate',
 				'meta+0 ctrl+0': 'resetView',
-				'r meta+shift+z meta+y ctrl+y': 'redo',
+				'r meta+shift+z ctrl+shift+z meta+y ctrl+y': 'redo',
 				'meta+plus ctrl+plus': 'scaleUp',
 				'meta+minus ctrl+minus': 'scaleDown',
 				'meta+up ctrl+up': 'moveUp',
 				'meta+down ctrl+down': 'moveDown',
-				'ctrl+shift+v meta+shift+v': 'pasteStyle',
+				'ctrl+shift+v meta+shift+v': 'pasteStyle'
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
 				mapModel.move('mousewheel', -1 * deltaX, deltaY);
