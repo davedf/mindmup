@@ -28,7 +28,7 @@ jQuery.fn.saveWidget = function (mapRepository) {
 	});
 	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
 		repository = (mapId && mapId[0]);
-		if (repository !== 'g') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
+		if (repository !== 'g' && repository !== 'o') { repository = 'a'; } /* stupid workaround, this takes care of null, new, default and a...*/
 		if (document.location.hash === '#google-drive') {
 			repository = 'g';
 		}
