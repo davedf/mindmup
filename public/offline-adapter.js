@@ -1,15 +1,14 @@
 /*global jQuery, MM, _*/
 MM.OfflineAdapter = function (storage) {
 	'use strict';
-	var offlineStorageSlotName = 'offline-maps';
+	var offlineStorageSlotName = 'offline-map';
 	this.description = 'OFFLINE';
 	this.recognises = function (mapId) {
 		return mapId && mapId[0] === 'o';
 	};
 	this.loadMap = function (mapId) {
 		var result = jQuery.Deferred(),
-			offlineMaps = storage.getItem(offlineStorageSlotName),
-			idea = offlineMaps && offlineMaps[mapId] && offlineMaps[mapId].idea;
+			idea = storage.getItem(mapId).idea;
 		if (idea) {
 			result.resolve(idea, mapId, 'application/json');
 		} else {
@@ -19,13 +18,18 @@ MM.OfflineAdapter = function (storage) {
 	};
 	this.saveMap = function (mapInfo) {
 		var result = jQuery.Deferred(),
-			offlineMaps = storage.getItem(offlineStorageSlotName) || {},
-			resultMapInfo = _.clone(mapInfo);
-		resultMapInfo.mapId = 'o' + resultMapInfo.idea.title.replace(/ /g, '+');
-		offlineMaps[resultMapInfo.mapId] = offlineMaps[resultMapInfo.mapId] || {};
-		offlineMaps[resultMapInfo.mapId].idea = resultMapInfo.idea;
-		storage.setItem(offlineStorageSlotName, offlineMaps);
-		result.resolve(resultMapInfo);
-		return result.promise();
+			resultMapInfo = _.clone(mapInfo),
+			offlineMaps = storage.getItem('offline-maps') || { nextMapId: 1 };
+		try {
+			if (!this.recognises(mapInfo.mapId)) {
+				resultMapInfo.mapId = offlineStorageSlotName + '-' + offlineMaps.nextMapId;
+				offlineMaps.nextMapId++;
+				storage.setItem('offline-maps', offlineMaps);
+			}
+			storage.setItem(resultMapInfo.mapId, { idea: resultMapInfo.idea });
+		} catch (e) {
+			return result.reject('failed-offline').promise();
+		}
+		return result.resolve(resultMapInfo).promise();
 	};
 };

@@ -227,6 +227,9 @@ body.ipad {
 .image-render .image-render-hidden {
 	display: none;
 }
-body.offlineDisabled .offlineOnly {
+body .offlineOnly {
 	display: none;
+}
+body.offlineEnabled .offlineOnly {
+	display: block;
 }
