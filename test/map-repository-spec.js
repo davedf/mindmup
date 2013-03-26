@@ -257,6 +257,43 @@ describe('Map Repository', function () {
 			expect(callCount).toBe(6);
 		});
 	});
+	describe('Local storage fallback', function () {
+		beforeEach(localStorage.clear.bind(localStorage));
+		it('should save a map in fallback storage if adapter fails with network-error', function () {
+			var listener = function (reason, label, callback) {
+				callback();
+			};
+			underTest.addEventListener('mapSavingFailed', listener);
+			adapter1.saveMap = function () {
+				return jQuery.Deferred().reject('network-error').promise();
+			};
+			underTest.setMap(content({ title: 'Hello world!'}), 's123');
+
+			underTest.publishMap();
+
+			clock.tick(1200001);
+			expect(localStorage.getItem('fallback-s123')).toBe('{"map":{"title":"Hello world!","id":1}}');
+		});
+		it('should remove locally stored fallback map if saving to cloud succeeds', function () {
+			localStorage.setItem('fallback-s123', '{"map":{"title":"Hello world!","id":1}}');
+			underTest.setMap(content({ title: 'Hello world!'}), 's123');
+
+			underTest.publishMap();
+
+			expect(localStorage.getItem('fallback-s123')).toBeNull();
+		});
+		it('should offer to load a map from fallback storage instead when locally stored fallback map exists', function () {
+			var listener = jasmine.createSpy();
+			localStorage.setItem('fallback-s123', '{"map":{"title":"Hello world!","id":1}}');
+			underTest.addEventListener('offlineFallbackExists', listener);
+
+			underTest.loadMap('s124');
+			expect(listener).not.toHaveBeenCalled();
+
+			underTest.loadMap('s123');
+			expect(listener).toHaveBeenCalled();
+		});
+	});
 	describe('MM.retry', function () {
 		var buildTaskToFailTimes = function (failTimes) {
 			var retryCount = 0;
