@@ -67,7 +67,7 @@ MM.GoogleDriveAdapter = function (clientId, apiKey, networkTimeoutMillis, conten
 			try {
 				deferred.notify('sending to Google Drive');
 				request.execute(function (resp) {
-					var retriable  = [404, 500, 502, 503, 504];
+					var retriable  = [404, 500, 502, 503, 504, -1];
 					if (resp.error) {
 						if (resp.error.code === 403) {
 							if (resp.error.reason && (resp.error.reason === 'rateLimitExceeded' || resp.error.reason === 'userRateLimitExceeded')) {

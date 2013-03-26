@@ -71,7 +71,7 @@ describe('OfflineAdapter', function () {
 			}).then(
 				this.fail.bind(this, 'saveMap should not succeed'),
 				function (reason) {
-					expect(reason).toBe('failed-offline');
+					expect(reason).toBe('local-storage-failed');
 				}
 			);
 		});

@@ -29,7 +29,7 @@ MM.OfflineAdapter = function (storage) {
 			}
 			storage.setItem(resultMapInfo.mapId, { map: resultMapInfo.idea });
 		} catch (e) {
-			return result.reject('failed-offline').promise();
+			return result.reject('local-storage-failed', e.toString()).promise();
 		}
 		return result.resolve(resultMapInfo).promise();
 	};
