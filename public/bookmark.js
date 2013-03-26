@@ -12,6 +12,9 @@ MM.jsonStorage = function (storage) {
 			return undefined;
 		}
 	};
+	self.remove = function (key) {
+		storage.removeItem(key);
+	};
 	return self;
 };
 MM.Bookmark = function (mapRepository, storage, storageKey) {

@@ -9,9 +9,9 @@ MM.OfflineAdapter = function (storage) {
 	this.loadMap = function (mapId) {
 		var result = jQuery.Deferred(),
 			stored = storage.getItem(mapId) || {},
-			idea = stored.idea;
-		if (idea) {
-			result.resolve(idea, mapId, 'application/json');
+			map = stored.map;
+		if (map) {
+			result.resolve(map, mapId, 'application/json');
 		} else {
 			result.reject('not-found');
 		}
@@ -27,10 +27,24 @@ MM.OfflineAdapter = function (storage) {
 				offlineMaps.nextMapId++;
 				storage.setItem('offline-maps', offlineMaps);
 			}
-			storage.setItem(resultMapInfo.mapId, { idea: resultMapInfo.idea });
+			storage.setItem(resultMapInfo.mapId, { map: resultMapInfo.idea });
 		} catch (e) {
 			return result.reject('failed-offline').promise();
 		}
 		return result.resolve(resultMapInfo).promise();
+	};
+};
+MM.OfflineFallback = function (storage) {
+	'use strict';
+	var localStoragePrefix = 'fallback-';
+	this.saveMap = function (mapId, map) {
+		storage.setItem(localStoragePrefix + mapId, { map: map });
+	};
+	this.loadMap = function (mapId) {
+		var entry = storage.getItem(localStoragePrefix + mapId);
+		return entry && entry.map;
+	};
+	this.remove = function (mapId) {
+		storage.remove(localStoragePrefix + mapId);
 	};
 };

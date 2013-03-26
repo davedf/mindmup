@@ -195,7 +195,7 @@ describe("JSONStorage", function () {
 	'use strict';
 	var json, storage;
 	beforeEach(function () {
-		storage = {getItem: function (item) {}, setItem:  function (key, value) {}};
+		storage = {getItem: function (item) {}, setItem:  function (key, value) {}, removeItem: function (key) {}};
 		json = MM.jsonStorage(storage);
 	});
 	it("stringifies items past into setItem before passing on", function () {
@@ -211,6 +211,11 @@ describe("JSONStorage", function () {
 	it("returns undefined if the item is not JSON", function () {
 		spyOn(storage, 'getItem').andReturn('{xxxxxx}');
 		expect(json.getItem('bla')).toBeUndefined();
+	});
+	it("removes item when remove method is invoked", function () {
+		spyOn(storage, 'removeItem');
+		json.remove('key');
+		expect(storage.removeItem).toHaveBeenCalledWith('key');
 	});
 });
 
