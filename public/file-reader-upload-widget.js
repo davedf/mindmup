@@ -25,7 +25,7 @@ $.fn.file_reader_upload = function (start, complete, fail) {
 			fail("unsupported format " + fileType);
 			return;
 		}
-		oFReader.readAsText(fileInfo);
+		oFReader.readAsText(fileInfo, "UTF-8");
 	});
     return element;
 }
