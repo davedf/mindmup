@@ -7,13 +7,9 @@
     <meta name="keywords" content="mind mapping, mind map, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
     <meta name="description" content="Zero-friction, free online mind mapping. Opensource mindmapping software. The most productive online mind map canvas on the Web. Supports Freemind mindmap import/export." />
     <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
-    <% if settings.online? then %>
-      <link href="//mindmup.s3.amazonaws.com/lib/bootstrap-combined.min.css" rel="stylesheet" />
-      <link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
-    <% else %>
-      <link href="/offline/bootstrap-combined.min.css" rel="stylesheet" />
-      <link href="/offline/fortawesome/font-awesome.min.css" rel="stylesheet" />
-    <% end %>
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-responsive-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <link href="//mindmup.s3.amazonaws.com/lib/colorPicker.css" rel="stylesheet" />
     <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
@@ -59,12 +55,14 @@
                 </button>
               </div>
           </div>
-			  <div class="btn-group hidden-map-changed">
+			  <div class="btn-group">
 				  <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
 				  <ul class="dropdown-menu">
 					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
 					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
 					  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="html" data-category="Map" data-event-type="Export Html">HTML Table</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="txt" data-category="Map" data-event-type="Export CSV">Text (tab separated)</a> </li>
 				  </ul>
         </div>
 
@@ -84,9 +82,9 @@
     <%= erb :terms_and_conditions %>
     <%= erb :open_from_drive %>
     <div id="container"></div>
-	<form method="post" id="formExport" action="/export" class="hide">
+	<form method="post" id="formExport" action="/echo" class="hide">
 		<input type="hidden" name="map" />
-		<input type="hidden" name="format" />
+		<input type="hidden" name="title" />
 	</form>
     <div id="fb-root"></div>
     <%= erb :scripts %>

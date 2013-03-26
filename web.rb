@@ -73,6 +73,12 @@ get "/s3proxy/:mapid" do
   settings.s3_bucket.objects[map_key(params[:mapid])].read
 end
 
+post "/echo" do
+  content_type 'application/octet-stream'
+  attachment Rack::Utils.escape(params[:title])
+  params[:map]
+end
+
 post "/export" do
   content_type 'application/octet-stream'
   contents=params[:map]

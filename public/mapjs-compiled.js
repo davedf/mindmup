@@ -473,7 +473,7 @@ var content = function (contentAggregate, progressCallback) {
 	return observable(contentAggregate);
 };
 /*jslint nomen: true*/
-/*global _*/
+/*global _, Color*/
 var MAPJS = MAPJS || {};
 (function () {
 	'use strict';
@@ -597,6 +597,17 @@ var MAPJS = MAPJS || {};
 		result.width = margin + _.max(_.map(nodes, function (node) { return node.x + node.width; })) - result.left;
 		result.height = margin + _.max(_.map(nodes, function (node) { return node.y + node.height; })) - result.top;
 		return result;
+	};
+	MAPJS.contrastForeground = function (background) {
+		/*jslint newcap:true*/
+		var luminosity = Color(background).luminosity();
+		if (luminosity < 0.5) {
+			return '#EEEEEE';
+		}
+		if (luminosity < 0.9) {
+			return '#4F4F4F';
+		}
+		return '#000000';
 	};
 }());
 /*jslint forin: true, nomen: true*/
@@ -1455,7 +1466,17 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					e.stopPropagation();
 				})
 				.blur(onCommit)
-				.focus()
+				.focus(function () {
+					if (shouldSelectAll) {
+						if (ideaInput[0].setSelectionRange) {
+							ideaInput[0].setSelectionRange(0, unformattedText.length);
+						} else {
+							ideaInput.select();
+						}
+					} else if (ideaInput[0].setSelectionRange) {
+						ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
+					}
+				})
 				.on('input', function () {
 					var text = new Kinetic.Idea({
 						text: ideaInput.val()
@@ -1463,12 +1484,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					ideaInput.width(Math.max(ideaInput.width(), text.getWidth() * scale));
 					ideaInput.height(Math.max(ideaInput.height(), text.getHeight() * scale));
 				});
+
 			self.stopEditing = onCancelEdit;
-			if (shouldSelectAll) {
-				ideaInput.select();
-			} else if (ideaInput[0].setSelectionRange) {
-				ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
-			}
+			ideaInput.focus();
 
 			self.getStage().on('xChange yChange', onStageMoved);
 		};
@@ -1525,8 +1543,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 		isRoot = this.level === 1,
 		isSelected = this.isSelected,
 		background = this.getBackground(),
-		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
-		luminosity = Color(tintedBackground).luminosity();
+		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString();
 	config.strokeWidth = 1;
 	config.padding = 8;
 	config.fontSize = 10;
@@ -1555,13 +1572,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 	this.setupShadows(config);
 	config.align = 'center';
 	config.cornerRadius = 10;
-	if (luminosity < 0.5) {
-		config.textFill = '#EEEEEE';
-	} else if (luminosity < 0.9) {
-		config.textFill = '#4F4F4F';
-	} else {
-		config.textFill = '#000000';
-	}
+	config.textFill = MAPJS.contrastForeground(tintedBackground);
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
