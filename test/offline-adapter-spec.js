@@ -1,4 +1,4 @@
-/*global beforeEach, content, describe, expect, it, MM, spyOn*/
+/*global beforeEach, content, describe, expect, it, MM, spyOn, localStorage*/
 describe('OfflineAdapter', function () {
 	'use strict';
 	var jsonStorage, underTest;
@@ -11,7 +11,31 @@ describe('OfflineAdapter', function () {
 		expect(underTest.recognises('g1234566797977797977')).toBe(false);
 		expect(underTest.recognises('alaksjdflajsldkfjlas')).toBe(false);
 	});
-	describe('Explicitly saving to offline', function () {
+	describe('loadMap', function () {
+		beforeEach(function () {
+			localStorage.clear();
+			localStorage.setItem('offline-map-99', '{"idea":{"title":"Hello World","id":1}}');
+		});
+		it('should return map as promised', function () {
+			underTest.loadMap('offline-map-99').then(
+				function (idea, mapId, mimeType) {
+					expect(idea).toEqual({title: "Hello World", id: 1});
+					expect(mapId).toBe('offline-map-99');
+					expect(mimeType).toBe('application/json');
+				},
+				this.fail.bind(this, 'loadMap should succeed')
+			);
+		});
+		it('should fail with not-found error if map not found', function () {
+			underTest.loadMap('offline-map-999').then(
+				this.fail.bind(this, 'loadMap should not succeed'),
+				function (reason) {
+					expect(reason).toBe('not-found');
+				}
+			);
+		});
+	});
+	describe('saveMap', function () {
 		beforeEach(function () {
 			localStorage.clear();
 		});

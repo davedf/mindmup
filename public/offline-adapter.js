@@ -8,7 +8,8 @@ MM.OfflineAdapter = function (storage) {
 	};
 	this.loadMap = function (mapId) {
 		var result = jQuery.Deferred(),
-			idea = storage.getItem(mapId).idea;
+			stored = storage.getItem(mapId) || {},
+			idea = stored.idea;
 		if (idea) {
 			result.resolve(idea, mapId, 'application/json');
 		} else {
