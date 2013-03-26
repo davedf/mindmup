@@ -50,6 +50,7 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 				json_content = parseFile(file_content, type);
 			} catch (e) {
 				fail('invalid file content', e);
+				return;
 			}
 			spinner("Initialising map");
 			counter = 0;
