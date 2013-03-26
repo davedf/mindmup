@@ -293,6 +293,26 @@ describe('Map Repository', function () {
 			underTest.loadMap('s123');
 			expect(listener).toHaveBeenCalled();
 		});
+		it('should dispatch mapSavingFailed event when fallback storage fails', function () {
+			var longTitle = new Array(5000000).join('a'),
+				lastReason,
+				mapSavingFailedListener = function (reason, label, callback) {
+					lastReason = reason;
+					if (callback) {
+						callback();
+					}
+				};
+			underTest.addEventListener('mapSavingFailed', mapSavingFailedListener);
+			adapter1.saveMap = function () {
+				return jQuery.Deferred().reject('network-error').promise();
+			};
+			underTest.setMap(content({ title: longTitle }), 's123');
+
+			underTest.publishMap();
+
+			clock.tick(1200001);
+			expect(lastReason).toBe('local-storage-failed');
+		});
 	});
 	describe('MM.retry', function () {
 		var buildTaskToFailTimes = function (failTimes) {
