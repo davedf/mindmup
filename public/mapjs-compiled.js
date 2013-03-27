@@ -1423,8 +1423,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				ideaInput,
 				onStageMoved = _.throttle(function () {
 					ideaInput.css({
-						top: canvasPosition.top + self.rect.getAbsolutePosition().y,
-						left: canvasPosition.left + self.rect.getAbsolutePosition().x
+						top: canvasPosition.top + self.getAbsolutePosition().y,
+						left: canvasPosition.left + self.getAbsolutePosition().x
 					});
 				}, 10),
 				updateText = function (newText) {
@@ -1444,6 +1444,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
+			console.log('ideaInput', canvasPosition.top, self.getAbsolutePosition().y, canvasPosition.left, self.getAbsolutePosition());
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
