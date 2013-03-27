@@ -1338,7 +1338,16 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		var ENTER_KEY_CODE = 13,
 			ESC_KEY_CODE = 27,
 			self = this,
-			unformattedText = joinLines(config.text);
+			unformattedText = joinLines(config.text),
+			bgRect = function (offset) {
+				return new Kinetic.Rect({
+					strokeWidth: 1,
+					cornerRadius: 10,
+					x: offset,
+					y: offset,
+					visible: false
+				});
+			};
 		config.text = breakWords(config.text);
 		this.level = config.level;
 		this.mmStyle = config.mmStyle;
@@ -1350,6 +1359,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			strokeWidth: 1,
 			cornerRadius: 10
 		});
+		this.rectbg1 = bgRect(8);
+		this.rectbg2 = bgRect(4);
 		this.text = new Kinetic.Text({
 			text: config.text,
 			fontSize: 14,
@@ -1358,6 +1369,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			fontStyle: 'bold',
 			align: 'center'
 		});
+		this.add(this.rectbg1);
+		this.add(this.rectbg2);
 		this.add(this.rect);
 		this.add(this.text);
 		this.setText = function (text) {
@@ -1367,50 +1380,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		this.setStyle();
 		this.classType = 'Idea';
-		/*
-		this.oldDrawFunc = this.getDrawFunc();
-		this.setDrawFunc(function (canvas) {
-			if (self.isVisible()) {
-				if (this.mmStyle && this.mmStyle.collapsed) {
-					var context = canvas.getContext(), width = this.getWidth(), height = this.getHeight();
-					this.drawCollapsedBG(canvas, {x: 8, y: 8});
-					this.drawCollapsedBG(canvas, {x: 4, y: 4});
-				}
-				this.oldDrawFunc(canvas);
-			}
-		});
-		oldTransitionTo = this.transitionTo.bind(this);
-		this.transitionTo = function (transition) {
-			if (!self.isVisible()) {
-				transition.duration = 0.01;
-			}
-			oldTransitionTo(transition);
-		};
-		*/
 		this.getNodeAttrs = function () {
 			return self.attrs;
-		};
-		this.drawCollapsedBG = function (canvas, offset) {
-			var context = canvas.getContext(),
-				cornerRadius = this.getCornerRadius(),
-				width = this.getWidth(),
-				height = this.getHeight();
-			context.beginPath();
-			if (cornerRadius === 0) {
-				context.rect(offset.x, offset.y, width, height);
-			} else {
-				context.moveTo(offset.x + cornerRadius, offset.y);
-				context.lineTo(offset.x + width - cornerRadius, offset.y);
-				context.arc(offset.x + width - cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI * 3 / 2, 0, false);
-				context.lineTo(offset.x + width, offset.y + height - cornerRadius);
-				context.arc(offset.x + width - cornerRadius, offset.y + height - cornerRadius, cornerRadius, 0, Math.PI / 2, false);
-				context.lineTo(offset.x + cornerRadius, offset.y + height);
-				context.arc(offset.x + cornerRadius, offset.y + height - cornerRadius, cornerRadius, Math.PI / 2, Math.PI, false);
-				context.lineTo(offset.x, offset.y + cornerRadius);
-				context.arc(offset.x + cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI, Math.PI * 3 / 2, false);
-			}
-			context.closePath();
-			canvas.fillStroke(this);
 		};
 		this.isVisible = function (offset) {
 			var stage = self.getStage();
@@ -1444,7 +1415,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
-			console.log('ideaInput', canvasPosition.top, self.getAbsolutePosition().y, canvasPosition.left, self.getAbsolutePosition());
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
@@ -1507,6 +1477,15 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	};
 }());
+
+Kinetic.Idea.prototype.setShadowOffset = function (offset) {
+	'use strict';
+	offset = this.getMMScale().x * offset;
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.setShadowOffset([offset, offset]);
+	});
+};
+
 Kinetic.Idea.prototype.getMMScale = function () {
 	'use strict';
 	var stage = this.getStage(),
@@ -1533,13 +1512,12 @@ Kinetic.Idea.prototype.setupShadows = function () {
 			opacity: 1
 		},
 		shadow = isSelected ? selectedShadow : normalShadow;
-	this.rect.setShadowColor(shadow.color);
-	this.rect.setShadowBlur(shadow.blur);
-	this.rect.setShadowOpacity(shadow.opacity);
-	this.rect.setShadowOffset(shadow.offset);
-	//if (this.rect.attrs && this.rect.attrs.shadow) {
-	//this.rect.setShadow(isSelected ? selectedShadow : normalShadow);
-	//}
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.setShadowColor(shadow.color);
+		r.setShadowBlur(shadow.blur);
+		r.setShadowOpacity(shadow.opacity);
+		r.setShadowOffset(shadow.offset);
+	});
 };
 Kinetic.Idea.prototype.getBackground = function () {
 	'use strict';
@@ -1558,32 +1536,35 @@ Kinetic.Idea.prototype.getBackground = function () {
 Kinetic.Idea.prototype.setStyle = function () {
 	'use strict';
 	/*jslint newcap: true*/
-	var isDroppable = this.isDroppable,
+	var self = this,
+		isDroppable = this.isDroppable,
 		isSelected = this.isSelected,
 		background = this.getBackground(),
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
 		padding = 8;
-	this.rect.attrs.width = this.text.getWidth() + 2 * padding;
-	this.rect.attrs.height = this.text.getHeight() + 2 * padding;
 	this.attrs.width = this.text.getWidth() + 2 * padding;
 	this.attrs.height = this.text.getHeight() + 2 * padding;
 	this.text.attrs.x = padding;
 	this.text.attrs.y = padding;
 
-	if (isDroppable) {
-		this.rect.attrs.stroke = '#9F4F4F';
-		this.rect.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
-		this.rect.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
-		this.rect.attrs.fillLinearGradientColorStops = [0, '#EF6F6F', 1, '#CF4F4F'];
-		background = '#EF6F6F';
-	} else if (isSelected) {
-		this.rect.attrs.fill = background;
-	} else {
-		this.rect.attrs.stroke = '#888';
-		this.rect.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
-		this.rect.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
-		this.rect.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
-	}
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.attrs.width = self.text.getWidth() + 2 * padding;
+		r.attrs.height = self.text.getHeight() + 2 * padding;
+		if (isDroppable) {
+			r.attrs.stroke = '#9F4F4F';
+			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+			r.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+			r.attrs.fillLinearGradientColorStops = [0, '#EF6F6F', 1, '#CF4F4F'];
+			background = '#EF6F6F';
+		} else if (isSelected) {
+			r.attrs.fill = background;
+		} else {
+			r.attrs.stroke = '#888';
+			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+			r.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+			r.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
+		}
+	});
 	this.setupShadows();
 	this.text.attrs.fill = MAPJS.contrastForeground(tintedBackground);
 };
@@ -1591,6 +1572,8 @@ Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
 	this.mmStyle = newMMStyle;
 	this.setStyle();
+	this.rectbg1.setVisible(this.mmStyle.collapsed || false);
+	this.rectbg2.setVisible(this.mmStyle.collapsed || false);
 	this.getLayer().draw();
 };
 Kinetic.Idea.prototype.getIsSelected = function () {
@@ -1613,7 +1596,7 @@ Kinetic.Idea.prototype.setIsDroppable = function (isDroppable) {
 	this.setStyle(this.attrs);
 };
 Kinetic.Global.extend(Kinetic.Idea, Kinetic.Group);
-/*global _, Kinetic, MAPJS, Image, setTimeout, jQuery */
+/*global _, Kinetic, MAPJS */
 Kinetic.IdeaProxy = function (idea, stage, layer) {
 	'use strict';
 	var nodeimage,
@@ -1707,7 +1690,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 			reRender();
 		});
 	});
-	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows'], function (fname) {
+	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows', 'setShadowOffset'], function (fname) {
 		container[fname] = function () {
 			var result = idea && idea[fname] && idea[fname].apply(idea, arguments);
 			reRender();
@@ -1755,7 +1738,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 	'use strict';
 	var layer = new Kinetic.Layer(),
 		nodeByIdeaId = {},
-		connectorByFromIdeaId_ToIdeaId = {},
+		connectorByFromIdeaIdToIdeaId = {},
 		connectorKey = function (fromIdeaId, toIdeaId) {
 			return fromIdeaId + '_' + toIdeaId;
 		},
@@ -1770,8 +1753,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			if (!stage) {
 				return;
 			}
-			visibleBeforeMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, 0, 0);
-			visibleAfterMove = atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, deltaX, deltaY);
+			visibleBeforeMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, 0, 0);
+			visibleAfterMove = atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, deltaX, deltaY);
 			if (visibleAfterMove || (!visibleBeforeMove)) {
 				if (deltaY !== 0) { stage.attrs.y += deltaY; }
 				if (deltaX !== 0) { stage.attrs.x += deltaX; }
@@ -1835,10 +1818,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			text: n.title,
 			mmStyle: n.style,
 			opacity: 1
-		}),
-			getScale = function () {
-				return (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || 1;
-			};
+		});
 
 		if (imageRendering) {
 			node = Kinetic.IdeaProxy(node, stage, layer);
@@ -1847,13 +1827,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
 		node.on('dblclick dbltap', mapModel.editNode.bind(mapModel, 'mouse', false));
 		node.on('dragstart', function () {
-			var scale = getScale();
-
 			node.moveToTop();
-			// node.setShadowOffset({
-			// 	x: 8 * scale,
-			// 	y: 8 * scale
-			// });
+			node.setShadowOffset(8);
 		});
 		node.on('dragmove', function () {
 			mapModel.nodeDragMove(
@@ -1863,11 +1838,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			);
 		});
 		node.on('dragend', function () {
-			var scale = getScale();
-			// node.getNodeAttrs().shadow.offset = {
-			// 	x: 4 * scale,
-			// 	y: 4 * scale
-			// };
+			node.setShadowOffset(4);
 			mapModel.nodeDragEnd(
 				n.id,
 				node.attrs.x,
@@ -1952,7 +1923,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			opacity: 0
 		});
 		connector.opacity = 0;
-		connectorByFromIdeaId_ToIdeaId[connectorKey(n.from, n.to)] = connector;
+		connectorByFromIdeaIdToIdeaId[connectorKey(n.from, n.to)] = connector;
 		layer.add(connector);
 		connector.moveToBottom();
 		connector.transitionTo({
@@ -1962,8 +1933,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 	});
 	mapModel.addEventListener('connectorRemoved', function (n) {
 		var key = connectorKey(n.from, n.to),
-			connector = connectorByFromIdeaId_ToIdeaId[key];
-		delete connectorByFromIdeaId_ToIdeaId[key];
+			connector = connectorByFromIdeaIdToIdeaId[key];
+		delete connectorByFromIdeaIdToIdeaId[key];
 		connector.transitionTo({
 			opacity: 0,
 			duration: 0.1,
@@ -2002,8 +1973,8 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		stage.on('dragmove', function () {
 			var deltaX = x - stage.attrs.x,
 				deltaY = y - stage.attrs.y,
-				visibleAfterMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, 0, 0),
-				shouldMoveBack = !visibleAfterMove && !(atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaId_ToIdeaId, deltaX, deltaY));
+				visibleAfterMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, 0, 0),
+				shouldMoveBack = !visibleAfterMove && !(atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, deltaX, deltaY));
 			if (shouldMoveBack) {
 				moveStage(deltaX, deltaY);
 			} else {
