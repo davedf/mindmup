@@ -1,11 +1,11 @@
-/*global beforeEach, content, describe, expect, it, MM, spyOn, localStorage*/
+/*global beforeEach, afterEach, sinon, content, describe, expect, it, MM, spyOn, localStorage*/
 describe('OfflineAdapter', function () {
 	'use strict';
 	var jsonStorage, underTest;
 	beforeEach(function () {
 		localStorage.clear();
 		jsonStorage = MM.jsonStorage(localStorage);
-		underTest = new MM.OfflineAdapter(jsonStorage);
+		underTest = new MM.OfflineAdapter(new MM.OfflineMapStorage(jsonStorage, 'offline'));
 	});
 	it('recognises mapIds starting with "o"', function () {
 		expect(underTest.recognises('oPress+Enter+To+Edit')).toBe(true);
@@ -43,7 +43,6 @@ describe('OfflineAdapter', function () {
 				mapId: 'g123',
 				idea: content({title: 'Hello World', id: 1})
 			});
-
 			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1}}');
 			expect(JSON.parse(localStorage.getItem('offline-maps')).nextMapId).toBe(2);
 		});
@@ -115,6 +114,91 @@ describe('Offline Fallback', function () {
 			underTest.remove('g123');
 
 			expect(localStorage.getItem('fallback-g123')).toBeNull();
+		});
+	});
+});
+describe('OfflineMapStorage', function () {
+	'use strict';
+	var jsonStorage, underTest, clock, map;
+	beforeEach(function () {
+		clock = sinon.useFakeTimers();
+		localStorage.clear();
+		jsonStorage = MM.jsonStorage(localStorage);
+		map = content({ title: 'Hello World!' });
+		underTest = new MM.OfflineMapStorage(jsonStorage, 'offline');
+	});
+	afterEach(function () {
+		clock.restore();
+	});
+	describe('saveNew file information', function () {
+		it('should return mapId', function () {
+			var result = underTest.saveNew(map);
+			expect(result).toBe('offline-map-1');
+		});
+		it('should store file information and increment nextMapId', function () {
+			clock.tick(2000);
+			underTest.saveNew(map);
+			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{"offline-map-1":{"d":"Hello World!","t":2}}}');
+		});
+		it('should store file content', function () {
+			underTest.saveNew(map);
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World!","id":1}}');
+		});
+
+	});
+	describe('overwriting file information', function () {
+		var mapId;
+		beforeEach(function () {
+			mapId = underTest.saveNew(map);
+			map.title = 'a new description';
+		});
+		it('should overwrite file content', function () {
+			underTest.save(mapId, map);
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a new description","id":1}}');
+		});
+		it('should update title and timestamp', function () {
+			clock.tick(2000);
+			underTest.save(mapId, map);
+			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{"offline-map-1":{"d":"a new description","t":2}}}');
+		});
+	});
+	describe('deleting file information', function () {
+		var mapId;
+		beforeEach(function () {
+			mapId = underTest.saveNew(map);
+		});
+		it('should remove file content', function () {
+			underTest.remove(mapId);
+			expect(localStorage.getItem('offline-map-1')).toBeNull();
+		});
+		it('should remove file information', function () {
+			underTest.remove(mapId);
+			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{}}');
+		});
+	});
+	describe('retrieving files and file information', function () {
+		var mapId1, mapId2;
+		beforeEach(function () {
+			mapId1 = underTest.saveNew(map);
+			map.title = 'new description';
+			mapId2 = underTest.saveNew(map);
+		});
+		it('should return a list of files', function () {
+			var result = underTest.list();
+			expect(result).toEqual({
+				'offline-map-1': {
+					d: 'Hello World!',
+					t: 0
+				},
+				'offline-map-2': {
+					d: 'new description',
+					t: 0
+				}
+			});
+		});
+		it('should return file content', function () {
+			var result = underTest.load(mapId1);
+			expect(result).toEqual({ title: 'Hello World!', id: 1 });
 		});
 	});
 });
