@@ -77,6 +77,7 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			},
 			offlineFallbackMap,
 			loadFromAdapter = function () {
+				offlineFallback.remove(mapId);
 				MM.retry(
 					adapter.loadMap.bind(adapter, mapId),
 					shouldRetry(5),
@@ -256,7 +257,7 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('mapSavingFailed', function (reason, label, callback) {
 		var messages = {
 			'file-too-large': ['Unfortunately, the file is too large for the selected storage provider.', 'Please select a different storage provider from the save dropdown menu'],
-			'network-error': ['There was a problem communicating with the server.', 'Click here to save to local storage'],
+			'network-error': ['There was a problem communicating with the server.', 'Click here to save a back-up copy locally in your browser'],
 			'local-storage-failed': ['There was a problem saving to local storage.', 'Not enough space']
 		},
 			message = messages[reason] || ['Unfortunately, there was a problem saving the map.', 'Please try again later. We have sent an error report and we will look into this as soon as possible'];
@@ -269,8 +270,8 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 	mapRepository.addEventListener('offlineFallbackExists', function (useLocalStorageCallback, useAdapterCallback) {
 		alert.hide(alertId);
 		alertId = alert.show(
-			'A locally stored copy of map exists!',
-			'<a href="#" data-mm-role="localStorage">Click here to load from local storage</a> or <a href="#" data-mm-role="adapterStorage">Click here to load from the cloud</a>',
+			'You saved a back-up copy of this map locally in your browser!',
+			'<a href="#" data-mm-role="localStorage">Click here to load from local back-up</a> or <a href="#" data-mm-role="adapterStorage">Click here to discard the local backup and load from the cloud</a>',
 			'warning'
 		);
 		jQuery('[data-mm-role=localStorage]').click(function () {
