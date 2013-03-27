@@ -1417,8 +1417,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		this.add(this.text);
 		this.add(this.link);
 		this.setText = function (text) {
+			var replacement = breakWords(text.replace(urlPattern, '')) || (text.substring(0, COLUMN_WORD_WRAP_LIMIT) + '...');
 			unformattedText = text;
-			self.text.setText(breakWords(text.replace(urlPattern, '')));
+			self.text.setText(replacement);
 			self.link.setVisible(urlPattern.test(text));
 			self.setStyle();
 		};
@@ -1610,6 +1611,8 @@ Kinetic.Idea.prototype.setStyle = function () {
 			r.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
 		}
 	});
+	this.rectbg1.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
+	this.rectbg2.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
 	this.setupShadows();
 	this.text.attrs.fill = MAPJS.contrastForeground(tintedBackground);
 };
@@ -1617,8 +1620,6 @@ Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
 	this.mmStyle = newMMStyle;
 	this.setStyle();
-	this.rectbg1.setVisible(this.mmStyle.collapsed || false);
-	this.rectbg2.setVisible(this.mmStyle.collapsed || false);
 	this.getLayer().draw();
 };
 Kinetic.Idea.prototype.getIsSelected = function () {
