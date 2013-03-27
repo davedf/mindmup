@@ -1338,23 +1338,36 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		var ENTER_KEY_CODE = 13,
 			ESC_KEY_CODE = 27,
 			self = this,
-			unformattedText = joinLines(config.text),
-			oldSetText,
-			oldTransitionTo;
+			unformattedText = joinLines(config.text);
 		config.text = breakWords(config.text);
 		this.level = config.level;
 		this.mmStyle = config.mmStyle;
 		this.isSelected = false;
-		this.setStyle(config);
-		config.draggable = true;
+		config.draggable = config.level > 1;
 		config.name = 'Idea';
-		Kinetic.Text.apply(this, [config]);
-		oldSetText = this.setText.bind(this);
+		Kinetic.Group.call(this, config);
+		this.rect = new Kinetic.Rect({
+			strokeWidth: 1,
+			cornerRadius: 10
+		});
+		this.text = new Kinetic.Text({
+			text: config.text,
+			fontSize: 14,
+			fontFamily: 'Helvetica',
+			lineHeight: 1.5,
+			fontStyle: 'bold',
+			align: 'center'
+		});
+		this.add(this.rect);
+		this.add(this.text);
 		this.setText = function (text) {
 			unformattedText = text;
-			oldSetText(breakWords(text));
+			self.text.setText(breakWords(text));
+			self.setStyle();
 		};
+		this.setStyle();
 		this.classType = 'Idea';
+		/*
 		this.oldDrawFunc = this.getDrawFunc();
 		this.setDrawFunc(function (canvas) {
 			if (self.isVisible()) {
@@ -1373,6 +1386,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			}
 			oldTransitionTo(transition);
 		};
+		*/
 		this.getNodeAttrs = function () {
 			return self.attrs;
 		};
@@ -1409,12 +1423,12 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				ideaInput,
 				onStageMoved = _.throttle(function () {
 					ideaInput.css({
-						top: canvasPosition.top + self.getAbsolutePosition().y,
-						left: canvasPosition.left + self.getAbsolutePosition().x
+						top: canvasPosition.top + self.rect.getAbsolutePosition().y,
+						left: canvasPosition.left + self.rect.getAbsolutePosition().x
 					});
 				}, 10),
 				updateText = function (newText) {
-					self.setStyle(self.attrs);
+					self.setStyle();
 					self.getStage().draw();
 					self.fire(':textChanged', {
 						text: newText || unformattedText
@@ -1437,13 +1451,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					width: (6 + self.getWidth()) * scale,
 					height: (6 + self.getHeight()) * scale,
 					'padding': 3 * scale + 'px',
-					'font-size': self.attrs.fontSize * scale + 'pt',
+					'font-size': self.text.attrs.fontSize * scale + 'px',
 					'line-height': 1.2,
 					'background-color': self.getBackground(),
 					'margin': -3 * scale,
-					'border-radius': self.attrs.cornerRadius * scale + 'px',
-					'border': self.attrs.strokeWidth * (2 * scale) + 'px dashed ' + self.attrs.stroke,
-					'color': self.attrs.textFill
+					'border-radius': self.rect.attrs.cornerRadius * scale + 'px',
+					'border': self.rect.attrs.strokeWidth * (2 * scale) + 'px dashed ' + self.rect.attrs.stroke,
+					'color': self.text.attrs.fill
 				})
 				.val(unformattedText)
 				.appendTo('body')
@@ -1492,16 +1506,17 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	};
 }());
-Kinetic.Idea.prototype.getScale = function () {
+Kinetic.Idea.prototype.getMMScale = function () {
 	'use strict';
-	var stage = this.getStage();
-	return (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || (this.attrs && this.attrs.scale && this.attrs.scale.x) || 1;
+	var stage = this.getStage(),
+		scale = (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || (this.attrs && this.attrs.scale && this.attrs.scale.x) || 1;
+	return {x: scale, y: scale};
 };
 
 
-Kinetic.Idea.prototype.setupShadows = function (config) {
+Kinetic.Idea.prototype.setupShadows = function () {
 	'use strict';
-	var scale = this.getScale(),
+	var scale = this.getMMScale().x,
 		isSelected = this.isSelected,
 		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 * scale : 4 * scale,
 		normalShadow = {
@@ -1515,12 +1530,15 @@ Kinetic.Idea.prototype.setupShadows = function (config) {
 			blur: 0,
 			offset: [offset, offset],
 			opacity: 1
-		};
-	if (this.attrs && this.attrs.shadow) {
-		this.setShadow(isSelected ? selectedShadow : normalShadow);
-	} else if (config) {
-		config.shadow = isSelected ? selectedShadow : normalShadow;
-	}
+		},
+		shadow = isSelected ? selectedShadow : normalShadow;
+	this.rect.setShadowColor(shadow.color);
+	this.rect.setShadowBlur(shadow.blur);
+	this.rect.setShadowOpacity(shadow.opacity);
+	this.rect.setShadowOffset(shadow.offset);
+	//if (this.rect.attrs && this.rect.attrs.shadow) {
+	//this.rect.setShadow(isSelected ? selectedShadow : normalShadow);
+	//}
 };
 Kinetic.Idea.prototype.getBackground = function () {
 	'use strict';
@@ -1536,48 +1554,42 @@ Kinetic.Idea.prototype.getBackground = function () {
 		};
 	return validColor(this.mmStyle && this.mmStyle.background, defaultBg);
 };
-Kinetic.Idea.prototype.setStyle = function (config) {
+Kinetic.Idea.prototype.setStyle = function () {
 	'use strict';
 	/*jslint newcap: true*/
 	var isDroppable = this.isDroppable,
-		isRoot = this.level === 1,
 		isSelected = this.isSelected,
 		background = this.getBackground(),
-		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString();
-	config.strokeWidth = 1;
-	config.padding = 8;
-	config.fontSize = 10;
-	config.fontFamily = 'Helvetica';
-	config.lineHeight = 1.5;
-	config.fontStyle = 'bold';
+		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
+		padding = 8;
+	this.rect.attrs.width = this.text.getWidth() + 2 * padding;
+	this.rect.attrs.height = this.text.getHeight() + 2 * padding;
+	this.attrs.width = this.text.getWidth() + 2 * padding;
+	this.attrs.height = this.text.getHeight() + 2 * padding;
+	this.text.attrs.x = padding;
+	this.text.attrs.y = padding;
+
 	if (isDroppable) {
-		config.stroke = '#9F4F4F';
-		config.fill = {
-			start: { x: 0, y: 0 },
-			end: {x: 0, y: 20 },
-			colorStops: [0, '#EF6F6F', 1, '#CF4F4F']
-		};
+		this.rect.attrs.stroke = '#9F4F4F';
+		this.rect.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+		this.rect.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+		this.rect.attrs.fillLinearGradientColorStops = [0, '#EF6F6F', 1, '#CF4F4F'];
 		background = '#EF6F6F';
 	} else if (isSelected) {
-		config.fill = background;
+		this.rect.attrs.fill = background;
 	} else {
-		config.stroke = '#888';
-		config.fill = {
-			start: { x: 0, y: 0 },
-			end: {x: 100, y: 100 },
-			colorStops: [0, tintedBackground, 1, background]
-		};
+		this.rect.attrs.stroke = '#888';
+		this.rect.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+		this.rect.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+		this.rect.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
 	}
-
-	this.setupShadows(config);
-	config.align = 'center';
-	config.cornerRadius = 10;
-	config.textFill = MAPJS.contrastForeground(tintedBackground);
+	this.setupShadows();
+	this.text.attrs.fill = MAPJS.contrastForeground(tintedBackground);
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
 	this.mmStyle = newMMStyle;
-	this.setStyle(this.attrs);
+	this.setStyle();
 	this.getLayer().draw();
 };
 Kinetic.Idea.prototype.getIsSelected = function () {
@@ -1588,7 +1600,7 @@ Kinetic.Idea.prototype.getIsSelected = function () {
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	'use strict';
 	this.isSelected = isSelected;
-	this.setStyle(this.attrs);
+	this.setStyle();
 	this.getLayer().draw();
 	if (!isSelected && this.stopEditing) {
 		this.stopEditing();
@@ -1599,24 +1611,14 @@ Kinetic.Idea.prototype.setIsDroppable = function (isDroppable) {
 	this.isDroppable = isDroppable;
 	this.setStyle(this.attrs);
 };
-Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (config) {
-	'use strict';
-	var transition = new Kinetic.Transition(this, config),
-		animation = new Kinetic.Animation();
-	animation.func = transition._onEnterFrame.bind(transition);
-	animation.node = this.getLayer();
-	transition.onFinished = animation.stop.bind(animation);
-	transition.start();
-	animation.start();
-};
-Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
+Kinetic.Global.extend(Kinetic.Idea, Kinetic.Group);
 /*global _, Kinetic, MAPJS, Image, setTimeout, jQuery */
 Kinetic.IdeaProxy = function (idea, stage, layer) {
 	'use strict';
 	var nodeimage,
 		emptyImage,
 		imageRendered,
-		container = new Kinetic.Container({opacity: 0, draggable: true}),
+		container = new Kinetic.Group({opacity: 0, draggable: true}),
 		removeImage = function () {
 			nodeimage.setImage(emptyImage);
 			imageRendered = false;
@@ -1630,13 +1632,12 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 				return;
 			}
 			imageRendered = true;
-			var scale = stage.attrs.scale.x, x = -scale, y = -scale,
+			var scale = stage.getScale().x, x = -scale, y = -scale,
 				unscaledWidth = idea.getWidth() + 20,
 				unscaledHeight = idea.getHeight() + 20,
 				width = (unscaledWidth * scale),
 				height = (unscaledHeight * scale);
-			idea.attrs.scale.x = scale;
-			idea.attrs.scale.y = scale;
+			idea.setScale({x: scale, y: scale});
 			idea.toImage({
 				x: x,
 				y: y,
@@ -1694,15 +1695,6 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	idea.getAbsolutePosition =  function () {
 		return container.getAbsolutePosition();
 	};
-	container.transitionToAndDontStopCurrentTransitions = function (config) {
-		var transition = new Kinetic.Transition(container, config),
-			animation = new Kinetic.Animation();
-		animation.func = transition._onEnterFrame.bind(transition);
-		animation.node = container.getLayer();
-		transition.onFinished = animation.stop.bind(animation);
-		transition.start();
-		animation.start();
-	};
 	_.each(['getHeight', 'getWidth', 'getIsSelected'], function (fname) {
 		container[fname] = function () {
 			return idea && idea[fname] && idea[fname].apply(idea, arguments);
@@ -1724,7 +1716,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	return container;
 };
 
-/*global _, window, document, jQuery, Kinetic, setTimeout*/
+/*global _, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
 if (Kinetic.Stage.prototype.isRectVisible) {
 	throw ('isRectVisible already exists, should not mix in our methods');
@@ -1857,10 +1849,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			var scale = getScale();
 
 			node.moveToTop();
-			node.getNodeAttrs().shadow.offset = {
-				x: 8 * scale,
-				y: 8 * scale
-			};
+			// node.setShadowOffset({
+			// 	x: 8 * scale,
+			// 	y: 8 * scale
+			// });
 		});
 		node.on('dragmove', function () {
 			mapModel.nodeDragMove(
@@ -1871,10 +1863,10 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		});
 		node.on('dragend', function () {
 			var scale = getScale();
-			node.getNodeAttrs().shadow.offset = {
-				x: 4 * scale,
-				y: 4 * scale
-			};
+			// node.getNodeAttrs().shadow.offset = {
+			// 	x: 4 * scale,
+			// 	y: 4 * scale
+			// };
 			mapModel.nodeDragEnd(
 				n.id,
 				node.attrs.x,
@@ -1900,7 +1892,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 
 		}
 		layer.add(node);
-		node.transitionToAndDontStopCurrentTransitions({
+		node.transitionTo({
 			opacity: 1,
 			duration: 0.4
 		});
