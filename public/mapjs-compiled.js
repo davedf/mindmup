@@ -353,7 +353,7 @@ var content = function (contentAggregate) {
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
-/*jslint forin: true, nomen: true*/
+/*jslint nomen: true*/
 /*global _*/
 var MAPJS = MAPJS || {};
 (function () {
@@ -432,6 +432,11 @@ var MAPJS = MAPJS || {};
 		}
 		return result;
 	};
+	MAPJS.defaultStyles = {
+		root: {background: '#22AAE0'},
+		nonRoot: {background: '#E0E0E0'}
+	};
+
 	MAPJS.calculateLayout = function (idea, dimensionProvider, margin) {
 		margin = margin || 10;
 		var result = {
@@ -440,11 +445,13 @@ var MAPJS = MAPJS || {};
 		},
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
-				var subIdeaRank, from, to;
-				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title', 'style']), {
+				var subIdeaRank, from, to, isRoot = level === 1,
+					defaultStyle = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'];
+				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title']), {
 					x: positions.x - root.x - 0.5 * root.width + margin,
 					y: positions.y - root.y - 0.5 * root.height + margin,
-					level: level
+					level: level,
+					style: _.extend({}, defaultStyle, positions.style)
 				});
 				if (positions.ideas) {
 					for (subIdeaRank in positions.ideas) {
@@ -458,7 +465,7 @@ var MAPJS = MAPJS || {};
 					}
 				}
 			};
-		//MAPJS.LayoutCompressor.compress(root);
+		MAPJS.LayoutCompressor.compress(root);
 		calculateLayoutInner(root, 1);
 		return result;
 	};
@@ -473,8 +480,8 @@ var MAPJS = MAPJS || {};
 		return result;
 	};
 }());
-/*jslint forin: true*/
-/*global MAPJS*/
+/*jslint forin: true, nomen: true*/
+/*global MAPJS, _*/
 MAPJS.LayoutCompressor = {};
 MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodes = function (firstNode, secondNode) {
 	'use strict';
@@ -496,19 +503,25 @@ MAPJS.LayoutCompressor.getVerticalDistanceBetweenNodeLists = function (firstNode
 	}
 	return result;
 };
-MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result) {
+MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox = function (node, parent) {
+	'use strict';
+	return {
+		x: Math.min(node.x, parent.x + 0.5 * parent.width),
+		y: Math.min(node.y, parent.y),
+		width: node.width + 0.5 * parent.width,
+		height: Math.max(node.y + node.height, parent.y + parent.height) - Math.min(node.y, parent.y)
+	};
+};
+MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result, parent) {
 	'use strict';
 	var subIdeaRank;
 	result = result || [];
-	result.push({
-		id: positions.id,
-		x: positions.x,
-		y: positions.y,
-		width: positions.width,
-		height: positions.height
-	});
+	result.push(_.pick(positions, 'x', 'y', 'width', 'height'));
+	if (parent) {
+		result.push(MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox(positions, parent));
+	}
 	for (subIdeaRank in positions.ideas) {
-		getSubTreeNodeList(positions.ideas[subIdeaRank], result);
+		getSubTreeNodeList(positions.ideas[subIdeaRank], result, positions);
 	}
 	return result;
 };
@@ -520,7 +533,7 @@ MAPJS.LayoutCompressor.moveSubTreeVertically = function moveSubTreeVertically(po
 		moveSubTreeVertically(positions.ideas[subIdeaRank], delta);
 	}
 };
-MAPJS.centerSubTrees = function (positions) {
+MAPJS.LayoutCompressor.centerSubTrees = function (positions) {
 	'use strict';
 	var subIdeaRank, ranksInOrder = [], i, allLowerNodes = [], lowerSubtree, upperSubtree, verticalDistance;
 	for (subIdeaRank in positions.ideas) {
@@ -568,7 +581,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 					allUpperNodes,
 					MAPJS.LayoutCompressor.getSubTreeNodeList(lowerSubtree)
 				);
-				if (verticalDistance > 0 && verticalDistance < Infinity) {
+				if (verticalDistance < Infinity) {
 					MAPJS.LayoutCompressor.moveSubTreeVertically(lowerSubtree, -verticalDistance);
 				}
 			}
@@ -581,17 +594,14 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 	ranksInOrder.sort(function ascending(first, second) {
 		return first - second;
 	});
-	negativeRanksInOrder.sort(function ascending(first, second) {
+	negativeRanksInOrder.sort(function descending(first, second) {
 		return second - first;
 	});
 	compressOneSide(ranksInOrder);
 	compressOneSide(negativeRanksInOrder);
 	if (ranksInOrder.length) {
 		middle = 0.5 * (positions.ideas[ranksInOrder[0]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].y + positions.ideas[ranksInOrder[ranksInOrder.length - 1]].height);
-		delta = positions.y - middle + 0.5 * positions.height;
-		ranksInOrder.forEach(function (rank) {
-			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
-		});
+		positions.y = middle - 0.5 * positions.height;
 	}
 	if (negativeRanksInOrder.length) {
 		middle = 0.5 * (positions.ideas[negativeRanksInOrder[0]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].y + positions.ideas[negativeRanksInOrder[negativeRanksInOrder.length - 1]].height);
@@ -600,7 +610,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 			MAPJS.LayoutCompressor.moveSubTreeVertically(positions.ideas[rank], delta);
 		});
 	}
-	MAPJS.centerSubTrees(positions);
+	MAPJS.LayoutCompressor.centerSubTrees(positions);
 	return positions;
 };
 /*jslint forin: true, nomen: true*/
@@ -720,7 +730,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.getSelectedStyle = function (prop) {
-		return currentlySelectedIdea().getStyle(prop);
+		var style = currentLayout.nodes[currentlySelectedIdeaId].style;
+		return style && style[prop];
 	};
 	this.toggleCollapse = function (source) {
 		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
@@ -735,7 +746,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.updateStyle = function (source, prop, value) {
 		analytic('updateStyle:' + prop, source);
-		idea.updateStyle(currentlySelectedIdeaId, prop, value);
+		if (this.getSelectedStyle(prop) != value) {
+			idea.updateStyle(currentlySelectedIdeaId, prop, value);
+		}
 	};
 	this.addSubIdea = function (source) {
 		analytic('addSubIdea', source);
@@ -1030,7 +1043,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
 /*global Color, _, console, jQuery, Kinetic*/
-/*jslint nomen: true*/
+/*jslint nomen: true, newcap: true*/
 (function () {
 	'use strict';
 	/*shamelessly copied from http://james.padolsey.com/javascript/wordwrap-for-javascript */
@@ -1172,7 +1185,7 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 	var isDroppable = this.isDroppable,
 		isSelected = this.isSelected,
 		isRoot = this.level === 1,
-		background = (this.mmStyle && this.mmStyle.background) ||  (isRoot ? '#30C0FF' : '#E0E0E0'),
+		defaultBg = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'].background,
 		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 : 4,
 		normalShadow = {
 			color: 'black',
@@ -1185,7 +1198,17 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 			blur: 0,
 			offset: [offset, offset],
 			opacity: 1
-		};
+		},
+		validColor = function (color, defaultColor) {
+			if (!color) {
+				return defaultColor;
+			}
+			var parsed = Color(color).hexString();
+			return color.toUpperCase() === parsed.toUpperCase() ? color : defaultColor;
+		},
+		background = validColor(this.mmStyle && this.mmStyle.background, defaultBg),
+		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
+		luminosity = Color(tintedBackground).luminosity();
 	config.strokeWidth = 1;
 	config.padding = 8;
 	config.fontSize = 10;
@@ -1199,15 +1222,15 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 			end: {x: 0, y: 20 },
 			colorStops: [0, '#EF6F6F', 1, '#CF4F4F']
 		};
-		config.textFill = '#FFFFFF';
+		background = '#EF6F6F';
 	} else if (isSelected) {
 		config.fill = background;
 	} else {
-		config.stroke = isRoot ? '#88F' : '#888';
+		config.stroke = '#888';
 		config.fill = {
 			start: { x: 0, y: 0 },
 			end: {x: 100, y: 100 },
-			colorStops: [0, Color(background).mix(Color('white')).hexString(), 1, background]
+			colorStops: [0, tintedBackground, 1, background]
 		};
 	}
 	config.align = 'center';
@@ -1217,7 +1240,13 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 		config.shadow = isSelected ? selectedShadow : normalShadow;
 	}
 	config.cornerRadius = 10;
-	config.textFill = (Color(background).luminosity()>0.6) ? '#5F5F5F' : '#FFFFFF';
+	if (luminosity < 0.5) {
+		config.textFill = '#EEEEEE';
+	} else if (luminosity < 0.9) {
+		config.textFill = '#4F4F4F';
+	} else {
+		config.textFill = '#000000';
+	}
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';

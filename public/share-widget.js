@@ -38,7 +38,6 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 				contentType: 'application/json',
 				data: '{"longUrl": "' + document.location.href + '"}',
 				success: function (result) {
-					activityLog.log('shortened url is', result.id);
 					shareToolbar.data('mm-url', result.id);
 					shareToolbar.find('[data-mm-role=short-url]').show().val(result.id);
 				},
@@ -47,7 +46,7 @@ jQuery.fn.shareWidget = function (googleShortenerApiKey, activityLog) {
 						shortenerRetriesLeft--;
 						setTimeout(fireShortener, 1000);
 					} else {
-						activityLog.error('URL shortener failed', err + " " + msg);
+						activityLog.log('Map', 'URL shortener failed', err + " " + msg);
 					}
 				}
 			});
