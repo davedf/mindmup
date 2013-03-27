@@ -48,7 +48,7 @@ MM.S3Adapter = function (s3Url, folder, activityLog) {
 					mapInfo.mapId = publishingConfig.s3UploadIdentifier;
 					deferred.resolve(mapInfo);
 				}).fail(function (evt) {
-					var errorReason = 's3-save-error',
+					var errorReason = 'network-error',
 						errorLabel = (evt && evt.responseText) || 'network-error',
 						errorReasonMap = { 'EntityTooLarge': 'file-too-large' };
 					if (evt && evt.responseXML) {
