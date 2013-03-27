@@ -1554,10 +1554,10 @@ Kinetic.Idea.prototype.setStyle = function () {
 			r.attrs.stroke = '#9F4F4F';
 			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
 			r.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
-			r.attrs.fillLinearGradientColorStops = [0, '#EF6F6F', 1, '#CF4F4F'];
 			background = '#EF6F6F';
+			r.attrs.fillLinearGradientColorStops = [0, background, 1, '#CF4F4F'];
 		} else if (isSelected) {
-			r.attrs.fill = background;
+			r.attrs.fillLinearGradientColorStops = [0, background, 1, background];
 		} else {
 			r.attrs.stroke = '#888';
 			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
