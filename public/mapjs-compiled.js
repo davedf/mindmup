@@ -1363,7 +1363,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		this.rectbg2 = bgRect(4);
 		this.text = new Kinetic.Text({
 			text: config.text,
-			fontSize: 14,
+			fontSize: 12,
 			fontFamily: 'Helvetica',
 			lineHeight: 1.5,
 			fontStyle: 'bold',
@@ -1423,7 +1423,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					height: (6 + self.getHeight()) * scale,
 					'padding': 3 * scale + 'px',
 					'font-size': self.text.attrs.fontSize * scale + 'px',
-					'line-height': 1.2,
+					'line-height': '150%',
 					'background-color': self.getBackground(),
 					'margin': -3 * scale,
 					'border-radius': self.rect.attrs.cornerRadius * scale + 'px',
