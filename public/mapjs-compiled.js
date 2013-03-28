@@ -1662,17 +1662,19 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 				return;
 			}
 			imageRendered = true;
-			var scale = stage.getScale().x, x = -scale, y = -scale,
+			var imageScale = 1,
+				scale = stage.getScale().x, x = -(scale * imageScale), y = -(scale * imageScale),
 				unscaledWidth = idea.getWidth() + 20,
 				unscaledHeight = idea.getHeight() + 20,
-				width = (unscaledWidth * scale),
-				height = (unscaledHeight * scale);
-			idea.setScale({x: scale, y: scale});
+				width = (unscaledWidth * scale * imageScale),
+				height = (unscaledHeight * scale * imageScale);
+
+			idea.setScale({x: scale * imageScale, y: scale * imageScale});
 			idea.toImage({
 				x: x,
 				y: y,
 				width: width,
-				height: height,
+				height: height ,
 				callback: function (img) {
 					nodeimage.setImage(img);
 					nodeimage.attrs.width = unscaledWidth;
