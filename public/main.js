@@ -80,6 +80,7 @@ MM.main = function (config) {
 		jQuery('[data-mm-role="toggle-class"]').toggleClassWidget();
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
+		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
 		mapRepository.loadMap(config.mapId);
 	});

@@ -169,6 +169,16 @@ div.colorPicker-picker { display: inline; float: left; background: none }
 	background-repeat: no-repeat;
 	background-position:left center;
 }
+.chrome .repo-o {
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/offline-chrome.png');
+}
+.safari .repo-o {
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/offline-safari.png');
+}
+.gecko .repo-o {
+	background-image: url('//mindmup.s3.amazonaws.com/lib/img/offline-firefox.png');
+}
+
 a.repo-g, a.repo-a, a.repo-o {
 	margin-left: 5px;
 }
@@ -227,9 +237,9 @@ body.ipad {
 .image-render .image-render-hidden {
 	display: none;
 }
-body .offlineOnly {
+.offline-disabled-hidden {
 	display: none;
 }
-body.offlineEnabled .offlineOnly {
+body.offline-enabled .offline-disabled-hidden {
 	display: block;
 }

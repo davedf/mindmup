@@ -25,7 +25,7 @@
           <ul class="dropdown-menu">
             <li><a data-mm-repository='a' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to MindMup">MindMup</a></li>
             <li><a data-mm-repository='g' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Google Drive">Google&nbsp;Drive</a></li>
-            <li class="offlineOnly"><a data-mm-repository='o' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Offline Storage">Offline&nbsp;Storage</a></li>
+            <li class="offline-disabled-hidden"><a data-mm-repository='o' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Browser Storage">Browser&nbsp;Storage</a></li>
           </ul>
         </div>
         <div class="btn-toolbar" id="toolbarEdit">
@@ -81,6 +81,7 @@
     <%= erb :feedback %>
     <%= erb :terms_and_conditions %>
     <%= erb :open_from_drive %>
+    <%= erb :open_from_local_storage %>
     <div id="container"></div>
 	<form method="post" id="formExport" action="/echo" class="hide">
 		<input type="hidden" name="map" />
