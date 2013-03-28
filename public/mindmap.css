@@ -83,6 +83,9 @@ div.topbar-color-picker {
 .map-changed .hidden-map-changed {
   display: none;
 }
+.map-not-sharable .hidden-map-not-sharable {
+  display: none;	
+}
 .map-unchanged .visible-map-changed {
   display: none;
 }

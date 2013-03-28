@@ -18,14 +18,14 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			}
 			return adapters[0];
 		},
-		setMap = function (idea, mapId) {
+		setMap = function (idea, mapId, notSharable) {
 			mapInfo = {
 				idea: idea,
 				mapId: mapId
 			};
-			dispatchEvent('mapLoaded', idea, mapId);
+			dispatchEvent('mapLoaded', idea, mapId, notSharable);
 		},
-		mapLoaded = function (fileContent, mapId, mimeType) {
+		mapLoaded = function (fileContent, mapId, mimeType, notSharable) {
 			var json, idea;
 			if (mimeType === 'application/json') {
 				json = typeof fileContent === 'string' ? JSON.parse(fileContent) : fileContent;
@@ -35,7 +35,7 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 				json = MM.freemindImport(fileContent);
 			}
 			idea = content(json);
-			setMap(idea, mapId);
+			setMap(idea, mapId, notSharable);
 		},
 		shouldRetry = function (retries) {
 			var times = MM.retryTimes(retries);
@@ -59,10 +59,13 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 					message = ((evt && evt.loaded) ? Math.round(100 * done / total) + '%' : evt);
 				dispatchEvent('mapLoading', mapId, message);
 			},
+			adapterLoadedMap = function (fileContent, mapId, mimeType) {
+				mapLoaded(fileContent, mapId, mimeType, adapter.notSharable);
+			},
 			mapLoadFailed = function (reason, label) {
 				var retryWithDialog = function () {
 					dispatchEvent('mapLoading', mapId);
-					adapter.loadMap(mapId, true).then(mapLoaded, mapLoadFailed).progress(progressEvent);
+					adapter.loadMap(mapId, true).then(adapterLoadedMap, mapLoadFailed).progress(progressEvent);
 				}, adapterName = adapter.description ? ' [' + adapter.description + ']' : '';
 				label = label ? label + adapterName : adapterName;
 				if (reason === 'no-access-allowed') {
@@ -83,14 +86,14 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 					shouldRetry(5),
 					MM.linearBackoff()
 				).then(
-					mapLoaded,
+					adapterLoadedMap,
 					mapLoadFailed
 				).progress(progressEvent);
 			};
 		dispatchEvent('mapLoading', mapId);
 		offlineFallbackMap = offlineFallback.loadMap(mapId);
 		if (offlineFallbackMap) {
-			dispatchEvent('offlineFallbackExists', mapLoaded.bind(undefined, offlineFallbackMap, mapId, 'application/json'), loadFromAdapter);
+			dispatchEvent('offlineFallbackExists', mapLoaded.bind(undefined, offlineFallbackMap, mapId, 'application/json', true), loadFromAdapter);
 		} else {
 			loadFromAdapter();
 		}
@@ -287,6 +290,13 @@ MM.MapRepository.alerts = function (mapRepository, alert) {
 MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, activityLog) {
 	'use strict';
 	var changed, saving, mapLoaded,
+		setNotSharable = function (notSharable) {
+			if (notSharable) {
+				jQuery('body').removeClass('map-sharable').addClass('map-not-sharable');
+			} else {
+				jQuery('body').removeClass('map-not-sharable').addClass('map-sharable');
+			}
+		},
 		toggleChange = function () {
 			saving = false;
 			if (!changed) {
@@ -295,9 +305,10 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 				changed = true;
 			}
 		};
-	mapRepository.addEventListener('mapLoaded', function (idea, mapId) {
+	mapRepository.addEventListener('mapLoaded', function (idea, mapId, notSharable) {
 		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
 		changed = false;
+		setNotSharable(notSharable);
 		if (!mapLoaded) {
 			jQuery(window).bind('beforeunload', function () {
 				if (changed && !saving) {

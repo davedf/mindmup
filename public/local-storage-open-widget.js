@@ -5,11 +5,31 @@ $.fn.localStorageOpenWidget = function (offlineMapStorage) {
         template = this.find('[data-mm-role=template]'),
         parent = template.parent(),
         statusDiv = this.find('[data-mm-role=status]'),
-		showAlert = function (message, type) {
+		showAlert = function (message, type, prompt, callback) {
 			type = type || 'block';
-			statusDiv.html('<div class="alert fade-in alert-' + type + '">' +
+			var html = '<div class="alert fade-in alert-' + type + '">' +
 					'<button type="button" class="close" data-dismiss="alert">&#215;</button>' +
-					'<strong>' + message + '</strong>' + '</div>');
+					'<strong>' + message + '</strong>';
+			if (callback && prompt) {
+				html = html + '&nbsp;<a href="#" data-mm-role="auth">' + prompt + '</a>';
+			}
+			html = html + '</div>';
+			statusDiv.html(html);
+			$('[data-mm-role=auth]').click(function () {
+				statusDiv.html('');
+				callback();
+			});
+
+		},
+		restoreMap = function (mapId, map) {
+			offlineMapStorage.save(mapId, map);
+			fileRetrieval();
+		},
+		deleteMap = function (mapId) {
+			var map = offlineMapStorage.load(mapId);
+			offlineMapStorage.remove(mapId);
+			fileRetrieval();
+			showAlert('Map "' + map.title + '" removed.', 'info', 'Undo', restoreMap.bind(undefined, mapId, map));
 		},
         loaded = function (fileMap) {
 			statusDiv.empty();
@@ -28,8 +48,10 @@ $.fn.localStorageOpenWidget = function (offlineMapStorage) {
 					added = template.clone().appendTo(parent);
 					added.find('a[data-mm-role=file-link]').attr('href', '/map/' + file.id).text(file.title);
 					added.find('[data-mm-role=modification-status]').text(new Date(file.modifiedDate).toLocaleString());
+					added.find('[data-mm-role=map-delete]').click(deleteMap.bind(undefined, file.id));
 				}
             });
+
         },
 		fileRetrieval = function () {
 			parent.empty();
