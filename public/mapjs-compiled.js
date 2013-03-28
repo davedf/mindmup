@@ -2191,9 +2191,11 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				'ctrl+shift+v meta+shift+v': 'pasteStyle'
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
-				mapModel.move('mousewheel', -1 * deltaX, deltaY);
-				if (event.preventDefault) { // stop the back button
-					event.preventDefault();
+				if (event.target === jQuery(stage.getContainer()).find('canvas')[0]) {
+					mapModel.move('mousewheel', -1 * deltaX, deltaY);
+					if (event.preventDefault) { // stop the back button
+						event.preventDefault();
+					}
 				}
 			};
 		jQuery.hotkeys.specialKeys[187] = 'plus';
