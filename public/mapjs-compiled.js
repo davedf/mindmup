@@ -1648,7 +1648,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	var nodeimage,
 		emptyImage,
 		imageRendered,
-		container = new Kinetic.Group({opacity: 0, draggable: true}),
+		container = new Kinetic.Group({opacity: 1, draggable: true}),
 		removeImage = function () {
 			nodeimage.setImage(emptyImage);
 			imageRendered = false;
@@ -1912,10 +1912,6 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 
 		}
 		layer.add(node);
-		node.transitionTo({
-			opacity: 1,
-			duration: 0.4
-		});
 		stage.on(':scaleChangeComplete', function () {
 			node.setupShadows();
 		});
@@ -2195,9 +2191,11 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				'ctrl+shift+v meta+shift+v': 'pasteStyle'
 			},
 			onScroll = function (event, delta, deltaX, deltaY) {
-				mapModel.move('mousewheel', -1 * deltaX, deltaY);
-				if (event.preventDefault) { // stop the back button
-					event.preventDefault();
+				if (event.target === jQuery(stage.getContainer()).find('canvas')[0]) {
+					mapModel.move('mousewheel', -1 * deltaX, deltaY);
+					if (event.preventDefault) { // stop the back button
+						event.preventDefault();
+					}
 				}
 			};
 		jQuery.hotkeys.specialKeys[187] = 'plus';
