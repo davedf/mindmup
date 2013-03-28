@@ -62,13 +62,14 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		pushToStorage();
 		self.dispatchEvent('added', bookmark);
 	};
-	self.remove = function (mapId) {
+	self.remove = function (mapId, suppressAlert) {
 		var idx, removed;
+		suppressAlert = suppressAlert || false;
 		for (idx = 0; idx < list.length; idx++) {
 			if (list[idx].mapId === mapId) {
 				removed = list.splice(idx, 1)[0];
 				pushToStorage();
-				self.dispatchEvent('deleted', removed);
+				self.dispatchEvent('deleted', removed, suppressAlert);
 				return;
 			}
 		}
@@ -140,9 +141,9 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert, addTooltips) {
 			};
 		bookmarks.addEventListener('added', updateLinks);
 		bookmarks.addEventListener('pinChanged', updateLinks);
-		bookmarks.addEventListener('deleted', function (mark) {
+		bookmarks.addEventListener('deleted', function (mark, suppressAlert) {
 			updateLinks();
-			if (alert) {
+			if (alert && !suppressAlert) {
 				if (alertId) {
 					alert.hide(alertId);
 				}

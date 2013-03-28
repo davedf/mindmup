@@ -90,7 +90,7 @@ describe("Magic bookmark manager", function () {
 			bookmark.store(mark);
 			bookmark.addEventListener('deleted', listener);
 			bookmark.remove('xx');
-			expect(listener).toHaveBeenCalledWith(mark);
+			expect(listener).toHaveBeenCalledWith(mark, false);
 		});
 	});
 	it("should return a read-only copy of the list", function () {

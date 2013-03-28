@@ -1,4 +1,4 @@
-/*global beforeEach, afterEach, sinon, content, describe, expect, it, MM, spyOn, localStorage*/
+/*global jasmine, beforeEach, afterEach, sinon, content, describe, expect, it, MM, spyOn, localStorage*/
 describe('OfflineAdapter', function () {
 	'use strict';
 	var jsonStorage, underTest;
@@ -144,7 +144,6 @@ describe('OfflineMapStorage', function () {
 			underTest.saveNew(map);
 			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World!","id":1}}');
 		});
-
 	});
 	describe('overwriting file information', function () {
 		var mapId;
@@ -162,6 +161,29 @@ describe('OfflineMapStorage', function () {
 			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{"offline-map-1":{"d":"a new description","t":2}}}');
 		});
 	});
+	describe('restoring file information', function () {
+		var mapId, fileInfo;
+		beforeEach(function () {
+			fileInfo = {d: 'a restored description', t: 1};
+			mapId = underTest.saveNew(map);
+			map.title = fileInfo.d;
+		});
+		it('should restore map', function () {
+			underTest.restore(mapId, map, fileInfo);
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a restored description","id":1}}');
+		});
+		it('should restore title and timestamp', function () {
+			clock.tick(22000);
+			underTest.restore(mapId, map, fileInfo);
+			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{"offline-map-1":{"d":"a restored description","t":1}}}');
+		});
+		it('should dispatch mapRestored event', function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapRestored', listener);
+			underTest.restore(mapId, map, fileInfo);
+			expect(listener).toHaveBeenCalledWith(mapId, map, fileInfo);
+		});
+	});
 	describe('deleting file information', function () {
 		var mapId;
 		beforeEach(function () {
@@ -174,6 +196,12 @@ describe('OfflineMapStorage', function () {
 		it('should remove file information', function () {
 			underTest.remove(mapId);
 			expect(localStorage.getItem('offline-maps')).toBe('{"nextMapId":2,"maps":{}}');
+		});
+		it('should dispatch mapDeleted event', function () {
+			var listener = jasmine.createSpy();
+			underTest.addEventListener('mapDeleted', listener);
+			underTest.remove(mapId);
+			expect(listener).toHaveBeenCalledWith(mapId);
 		});
 	});
 	describe('retrieving files and file information', function () {

@@ -1,4 +1,4 @@
-/*global jQuery, MM, _*/
+/*global jQuery, MM, _, observable*/
 MM.OfflineAdapter = function (storage) {
 	'use strict';
 	this.description = 'OFFLINE';
@@ -48,8 +48,10 @@ MM.OfflineFallback = function (storage) {
 };
 MM.OfflineMapStorage = function (storage, keyPrefix) {
 	'use strict';
+	observable(this);
 	keyPrefix = keyPrefix || 'offline';
-	var keyName = keyPrefix + '-maps';
+	var dispatchEvent = this.dispatchEvent,
+		keyName = keyPrefix + '-maps';
 	var newFileInformation = function (fileDescription) {
 			return {d: fileDescription, t: Math.round(+new Date() / 1000)};
 		},
@@ -82,6 +84,14 @@ MM.OfflineMapStorage = function (storage, keyPrefix) {
 		storage.remove(fileId);
 		delete files.maps[fileId];
 		storage.setItem(keyName, files);
+		dispatchEvent('mapDeleted', fileId);
+	};
+	this.restore = function (fileId, fileContent, fileInfo) {
+		var files = storedFileInformation();
+		files.maps[fileId] = fileInfo;
+		storage.setItem(fileId, {map: fileContent});
+		storage.setItem(keyName, files);
+		dispatchEvent('mapRestored', fileId, fileContent, fileInfo);
 	};
 	this.list = function () {
 		return storedFileInformation().maps;
@@ -91,4 +101,18 @@ MM.OfflineMapStorage = function (storage, keyPrefix) {
 		return item && item.map;
 	};
 	return this;
+};
+
+MM.OfflineMapStorageBookmarks = function (offlineMapStorage, bookmarks) {
+	'use strict';
+	offlineMapStorage.addEventListener('mapRestored', function (mapId, map, mapInfo) {
+		bookmarks.store({
+			mapId: mapId,
+			title: mapInfo.d
+		});
+	});
+
+	offlineMapStorage.addEventListener('mapDeleted', function (mapId) {
+		bookmarks.remove(mapId, true);
+	});
 };
