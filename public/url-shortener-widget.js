@@ -14,7 +14,16 @@ jQuery.fn.urlShortenerWidget = function (googleShortenerApiKey, activityLog) {
 					list.each(function () {
 						jQuery(this).data('mm-url', result.id);
 					});
-					list.filter('[data-mm-role=short-url]').show().val(result.id);
+					list.filter('[data-mm-role=short-url]').show().val(result.id).
+						on('input', function () {
+							jQuery(this).val(result.id);
+						}).click(function () {
+							if (this.setSelectionRange) {
+								this.setSelectionRange(0, result.id.length);
+							} else {
+								this.select();
+							}
+						});
 				},
 				error: function (xhr, err, msg) {
 					if (shortenerRetriesLeft > 0) {
