@@ -1,4 +1,4 @@
-/*global MM, $, _*/
+/*global MM, $, _, escape*/
 MM.freemindImport = function (xml, start, progress) {
 	'use strict';
 	var nodeStyle = function (node, parentStyle) {
@@ -48,7 +48,8 @@ MM.freemindImport = function (xml, start, progress) {
 MM.freemindExport = function (idea) {
 	'use strict';
 	var formatNode = function (idea) {
-		return '<node ID="' + idea.id + '" TEXT="' + idea.title.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '">' + (_.size(idea.ideas) > 0 ? _.map(_.sortBy(idea.ideas, function (val, key) { return parseFloat(key); }), formatNode).join('') : '') + '</node>';
+		var escapedText = escape(idea.title).replace(/%([0-9A-E][0-9A-E])/g, "&#x$1;").replace(/%u([0-9A-F][0-9A-F][0-9A-F][0-9A-F])/g, '&#x$1;');
+		return '<node ID="' + idea.id + '" TEXT="' + escapedText + '">' + (_.size(idea.ideas) > 0 ? _.map(_.sortBy(idea.ideas, function (val, key) { return parseFloat(key); }), formatNode).join('') : '') + '</node>';
 	};
 	return '<map version="0.7.1">' + formatNode(idea) + '</map>';
 };
