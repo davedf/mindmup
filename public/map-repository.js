@@ -82,7 +82,7 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			offlineFallbackMap,
 			loadFromAdapter = function () {
 				offlineFallback.remove(mapId);
-				var embeddedMap = MM && mapId && MM.Maps[mapId.toLowerCase()];
+				var embeddedMap = MM && MM.Maps && mapId && MM.Maps[mapId.toLowerCase()];
 				if (embeddedMap) {
 					console.log('embedded map', mapId);
 					mapLoaded(embeddedMap, mapId, jsonMimeType, true);
