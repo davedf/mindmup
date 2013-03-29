@@ -33,9 +33,9 @@ var observable = function (base) {
 	};
 	return base;
 };
-/*jslint forin: true, nomen: true*/
+/*jslint eqeq: true, forin: true, nomen: true*/
 /*global _, observable*/
-var content = function (contentAggregate) {
+var content = function (contentAggregate, progressCallback) {
 	'use strict';
 	var init = function (contentIdea) {
 		if (contentIdea.ideas) {
@@ -43,13 +43,13 @@ var content = function (contentAggregate) {
 				contentIdea.ideas[parseFloat(key)] = init(value);
 			});
 		}
-		contentIdea.id = contentIdea.id || (contentAggregate.maxId() + 1);
+		contentIdea.id = contentIdea.id || contentAggregate.nextId();
 		contentIdea.containsDirectChild = contentIdea.findChildRankById = function (childIdeaId) {
 			return parseFloat(
 				_.reduce(
 					contentIdea.ideas,
 					function (res, value, key) {
-						return value.id === childIdeaId ? key : res;
+						return value.id == childIdeaId ? key : res;
 					},
 					undefined
 				)
@@ -57,7 +57,7 @@ var content = function (contentAggregate) {
 		};
 		contentIdea.findSubIdeaById = function (childIdeaId) {
 			var myChild = _.find(contentIdea.ideas, function (idea) {
-				return idea.id === childIdeaId;
+				return idea.id == childIdeaId;
 			});
 			return myChild || _.reduce(contentIdea.ideas, function (result, idea) {
 				return result || idea.findSubIdeaById(childIdeaId);
@@ -78,6 +78,9 @@ var content = function (contentAggregate) {
 			}
 			return false;
 		};
+		if (progressCallback) {
+			progressCallback();
+		}
 		return contentIdea;
 	},
 		maxKey = function (kv_map, sign) {
@@ -93,7 +96,7 @@ var content = function (contentAggregate) {
 		},
 		nextChildRank = function (parentIdea) {
 			var new_rank, counts, childRankSign = 1;
-			if (parentIdea.id === contentAggregate.id) {
+			if (parentIdea.id == contentAggregate.id) {
 				counts = _.countBy(parentIdea.ideas, function (v, k) {
 					return k < 0;
 				});
@@ -105,36 +108,47 @@ var content = function (contentAggregate) {
 			return new_rank;
 		},
 		appendSubIdea = function (parentIdea, subIdea) {
+			var rank;
 			parentIdea.ideas = parentIdea.ideas || {};
-
-			parentIdea.ideas[nextChildRank(parentIdea)] = subIdea;
+			rank = nextChildRank(parentIdea);
+			parentIdea.ideas[rank] = subIdea;
+			return rank;
 		},
 		findIdeaById = function (ideaId) {
 			ideaId = parseFloat(ideaId);
-			return contentAggregate.id === ideaId ? contentAggregate : contentAggregate.findSubIdeaById(ideaId);
+			return contentAggregate.id == ideaId ? contentAggregate : contentAggregate.findSubIdeaById(ideaId);
 		},
 		sameSideSiblingRanks = function (parentIdea, ideaRank) {
 			return _(_.map(_.keys(parentIdea.ideas), parseFloat)).reject(function (k) {return k * ideaRank < 0; });
 		},
-		traverseAndRemoveIdea = function (parentIdea, subIdeaId) {
-			var deleted, childRank = parentIdea.findChildRankById(subIdeaId);
-			if (childRank) {
-				deleted = parentIdea.ideas[childRank];
-				delete parentIdea.ideas[childRank];
-				return deleted;
-			}
-			return _.reduce(
-				parentIdea.ideas,
-				function (result, child) {
-					return result || traverseAndRemoveIdea(child, subIdeaId);
-				},
-				false
-			);
-		},
 		sign = function (number) {
 			/* intentionally not returning 0 case, to help with split sorting into 2 groups */
 			return number < 0 ? -1 : 1;
-		};
+		},
+		eventStack = [],
+		redoStack = [],
+		isRedoInProgress = false,
+		notifyChange = function (method, args, undofunc) {
+			eventStack.push({eventMethod: method, eventArgs: args, undoFunction: undofunc});
+			if (isRedoInProgress) {
+				contentAggregate.dispatchEvent('changed', 'redo');
+			} else {
+				contentAggregate.dispatchEvent('changed', method, args);
+				redoStack = [];
+			}
+		},
+		reorderChild = function (parentIdea, newRank, oldRank) {
+			parentIdea.ideas[newRank] = parentIdea.ideas[oldRank];
+			delete parentIdea.ideas[oldRank];
+		},
+		cachedId;
+	contentAggregate.nextId = function nextId() {
+		if (!cachedId) {
+			cachedId =  contentAggregate.maxId();
+		}
+		cachedId += 1;
+		return cachedId;
+	};
 	contentAggregate.maxId = function maxId(idea) {
 		idea = idea || contentAggregate;
 		if (!idea.ideas) {
@@ -172,8 +186,10 @@ var content = function (contentAggregate) {
 		if (siblingsBefore.length === 0) { return false; }
 		return parentIdea.ideas[_.max(siblingsBefore, Math.abs)].id;
 	};
-
-
+	contentAggregate.clone = function (subIdeaId) {
+		var toClone = (subIdeaId && subIdeaId != contentAggregate.id && contentAggregate.findSubIdeaById(subIdeaId)) || contentAggregate;
+		return JSON.parse(JSON.stringify(toClone));
+	};
 	/*** private utility methods ***/
 	contentAggregate.findParent = function (subIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
@@ -191,6 +207,31 @@ var content = function (contentAggregate) {
 	};
 
 	/**** aggregate command processing methods ****/
+	contentAggregate.paste = function (parentIdeaId, jsonToPaste) {
+		var pasteParent = (parentIdeaId === contentAggregate.id) ?  contentAggregate : contentAggregate.findSubIdeaById(parentIdeaId),
+			cleanUp = function (json) {
+				var result =  _.omit(json, 'ideas', 'id'), index = 1, childKeys, sortedChildKeys;
+				if (json.ideas) {
+					childKeys = _.groupBy(_.map(_.keys(json.ideas), parseFloat), function (key) { return key > 0; });
+					sortedChildKeys = _.sortBy(childKeys[true], Math.abs).concat(_.sortBy(childKeys[false], Math.abs));
+					result.ideas = {};
+					_.each(sortedChildKeys, function (key) {
+						result.ideas[index++] = cleanUp(json.ideas[key]);
+					});
+				}
+				return result;
+			},
+			newIdea = jsonToPaste && jsonToPaste.title && init(cleanUp(jsonToPaste)),
+			newRank;
+		if (!pasteParent || !newIdea) {
+			return false;
+		}
+		newRank = appendSubIdea(pasteParent, newIdea);
+		notifyChange('paste', [parentIdeaId, jsonToPaste, newIdea.id], function () {
+			delete pasteParent.ideas[newRank];
+		});
+		return true;
+	};
 	contentAggregate.flip = function (ideaId) {
 		var new_rank, max_rank, current_rank = contentAggregate.findChildRankById(ideaId);
 		if (!current_rank) {
@@ -198,41 +239,56 @@ var content = function (contentAggregate) {
 		}
 		max_rank = maxKey(contentAggregate.ideas, -1 * sign(current_rank));
 		new_rank = max_rank - 10 * sign(current_rank);
-		contentAggregate.ideas[new_rank] = contentAggregate.ideas[current_rank];
-		delete contentAggregate.ideas[current_rank];
-		contentAggregate.dispatchEvent('changed', 'flip', [ideaId]);
+		reorderChild(contentAggregate, new_rank, current_rank);
+		notifyChange('flip', [ideaId], function () {
+			reorderChild(contentAggregate, current_rank, new_rank);
+		});
 		return true;
 	};
 	contentAggregate.updateTitle = function (ideaId, title) {
-		var idea = findIdeaById(ideaId);
+		var idea = findIdeaById(ideaId), originalTitle;
 		if (!idea) {
 			return false;
 		}
+		originalTitle = idea.title;
+		if (originalTitle == title) {
+			return false;
+		}
 		idea.title = title;
-		contentAggregate.dispatchEvent('changed', 'updateTitle', [ideaId, title]);
+		notifyChange('updateTitle', [ideaId, title], function () {
+			idea.title = originalTitle;
+		});
 		return true;
 	};
 	contentAggregate.addSubIdea = function (parentId, ideaTitle) {
-		var idea, parent = findIdeaById(parentId);
+		var idea, parent = findIdeaById(parentId), newRank;
 		if (!parent) {
 			return false;
 		}
 		idea = init({
 			title: ideaTitle
 		});
-		appendSubIdea(parent, idea);
-		contentAggregate.dispatchEvent('changed', 'addSubIdea', [parentId, ideaTitle, idea.id]);
+		newRank = appendSubIdea(parent, idea);
+		notifyChange('addSubIdea', [parentId, ideaTitle, idea.id], function () {
+			delete parent.ideas[newRank];
+		});
 		return true;
 	};
 	contentAggregate.removeSubIdea = function (subIdeaId) {
-		var result = traverseAndRemoveIdea(contentAggregate, subIdeaId);
-		if (result) {
-			contentAggregate.dispatchEvent('changed', 'removeSubIdea', [subIdeaId]);
+		var parent = contentAggregate.findParent(subIdeaId), oldRank, oldIdea;
+		if (parent) {
+			oldRank = parent.findChildRankById(subIdeaId);
+			oldIdea = parent.ideas[oldRank];
+			delete parent.ideas[oldRank];
+			notifyChange('removeSubIdea', [subIdeaId], function () {
+				parent.ideas[oldRank] = oldIdea;
+			});
+			return true;
 		}
-		return result;
+		return false;
 	};
 	contentAggregate.insertIntermediate = function (inFrontOfIdeaId, title) {
-		if (contentAggregate.id === inFrontOfIdeaId) {
+		if (contentAggregate.id == inFrontOfIdeaId) {
 			return false;
 		}
 		var childRank, oldIdea, newIdea, parentIdea = contentAggregate.findParent(inFrontOfIdeaId);
@@ -251,14 +307,16 @@ var content = function (contentAggregate) {
 		newIdea.ideas = {
 			1: oldIdea
 		};
-		contentAggregate.dispatchEvent('changed', 'insertIntermediate', [inFrontOfIdeaId, title, newIdea.id]);
+		notifyChange('insertIntermediate', [inFrontOfIdeaId, title, newIdea.id], function () {
+			parentIdea.ideas[childRank] = oldIdea;
+		});
 		return true;
 	};
 	contentAggregate.changeParent = function (ideaId, newParentId) {
-		if (ideaId === newParentId) {
+		var oldParent, oldRank, newRank, idea, parent = findIdeaById(newParentId);
+		if (ideaId == newParentId) {
 			return false;
 		}
-		var idea, parent = findIdeaById(newParentId);
 		if (!parent) {
 			return false;
 		}
@@ -272,19 +330,40 @@ var content = function (contentAggregate) {
 		if (parent.containsDirectChild(ideaId)) {
 			return false;
 		}
-		traverseAndRemoveIdea(contentAggregate, ideaId);
-		if (!idea) {
+		oldParent = contentAggregate.findParent(ideaId);
+		if (!oldParent) {
 			return false;
 		}
-		appendSubIdea(parent, idea);
-		contentAggregate.dispatchEvent('changed', 'changeParent', [ideaId, newParentId]);
+		oldRank = oldParent.findChildRankById(ideaId);
+		newRank = appendSubIdea(parent, idea);
+		delete oldParent.ideas[oldRank];
+		notifyChange('changeParent', [ideaId, newParentId], function () {
+			oldParent.ideas[oldRank] = idea;
+			delete parent.ideas[newRank];
+		});
+		return true;
+	};
+	contentAggregate.setStyleMap = function (ideaId, newStyle) {
+		var idea = findIdeaById(ideaId), oldStyle;
+		if (!idea || !_.isObject(newStyle)) {
+			return false;
+		}
+		if (_.isEqual(idea.style, newStyle)) {
+			return false;
+		}
+		oldStyle = _.clone(idea.style);
+		idea.style = _.clone(newStyle);
+		notifyChange('setStyleMap', [ideaId, newStyle], function () {
+			idea.style = oldStyle;
+		});
 		return true;
 	};
 	contentAggregate.updateStyle = function (ideaId, styleName, styleValue) {
-		var idea = findIdeaById(ideaId);
+		var idea = findIdeaById(ideaId), oldStyle;
 		if (!idea) {
 			return false;
 		}
+		oldStyle = _.extend({}, idea.style);
 		idea.style = _.extend({}, idea.style);
 		if (!styleValue || styleValue === "false") {
 			if (!idea.style[styleName]) {
@@ -301,8 +380,23 @@ var content = function (contentAggregate) {
 		if (_.size(idea.style) === 0) {
 			delete idea.style;
 		}
-		contentAggregate.dispatchEvent('changed', 'updateStyle', [ideaId, styleName, styleValue]);
+		notifyChange('updateStyle', [ideaId, styleName, styleValue], function () {
+			idea.style = oldStyle;
+		});
 		return true;
+	};
+	contentAggregate.moveRelative = function (ideaId, relativeMovement) {
+		var parentIdea = contentAggregate.findParent(ideaId),
+			current_rank = parentIdea && parentIdea.findChildRankById(ideaId),
+			sibling_ranks = current_rank && _.sortBy(sameSideSiblingRanks(parentIdea, current_rank), Math.abs),
+			currentIndex = sibling_ranks && sibling_ranks.indexOf(current_rank),
+			/* we call positionBefore, so movement down is actually 2 spaces, not 1 */
+			newIndex = currentIndex + (relativeMovement > 0 ? relativeMovement + 1 : relativeMovement),
+			beforeSibling = (newIndex >= 0) && parentIdea && sibling_ranks && parentIdea.ideas[sibling_ranks[newIndex]];
+		if (newIndex < 0 || !parentIdea) {
+			return false;
+		}
+		return contentAggregate.positionBefore(ideaId, beforeSibling && beforeSibling.id, parentIdea);
 	};
 	contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
@@ -317,7 +411,7 @@ var content = function (contentAggregate) {
 				false
 			);
 		}
-		if (ideaId === positionBeforeIdeaId) {
+		if (ideaId == positionBeforeIdeaId) {
 			return false;
 		}
 		new_rank = 0;
@@ -331,30 +425,55 @@ var content = function (contentAggregate) {
 				return Math.abs(k) >= Math.abs(after_rank);
 			});
 			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings, Math.abs) : 0;
-			if (before_rank === current_rank) {
+			if (before_rank == current_rank) {
 				return false;
 			}
 			new_rank = before_rank + (after_rank - before_rank) / 2;
 		} else {
 			max_rank = maxKey(parentIdea.ideas, current_rank < 0 ? -1 : 1);
-			if (max_rank === current_rank) {
+			if (max_rank == current_rank) {
 				return false;
 			}
 			new_rank = max_rank + 10 * (current_rank < 0 ? -1 : 1);
 		}
-		if (new_rank === current_rank) {
+		if (new_rank == current_rank) {
 			return false;
 		}
-		parentIdea.ideas[new_rank] = parentIdea.ideas[current_rank];
-		delete parentIdea.ideas[current_rank];
-		contentAggregate.dispatchEvent('changed', 'positionBefore', [ideaId, positionBeforeIdeaId]);
+		reorderChild(parentIdea, new_rank, current_rank);
+
+		notifyChange('positionBefore', [ideaId, positionBeforeIdeaId], function () {
+			reorderChild(parentIdea, current_rank, new_rank);
+		});
 		return true;
+	};
+	/* undo/redo */
+	contentAggregate.undo = function () {
+		var topEvent;
+		topEvent = eventStack.pop();
+		if (topEvent && topEvent.undoFunction) {
+			topEvent.undoFunction();
+			redoStack.push(topEvent);
+			contentAggregate.dispatchEvent('changed', 'undo', []);
+			return true;
+		}
+		return false;
+	};
+	contentAggregate.redo = function () {
+		var topEvent;
+		topEvent = redoStack.pop();
+		if (topEvent) {
+			isRedoInProgress = true;
+			contentAggregate[topEvent.eventMethod].apply(contentAggregate, topEvent.eventArgs);
+			isRedoInProgress = false;
+			return true;
+		}
+		return false;
 	};
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
 /*jslint nomen: true*/
-/*global _*/
+/*global _, Color*/
 var MAPJS = MAPJS || {};
 (function () {
 	'use strict';
@@ -479,6 +598,17 @@ var MAPJS = MAPJS || {};
 		result.height = margin + _.max(_.map(nodes, function (node) { return node.y + node.height; })) - result.top;
 		return result;
 	};
+	MAPJS.contrastForeground = function (background) {
+		/*jslint newcap:true*/
+		var luminosity = Color(background).luminosity();
+		if (luminosity < 0.5) {
+			return '#EEEEEE';
+		}
+		if (luminosity < 0.9) {
+			return '#4F4F4F';
+		}
+		return '#000000';
+	};
 }());
 /*jslint forin: true, nomen: true*/
 /*global MAPJS, _*/
@@ -507,9 +637,9 @@ MAPJS.LayoutCompressor.nodeAndConnectorCollisionBox = function (node, parent) {
 	'use strict';
 	return {
 		x: Math.min(node.x, parent.x + 0.5 * parent.width),
-		y: Math.min(node.y, parent.y),
+		y: node.y,
 		width: node.width + 0.5 * parent.width,
-		height: Math.max(node.y + node.height, parent.y + parent.height) - Math.min(node.y, parent.y)
+		height: node.height
 	};
 };
 MAPJS.LayoutCompressor.getSubTreeNodeList = function getSubTreeNodeList(positions, result, parent) {
@@ -627,14 +757,27 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			connectors: {}
 		},
 		idea,
-		isInputEnabled,
+		isInputEnabled = true,
 		currentlySelectedIdeaId,
+		markedIdeaId,
 		getRandomTitle = function (titles) {
 			return titles[Math.floor(titles.length * Math.random())];
 		},
 		horizontalSelectionThreshold = 300,
-		updateCurrentLayout = function (newLayout) {
+		moveNodes = function (nodes, deltaX, deltaY) {
+			_.each(nodes, function (node) {
+				node.x += deltaX;
+				node.y += deltaY;
+			});
+		},
+		updateCurrentLayout = function (newLayout, contextNodeId) {
 			var nodeId, newNode, oldNode, newConnector, oldConnector;
+			if (contextNodeId && currentLayout.nodes[contextNodeId] && newLayout.nodes[contextNodeId]) {
+				moveNodes(newLayout.nodes,
+					currentLayout.nodes[contextNodeId].x - newLayout.nodes[contextNodeId].x,
+					currentLayout.nodes[contextNodeId].y - newLayout.nodes[contextNodeId].y
+					);
+			}
 			for (nodeId in currentLayout.connectors) {
 				newConnector = newLayout.connectors[nodeId];
 				oldConnector = currentLayout.connectors[nodeId];
@@ -680,8 +823,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			currentLayout = newLayout;
 		},
 		onIdeaChanged = function (command, args) {
-			var newIdeaId;
-			updateCurrentLayout(layoutCalculator(idea));
+			var newIdeaId, contextNodeId;
+			contextNodeId = command === 'updateStyle' ? args[0] : undefined;
+			updateCurrentLayout(layoutCalculator(idea), contextNodeId);
 			if (command === 'addSubIdea') {
 				newIdeaId = args[2];
 				self.selectNode(newIdeaId);
@@ -707,6 +851,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	this.setIdea = function (anIdea) {
 		if (idea) {
 			idea.removeEventListener('changed', onIdeaChanged);
+			currentlySelectedIdeaId = undefined;
 		}
 		idea = anIdea;
 		idea.addEventListener('changed', onIdeaChanged);
@@ -721,7 +866,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.selectNode = function (id) {
-		if (id !== currentlySelectedIdeaId) {
+		if (isInputEnabled && id !== currentlySelectedIdeaId) {
 			if (currentlySelectedIdeaId) {
 				self.dispatchEvent('nodeSelectionChanged', currentlySelectedIdeaId, false);
 			}
@@ -730,8 +875,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		}
 	};
 	this.getSelectedStyle = function (prop) {
-		var style = currentLayout.nodes[currentlySelectedIdeaId].style;
-		return style && style[prop];
+		var node = currentLayout.nodes[currentlySelectedIdeaId];
+		return node && node.style && node.style[prop];
 	};
 	this.toggleCollapse = function (source) {
 		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
@@ -739,39 +884,49 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.collapse = function (source, doCollapse) {
 		analytic('collapse:' + doCollapse, source);
-		var node = currentlySelectedIdea();
-		if (node.ideas && _.size(node.ideas) > 0) {
-			idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
+		if (isInputEnabled) {
+			var node = currentlySelectedIdea();
+			if (node.ideas && _.size(node.ideas) > 0) {
+				idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
+			}
 		}
 	};
 	this.updateStyle = function (source, prop, value) {
-		analytic('updateStyle:' + prop, source);
-		if (this.getSelectedStyle(prop) != value) {
+		/*jslint eqeq:true */
+		if (isInputEnabled && this.getSelectedStyle(prop) != value) {
+			analytic('updateStyle:' + prop, source);
 			idea.updateStyle(currentlySelectedIdeaId, prop, value);
 		}
 	};
 	this.addSubIdea = function (source) {
 		analytic('addSubIdea', source);
-		ensureNodeIsExpanded(source, currentlySelectedIdeaId);
-		idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle(titlesToRandomlyChooseFrom));
+		if (isInputEnabled) {
+			ensureNodeIsExpanded(source, currentlySelectedIdeaId);
+			idea.addSubIdea(currentlySelectedIdeaId, getRandomTitle(titlesToRandomlyChooseFrom));
+		}
 	};
 	this.insertIntermediate = function (source) {
-		if (currentlySelectedIdeaId === idea.id) {
-			return false;
+		if (!isInputEnabled || currentlySelectedIdeaId === idea.id) {
+			return;
 		}
 		idea.insertIntermediate(currentlySelectedIdeaId, getRandomTitle(intermediaryTitlesToRandomlyChooseFrom));
 		analytic('insertIntermediate', source);
 	};
 	this.addSiblingIdea = function (source) {
 		analytic('addSiblingIdea', source);
-		var parent = idea.findParent(currentlySelectedIdeaId) || idea;
-		idea.addSubIdea(parent.id, getRandomTitle(titlesToRandomlyChooseFrom));
+		if (isInputEnabled) {
+			var parent = idea.findParent(currentlySelectedIdeaId) || idea;
+			ensureNodeIsExpanded(source, parent.id);
+			idea.addSubIdea(parent.id, getRandomTitle(titlesToRandomlyChooseFrom));
+		}
 	};
 	this.removeSubIdea = function (source) {
 		analytic('removeSubIdea', source);
-		var parent = idea.findParent(currentlySelectedIdeaId);
-		if (idea.removeSubIdea(currentlySelectedIdeaId)) {
-			self.selectNode(parent.id);
+		if (isInputEnabled) {
+			var parent = idea.findParent(currentlySelectedIdeaId);
+			if (idea.removeSubIdea(currentlySelectedIdeaId)) {
+				self.selectNode(parent.id);
+			}
 		}
 	};
 	this.updateTitle = function (ideaId, title) {
@@ -781,21 +936,39 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		if (source) {
 			analytic('editNode', source);
 		}
+		if (!isInputEnabled) {
+			return false;
+		}
 		var title = currentlySelectedIdea().title;
 		if (intermediaryTitlesToRandomlyChooseFrom.indexOf(title) !== -1 ||
 				 titlesToRandomlyChooseFrom.indexOf(title) !== -1) {
 			shouldSelectAll = true;
 		}
-		self.dispatchEvent('nodeEditRequested:' + currentlySelectedIdeaId, shouldSelectAll);
-
+		self.dispatchEvent('nodeEditRequested', currentlySelectedIdeaId, shouldSelectAll);
 	};
 	this.scaleUp = function (source) {
-		self.dispatchEvent('mapScaleChanged', true);
-		analytic('scaleUp', source);
+		self.scale(source, 1.25);
 	};
 	this.scaleDown = function (source) {
-		self.dispatchEvent('mapScaleChanged', false);
-		analytic('scaleDown', source);
+		self.scale(source, 0.8);
+	};
+	this.scale = function (source, scaleMultiplier, zoomPoint) {
+		if (isInputEnabled) {
+			self.dispatchEvent('mapScaleChanged', scaleMultiplier, zoomPoint);
+			analytic(scaleMultiplier < 1 ? 'scaleDown' : 'scaleUp', source);
+		}
+	};
+	this.move = function (source, deltaX, deltaY) {
+		if (isInputEnabled) {
+			self.dispatchEvent('mapMoveRequested', deltaX, deltaY);
+			analytic('move', source);
+		}
+	};
+	this.resetView = function (source) {
+		if (isInputEnabled) {
+			self.dispatchEvent('mapViewResetRequested');
+			analytic('resetView', source);
+		}
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -816,6 +989,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				isRoot = currentlySelectedIdeaId === idea.id,
 				targetRank = isRoot ? -Infinity : Infinity,
 				targetNode;
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeLeft', source);
 			if (isRootOrLeftHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
@@ -835,6 +1011,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		self.selectNodeRight = function (source) {
 			var node, rank, minimumPositiveRank = Infinity;
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeRight', source);
 			if (isRootOrRightHalf(currentlySelectedIdeaId)) {
 				node = idea.id === currentlySelectedIdeaId ? idea : idea.findSubIdeaById(currentlySelectedIdeaId);
@@ -858,6 +1037,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				nodesAbove,
 				closestNode,
 				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeUp', source);
 			if (previousSibling) {
 				self.selectNode(previousSibling);
@@ -880,6 +1062,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				nodesBelow,
 				closestNode,
 				currentNode = currentLayout.nodes[currentlySelectedIdeaId];
+			if (!isInputEnabled) {
+				return;
+			}
 			analytic('selectNodeDown', source);
 			if (nextSibling) {
 				self.selectNode(nextSibling);
@@ -898,6 +1083,57 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			}
 
 		};
+		self.undo = function (source) {
+			analytic('undo', source);
+			if (isInputEnabled) {
+				idea.undo();
+			}
+		};
+		self.redo = function (source) {
+			analytic('redo', source);
+			if (isInputEnabled) {
+				idea.redo();
+			}
+		};
+		self.moveRelative = function (source, relativeMovement) {
+			analytic('moveRelative', source);
+			if (isInputEnabled) {
+				idea.moveRelative(currentlySelectedIdeaId, relativeMovement);
+			}
+		};
+		self.cut = function (source) {
+			analytic('cut', source);
+			if (isInputEnabled) {
+				self.clipBoard = idea.clone(currentlySelectedIdeaId);
+				idea.removeSubIdea(currentlySelectedIdeaId);
+			}
+		};
+		self.copy = function (source) {
+			analytic('copy', source);
+			if (isInputEnabled) {
+				self.clipBoard = idea.clone(currentlySelectedIdeaId);
+			}
+		};
+		self.paste = function (source) {
+			analytic('paste', source);
+			if (isInputEnabled) {
+				idea.paste(currentlySelectedIdeaId, self.clipBoard);
+			}
+		};
+		self.pasteStyle = function (source) {
+			analytic('pasteStyle', source);
+			if (isInputEnabled) {
+				var pastingStyle = _.omit(self.clipBoard.style, 'collapsed'),
+					collapsed = currentlySelectedIdea().getStyle('collapsed');
+				if (collapsed) {
+					pastingStyle.collapsed = collapsed;
+				}
+				idea.setStyleMap(currentlySelectedIdeaId, pastingStyle);
+			}
+		};
+		self.moveUp = function (source) { self.moveRelative(source, -1); };
+		self.moveDown = function (source) { self.moveRelative(source, 1); };
+
 	}());
 	//Todo - clean up this shit below
 	(function () {
@@ -940,18 +1176,24 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			}
 			updateCurrentDroppable(undefined);
 		};
-		self.nodeDragEnd = function (id, x, y) {
+		self.nodeDragEnd = function (id, x, y, shouldCopy) {
 			var nodeBeingDragged = currentLayout.nodes[id],
 				nodeId,
 				node,
 				rootNode = currentLayout.nodes[idea.id],
-				verticallyClosestNode = { id: null, y: Infinity };
+				verticallyClosestNode = { id: null, y: Infinity },
+				clone;
 			updateCurrentDroppable(undefined);
 			self.dispatchEvent('nodeMoved', nodeBeingDragged);
 			for (nodeId in currentLayout.nodes) {
 				node = currentLayout.nodes[nodeId];
 				if (canDropOnNode(id, x, y, node)) {
-					if (!idea.changeParent(id, nodeId)) {
+					if (shouldCopy) {
+						clone = idea.clone(id);
+						if (!clone || !idea.paste(nodeId, clone)) {
+							self.dispatchEvent('nodeMoved', nodeBeingDragged, 'failed');
+						}
+					} else if (!idea.changeParent(id, nodeId)) {
 						self.dispatchEvent('nodeMoved', nodeBeingDragged, 'failed');
 					}
 					return;
@@ -972,62 +1214,90 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 	}());
 };
-/*global Kinetic*/
+/*global _, Kinetic, MAPJS*/
 /*jslint nomen: true*/
 (function () {
 	'use strict';
-	var horizontalConnector, calculateConnector;
+	var horizontalConnector, calculateConnector, calculateConnectorInner;
 	Kinetic.Connector = function (config) {
+		var oldTransitionTo;
 		this.shapeFrom = config.shapeFrom;
 		this.shapeTo = config.shapeTo;
 		this.shapeType = 'Connector';
 		Kinetic.Shape.call(this, config);
+		oldTransitionTo = this.transitionTo.bind(this);
+		this.transitionTo = function (transition) {
+			if (!(this.shapeFrom.isVisible || this.shapeTo.isVisible())) {
+				transition.duration = 0.01;
+			}
+			oldTransitionTo(transition);
+		};
 		this._setDrawFuncs();
 	};
-	horizontalConnector = function (parent, child) {
-		var childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0.1 : 0.9,
+	horizontalConnector = function (parentX, parentY, parentWidth, parentHeight,
+			childX, childY, childWidth, childHeight) {
+		var childHorizontalOffset = parentX < childX ? 0.1 : 0.9,
 			parentHorizontalOffset = 1 - childHorizontalOffset;
 		return {
 			from: {
-				x: parent.attrs.x + parentHorizontalOffset * parent.getWidth(),
-				y: parent.attrs.y + 0.5 * parent.getHeight()
+				x: parentX + parentHorizontalOffset * parentWidth,
+				y: parentY + 0.5 * parentHeight
 			},
 			to: {
-				x: child.attrs.x + childHorizontalOffset * child.getWidth(),
-				y: child.attrs.y + 0.5 * child.getHeight()
+				x: childX + childHorizontalOffset * childWidth,
+				y: childY + 0.5 * childHeight
 			},
 			controlPointOffset: 0
 		};
 	};
 	calculateConnector = function (parent, child) {
+		return calculateConnectorInner(parent.attrs.x, parent.attrs.y, parent.getWidth(), parent.getHeight(),
+			child.attrs.x, child.attrs.y, child.getWidth(), child.getHeight());
+	};
+	calculateConnectorInner = _.memoize(function (parentX, parentY, parentWidth, parentHeight,
+			childX, childY, childWidth, childHeight) {
 		var tolerance = 10,
-			childMid = child.attrs.y + child.getHeight() * 0.5,
-			parentMid = parent.attrs.y + parent.getHeight() * 0.5,
+			childMid = childY + childHeight * 0.5,
+			parentMid = parentY + parentHeight * 0.5,
 			childHorizontalOffset;
-		if (Math.abs(parentMid - childMid) + tolerance < Math.max(child.getHeight(), parent.getHeight()) * 0.75) {
-			return horizontalConnector(parent, child);
+		if (Math.abs(parentMid - childMid) + tolerance < Math.max(childHeight, parentHeight * 0.75)) {
+			return horizontalConnector(parentX, parentY, parentWidth, parentHeight, childX, childY, childWidth, childHeight);
 		}
-		childHorizontalOffset = parent.attrs.x < child.attrs.x ? 0 : 1;
+		childHorizontalOffset = parentX < childX ? 0 : 1;
 		return {
 			from: {
-				x: parent.attrs.x + 0.5 * parent.getWidth(),
-				y: parent.attrs.y + 0.5 * parent.getHeight()
+				x: parentX + 0.5 * parentWidth,
+				y: parentY + 0.5 * parentHeight
 			},
 			to: {
-				x: child.attrs.x + childHorizontalOffset * child.getWidth(),
-				y: child.attrs.y + 0.5 * child.getHeight()
+				x: childX + childHorizontalOffset * childWidth,
+				y: childY + 0.5 * childHeight
 			},
 			controlPointOffset: 0.75
 		};
-	};
+	}, function () {
+		return _.toArray(arguments).join(',');
+	});
 	Kinetic.Connector.prototype = {
+		isVisible: function (offset) {
+			var stage = this.getStage(),
+				conn = calculateConnector(this.shapeFrom, this.shapeTo),
+				x = Math.min(conn.from.x, conn.to.x),
+				y = Math.min(conn.from.y, conn.to.y),
+				rect = new MAPJS.Rectangle(x, y, Math.max(conn.from.x, conn.to.x) - x, Math.max(conn.from.y, conn.to.y) - y);
+			return stage && stage.isRectVisible(rect, offset);
+		},
 		drawFunc: function (canvas) {
 			var context = canvas.getContext(),
 				shapeFrom = this.shapeFrom,
 				shapeTo = this.shapeTo,
-				conn = calculateConnector(shapeFrom, shapeTo),
+				conn,
 				offset,
 				maxOffset;
+			if (!this.isVisible()) {
+				return;
+			}
+			conn = calculateConnector(shapeFrom, shapeTo);
 			if (!conn) {
 				return;
 			}
@@ -1042,12 +1312,13 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
-/*global Color, _, console, jQuery, Kinetic*/
-/*jslint nomen: true, newcap: true*/
+/*global MAPJS, Color, _, jQuery, Kinetic*/
+/*jslint nomen: true, newcap: true, browser: true*/
 (function () {
 	'use strict';
 	/*shamelessly copied from http://james.padolsey.com/javascript/wordwrap-for-javascript */
-	var COLUMN_WORD_WRAP_LIMIT = 25;
+	var COLUMN_WORD_WRAP_LIMIT = 25,
+		urlPattern = /(https?:\/\/|www\.)[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])?/i;
 	function wordWrap(str, width, brk, cut) {
 		brk = brk || '\n';
 		width = width || 75;
@@ -1064,92 +1335,145 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	function breakWords(string) {
 		return wordWrap(joinLines(string), COLUMN_WORD_WRAP_LIMIT, '\n', false);
 	}
+	function createLink() {
+		var link = new Kinetic.Group(),
+			rectProps = {
+				width: 10,
+				height: 20,
+				rotation: 0.6,
+				stroke: '#555555',
+				strokeWidth: 3,
+				cornerRadius: 6,
+				shadowOffset: [2, 2],
+				shadow: '#CCCCCC',
+				shadowBlur: 0.4,
+				shadowOpacity: 0.4,
+			},
+			rect = new Kinetic.Rect(rectProps),
+			rect2 = new Kinetic.Rect(rectProps);
+		rect2.attrs.x = 7;
+		rect2.attrs.y = -7;
+		link.add(rect);
+		link.add(rect2);
+		link.setActive = function (isActive) {
+			rect.attrs.stroke = rect2.attrs.stroke = (isActive ? 'black' : '#555555');
+			link.getLayer().draw();
+		};
+		return link;
+	}
 	Kinetic.Idea = function (config) {
 		var ENTER_KEY_CODE = 13,
 			ESC_KEY_CODE = 27,
 			self = this,
-			setStageDraggable = function (isDraggable) {
-				self.getStage().setDraggable(isDraggable);
-			},
 			unformattedText = joinLines(config.text),
-			oldSetText;
-		config.text = breakWords(config.text);
+			bgRect = function (offset) {
+				return new Kinetic.Rect({
+					strokeWidth: 1,
+					cornerRadius: 10,
+					x: offset,
+					y: offset,
+					visible: false
+				});
+			};
 		this.level = config.level;
 		this.mmStyle = config.mmStyle;
 		this.isSelected = false;
-		this.setStyle(config);
-
-		config.draggable = true;
+		config.draggable = config.level > 1;
 		config.name = 'Idea';
-		Kinetic.Text.apply(this, [config]);
-		oldSetText = this.setText.bind(this);
-		this.setText = function (text) {
-			unformattedText = text;
-			oldSetText(breakWords(text));
-		};
-		this.classType = 'Idea';
-		this.on('dblclick', self.fire.bind(self, ':nodeEditRequested'));
-		if (config.level > 1) {
-			this.on('mouseover touchstart', setStageDraggable.bind(null, false));
-			this.on('mouseout touchend', setStageDraggable.bind(null, true));
-		}
-		this.oldDrawFunc = this.getDrawFunc();
-
-		this.setDrawFunc(function (canvas) {
-			if (this.mmStyle && this.mmStyle.collapsed) {
-				var context = canvas.getContext(), width = this.getWidth(), height = this.getHeight();
-				this.drawCollapsedBG(canvas, {x: 8, y: 8});
-				this.drawCollapsedBG(canvas, {x: 4, y: 4});
-			}
-			this.oldDrawFunc(canvas);
+		Kinetic.Group.call(this, config);
+		this.rect = new Kinetic.Rect({
+			strokeWidth: 1,
+			cornerRadius: 10
 		});
-		this.drawCollapsedBG =  function (canvas, offset) {
-            var context = canvas.getContext(),
-				cornerRadius = this.getCornerRadius(),
-				width = this.getWidth(),
-				height = this.getHeight();
-            context.beginPath();
-            if (cornerRadius === 0) {
-                context.rect(offset.x, offset.y, width, height);
-            } else {
-                context.moveTo(offset.x + cornerRadius, offset.y);
-                context.lineTo(offset.x + width - cornerRadius, offset.y);
-                context.arc(offset.x + width - cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI * 3 / 2, 0, false);
-                context.lineTo(offset.x + width, offset.y + height - cornerRadius);
-                context.arc(offset.x + width - cornerRadius, offset.y + height - cornerRadius, cornerRadius, 0, Math.PI / 2, false);
-                context.lineTo(offset.x + cornerRadius, offset.y + height);
-                context.arc(offset.x + cornerRadius, offset.y + height - cornerRadius, cornerRadius, Math.PI / 2, Math.PI, false);
-                context.lineTo(offset.x, offset.y + cornerRadius);
-                context.arc(offset.x + cornerRadius, offset.y + cornerRadius, cornerRadius, Math.PI, Math.PI * 3 / 2, false);
-            }
-            context.closePath();
-            canvas.fillStroke(this);
-        };
+		this.rectbg1 = bgRect(8);
+		this.rectbg2 = bgRect(4);
+		this.link = createLink();
+		this.link.on('click tap', function () {
+			var url = unformattedText.match(urlPattern);
+			if (url && url[0]) {
+				url = url[0];
+				if (!/https?:\/\//i.test(url)) {
+					url = 'http://' + url;
+				}
+				window.open(url, '_blank');
+			}
+		});
+		this.link.on('mouseover', function () {
+			self.link.setActive(true);
+		});
+		this.link.on('mouseout', function () {
+			self.link.setActive(false);
+		});
+		this.text = new Kinetic.Text({
+			fontSize: 12,
+			fontFamily: 'Helvetica',
+			lineHeight: 1.5,
+			fontStyle: 'bold',
+			align: 'center'
+		});
+		this.add(this.rectbg1);
+		this.add(this.rectbg2);
+		this.add(this.rect);
+		this.add(this.text);
+		this.add(this.link);
+		this.setText = function (text) {
+			var replacement = breakWords(text.replace(urlPattern, '')) || (text.substring(0, COLUMN_WORD_WRAP_LIMIT) + '...');
+			unformattedText = text;
+			self.text.setText(replacement);
+			self.link.setVisible(urlPattern.test(text));
+			self.setStyle();
+		};
+		this.setText(config.text);
+		this.classType = 'Idea';
+		this.getNodeAttrs = function () {
+			return self.attrs;
+		};
+		this.isVisible = function (offset) {
+			var stage = self.getStage();
+			return stage && stage.isRectVisible(new MAPJS.Rectangle(self.attrs.x, self.attrs.y, self.getWidth(), self.getHeight()), offset);
+		};
 		this.editNode = function (shouldSelectAll) {
 			self.fire(':editing');
-			//this only works for solid color nodes
-			self.attrs.textFill = self.attrs.fill;
 			self.getLayer().draw();
 			var canvasPosition = jQuery(self.getLayer().getCanvas().getElement()).offset(),
 				ideaInput,
+				onStageMoved = _.throttle(function () {
+					ideaInput.css({
+						top: canvasPosition.top + self.getAbsolutePosition().y,
+						left: canvasPosition.left + self.getAbsolutePosition().x
+					});
+				}, 10),
 				updateText = function (newText) {
-					self.setStyle(self.attrs);
+					self.setStyle();
 					self.getStage().draw();
 					self.fire(':textChanged', {
 						text: newText || unformattedText
 					});
 					ideaInput.remove();
+					self.stopEditing = undefined;
+					self.getStage().off('xChange yChange', onStageMoved);
 				},
 				onCommit = function () {
 					updateText(ideaInput.val());
+				},
+				onCancelEdit = function () {
+					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
 			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
-					width: self.getWidth() * scale,
-					height: self.getHeight() * scale
+					width: (6 + self.getWidth()) * scale,
+					height: (6 + self.getHeight()) * scale,
+					'padding': 3 * scale + 'px',
+					'font-size': self.text.attrs.fontSize * scale + 'px',
+					'line-height': '150%',
+					'background-color': self.getBackground(),
+					'margin': -3 * scale,
+					'border-radius': self.rect.attrs.cornerRadius * scale + 'px',
+					'border': self.rect.attrs.strokeWidth * (2 * scale) + 'px dashed ' + self.rect.attrs.stroke,
+					'color': self.text.attrs.fill
 				})
 				.val(unformattedText)
 				.appendTo('body')
@@ -1157,41 +1481,74 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					if (e.which === ENTER_KEY_CODE) {
 						onCommit();
 					} else if (e.which === ESC_KEY_CODE) {
-						updateText(unformattedText);
+						onCancelEdit();
 					} else if (e.which === 9) {
 						e.preventDefault();
+					} else if (e.which === 83 && (e.metaKey || e.ctrlKey)) {
+						e.preventDefault();
+						onCommit();
+						return; /* propagate to let the environment handle ctrl+s */
+					} else if (!e.shiftKey && e.which === 90 && (e.metaKey || e.ctrlKey)) {
+						if (ideaInput.val() === unformattedText) {
+							onCancelEdit();
+						}
 					}
 					e.stopPropagation();
 				})
 				.blur(onCommit)
-				.focus();
-			if (shouldSelectAll) {
-				ideaInput.select();
-			} else if (ideaInput[0].setSelectionRange) {
-				ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
-			}
-			self.getStage().on('xChange yChange', function () {
-				ideaInput.css({
-					top: canvasPosition.top + self.getAbsolutePosition().y,
-					left: canvasPosition.left + self.getAbsolutePosition().x
+				.focus(function () {
+					if (shouldSelectAll) {
+						if (ideaInput[0].setSelectionRange) {
+							ideaInput[0].setSelectionRange(0, unformattedText.length);
+						} else {
+							ideaInput.select();
+						}
+					} else if (ideaInput[0].setSelectionRange) {
+						ideaInput[0].setSelectionRange(unformattedText.length, unformattedText.length);
+					}
+				})
+				.on('input', function () {
+					var text = new Kinetic.Idea({
+						text: ideaInput.val()
+					});
+					ideaInput.width(Math.max(ideaInput.width(), text.getWidth() * scale));
+					ideaInput.height(Math.max(ideaInput.height(), text.getHeight() * scale));
 				});
-			});
+
+			self.stopEditing = onCancelEdit;
+			ideaInput.focus();
+
+			self.getStage().on('xChange yChange', onStageMoved);
 		};
 	};
 }());
 
-Kinetic.Idea.prototype.setStyle = function (config) {
+Kinetic.Idea.prototype.setShadowOffset = function (offset) {
 	'use strict';
-	var isDroppable = this.isDroppable,
+	offset = this.getMMScale().x * offset;
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.setShadowOffset([offset, offset]);
+	});
+};
+
+Kinetic.Idea.prototype.getMMScale = function () {
+	'use strict';
+	var stage = this.getStage(),
+		scale = (stage && stage.attrs && stage.attrs.scale && stage.attrs.scale.x) || (this.attrs && this.attrs.scale && this.attrs.scale.x) || 1;
+	return {x: scale, y: scale};
+};
+
+
+Kinetic.Idea.prototype.setupShadows = function () {
+	'use strict';
+	var scale = this.getMMScale().x,
 		isSelected = this.isSelected,
-		isRoot = this.level === 1,
-		defaultBg = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'].background,
-		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 : 4,
+		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 * scale : 4 * scale,
 		normalShadow = {
 			color: 'black',
-			blur: 10,
+			blur: 10 * scale,
 			offset: [offset, offset],
-			opacity: 0.4
+			opacity: 0.4 * scale
 		},
 		selectedShadow = {
 			color: 'black',
@@ -1199,94 +1556,308 @@ Kinetic.Idea.prototype.setStyle = function (config) {
 			offset: [offset, offset],
 			opacity: 1
 		},
+		shadow = isSelected ? selectedShadow : normalShadow;
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.setShadowColor(shadow.color);
+		r.setShadowBlur(shadow.blur);
+		r.setShadowOpacity(shadow.opacity);
+		r.setShadowOffset(shadow.offset);
+	});
+};
+Kinetic.Idea.prototype.getBackground = function () {
+	'use strict';
+	/*jslint newcap: true*/
+	var isRoot = this.level === 1,
+		defaultBg = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'].background,
 		validColor = function (color, defaultColor) {
 			if (!color) {
 				return defaultColor;
 			}
 			var parsed = Color(color).hexString();
 			return color.toUpperCase() === parsed.toUpperCase() ? color : defaultColor;
-		},
-		background = validColor(this.mmStyle && this.mmStyle.background, defaultBg),
+		};
+	return validColor(this.mmStyle && this.mmStyle.background, defaultBg);
+};
+Kinetic.Idea.prototype.setStyle = function () {
+	'use strict';
+	/*jslint newcap: true*/
+	var self = this,
+		isDroppable = this.isDroppable,
+		isSelected = this.isSelected,
+		background = this.getBackground(),
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
-		luminosity = Color(tintedBackground).luminosity();
-	config.strokeWidth = 1;
-	config.padding = 8;
-	config.fontSize = 10;
-	config.fontFamily = 'Helvetica';
-	config.lineHeight = 1.5;
-	config.fontStyle = 'bold';
-	if (isDroppable) {
-		config.stroke = '#9F4F4F';
-		config.fill = {
-			start: { x: 0, y: 0 },
-			end: {x: 0, y: 20 },
-			colorStops: [0, '#EF6F6F', 1, '#CF4F4F']
-		};
-		background = '#EF6F6F';
-	} else if (isSelected) {
-		config.fill = background;
-	} else {
-		config.stroke = '#888';
-		config.fill = {
-			start: { x: 0, y: 0 },
-			end: {x: 100, y: 100 },
-			colorStops: [0, tintedBackground, 1, background]
-		};
-	}
-	config.align = 'center';
-	if (this.attrs && this.attrs.shadow) {
-		this.setShadow(isSelected ? selectedShadow : normalShadow);
-	} else {
-		config.shadow = isSelected ? selectedShadow : normalShadow;
-	}
-	config.cornerRadius = 10;
-	if (luminosity < 0.5) {
-		config.textFill = '#EEEEEE';
-	} else if (luminosity < 0.9) {
-		config.textFill = '#4F4F4F';
-	} else {
-		config.textFill = '#000000';
-	}
+		padding = 8;
+	this.attrs.width = this.text.getWidth() + 2 * padding;
+	this.attrs.height = this.text.getHeight() + 2 * padding;
+	this.text.attrs.x = padding;
+	this.text.attrs.y = padding;
+	this.link.attrs.x = this.text.getWidth() + 10;
+	this.link.attrs.y = this.text.getHeight() + 5;
+	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+		r.attrs.width = self.text.getWidth() + 2 * padding;
+		r.attrs.height = self.text.getHeight() + 2 * padding;
+		if (isDroppable) {
+			r.attrs.stroke = '#9F4F4F';
+			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+			r.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+			background = '#EF6F6F';
+			r.attrs.fillLinearGradientColorStops = [0, background, 1, '#CF4F4F'];
+		} else if (isSelected) {
+			r.attrs.fillLinearGradientColorStops = [0, background, 1, background];
+		} else {
+			r.attrs.stroke = '#888';
+			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
+			r.attrs.fillLinearGradientEndPoint = {x: 100, y: 100};
+			r.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
+		}
+	});
+	this.rectbg1.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
+	this.rectbg2.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
+	this.setupShadows();
+	this.text.attrs.fill = MAPJS.contrastForeground(tintedBackground);
 };
 Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
 	'use strict';
 	this.mmStyle = newMMStyle;
-	this.setStyle(this.attrs);
+	this.setStyle();
 	this.getLayer().draw();
 };
+Kinetic.Idea.prototype.getIsSelected = function () {
+	'use strict';
+	return this.isSelected;
+};
+
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
 	'use strict';
 	this.isSelected = isSelected;
-	this.setStyle(this.attrs);
+	this.setStyle();
 	this.getLayer().draw();
+	if (!isSelected && this.stopEditing) {
+		this.stopEditing();
+	}
 };
 Kinetic.Idea.prototype.setIsDroppable = function (isDroppable) {
 	'use strict';
 	this.isDroppable = isDroppable;
 	this.setStyle(this.attrs);
 };
-Kinetic.Idea.prototype.transitionToAndDontStopCurrentTransitions = function (config) {
+Kinetic.Global.extend(Kinetic.Idea, Kinetic.Group);
+/*global _, Kinetic, MAPJS */
+Kinetic.IdeaProxy = function (idea, stage, layer) {
 	'use strict';
-	var transition = new Kinetic.Transition(this, config),
-		animation = new Kinetic.Animation();
-	animation.func = transition._onEnterFrame.bind(transition);
-	animation.node = this.getLayer();
-	transition.onFinished = animation.stop.bind(animation);
-	transition.start();
-	animation.start();
+	var nodeimage,
+		emptyImage,
+		imageRendered,
+		container = new Kinetic.Group({opacity: 1, draggable: true}),
+		removeImage = function () {
+			nodeimage.setImage(emptyImage);
+			imageRendered = false;
+		},
+		cacheImage = function () {
+			if (!idea.isVisible()) {
+				removeImage();
+				return;
+			}
+			if (imageRendered) {
+				return;
+			}
+			imageRendered = true;
+			var imageScale = 1,
+				scale = stage.getScale().x, x = -(scale * imageScale), y = -(scale * imageScale),
+				unscaledWidth = idea.getWidth() + 20,
+				unscaledHeight = idea.getHeight() + 20,
+				width = (unscaledWidth * scale * imageScale),
+				height = (unscaledHeight * scale * imageScale);
+
+			idea.setScale({x: scale * imageScale, y: scale * imageScale});
+			idea.toImage({
+				x: x,
+				y: y,
+				width: width,
+				height: height ,
+				callback: function (img) {
+					nodeimage.setImage(img);
+					nodeimage.attrs.width = unscaledWidth;
+					nodeimage.attrs.height = unscaledHeight;
+					layer.draw();
+				}
+			});
+		},
+		reRender = function () {
+			imageRendered = false;
+			cacheImage();
+		},
+		nodeImageDrawFunc;
+	container.attrs.x = idea.attrs.x;
+	container.attrs.y = idea.attrs.y;
+	idea.attrs.x = 0;
+	idea.attrs.y = 0;
+	idea.link.remove();
+	nodeimage = new Kinetic.Image({
+		x: -1,
+		y: -1,
+		width: idea.getWidth() + 20,
+		height: idea.getHeight() + 20
+	});
+	nodeImageDrawFunc = nodeimage.getDrawFunc().bind(nodeimage);
+	nodeimage.setDrawFunc(function (canvas) {
+		cacheImage();
+		nodeImageDrawFunc(canvas);
+	});
+
+	container.add(nodeimage);
+	container.add(idea.link);
+	container.getNodeAttrs = function () {
+		return idea.attrs;
+	};
+	container.isVisible = function (offset) {
+		return stage && stage.isRectVisible(new MAPJS.Rectangle(container.attrs.x, container.attrs.y, container.getWidth(), container.getHeight()), offset);
+	};
+	idea.isVisible = function (offset) {
+		return stage && stage.isRectVisible(new MAPJS.Rectangle(container.attrs.x, container.attrs.y, container.getWidth(), container.getHeight()), offset);
+	};
+
+
+	idea.getLayer = function () {
+		return layer;
+	};
+	idea.getStage = function () {
+		return stage;
+	};
+	idea.getAbsolutePosition =  function () {
+		return container.getAbsolutePosition();
+	};
+	_.each(['getHeight', 'getWidth', 'getIsSelected'], function (fname) {
+		container[fname] = function () {
+			return idea && idea[fname] && idea[fname].apply(idea, arguments);
+		};
+	});
+	_.each([':textChanged', ':editing'], function (fname) {
+		idea.on(fname, function (event) {
+			container.fire(fname, event);
+			reRender();
+		});
+	});
+	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows', 'setShadowOffset'], function (fname) {
+		container[fname] = function () {
+			var result = idea && idea[fname] && idea[fname].apply(idea, arguments);
+			reRender();
+			return result;
+		};
+	});
+	return container;
 };
-Kinetic.Global.extend(Kinetic.Idea, Kinetic.Text);
-/*global console, window, document, jQuery, Kinetic*/
+
+/*global _, document, jQuery, Kinetic*/
 var MAPJS = MAPJS || {};
-MAPJS.KineticMediator = function (mapModel, stage) {
+if (Kinetic.Stage.prototype.isRectVisible) {
+	throw ('isRectVisible already exists, should not mix in our methods');
+}
+MAPJS.Rectangle = function (x, y, width, height) {
+	'use strict';
+	this.scale = function (scale) {
+		return new MAPJS.Rectangle(x * scale, y * scale, width * scale, height * scale);
+	};
+	this.translate = function (dx, dy) {
+		return new MAPJS.Rectangle(x + dx, y + dy, width, height);
+	};
+	this.inset = function (margin) {
+		return new MAPJS.Rectangle(x + margin, y + margin, width - (margin * 2), height - (margin * 2));
+	};
+	this.x = x;
+	this.y = y;
+	this.height = height;
+	this.width = width;
+};
+Kinetic.Stage.prototype.isRectVisible = function (rect, offset) {
+	'use strict';
+	offset = offset || {x: 0, y: 0, margin: 0};
+	var scale = this.getScale().x || 1;
+	rect = rect.scale(scale).translate(offset.x, offset.y).inset(offset.margin);
+	return !(
+		rect.x + this.attrs.x > this.getWidth() ||
+		rect.x + rect.width + this.attrs.x < 0  ||
+		rect.y + this.attrs.y > this.getHeight() ||
+		rect.y + rect.height + this.attrs.y < 0
+	);
+};
+
+MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 	'use strict';
 	var layer = new Kinetic.Layer(),
 		nodeByIdeaId = {},
-		connectorByFromIdeaId_ToIdeaId = {},
+		connectorByFromIdeaIdToIdeaId = {},
 		connectorKey = function (fromIdeaId, toIdeaId) {
 			return fromIdeaId + '_' + toIdeaId;
-		};
+		},
+		atLeastOneVisible = function (list, deltaX, deltaY) {
+			var margin = Math.min(stage.getHeight(), stage.getWidth()) * 0.1;
+			return _.find(list, function (node) {
+				return node.isVisible({x: deltaX, y: deltaY, margin: margin});
+			});
+		},
+		moveStage = function (deltaX, deltaY) {
+			var visibleAfterMove, visibleBeforeMove;
+			if (!stage) {
+				return;
+			}
+			visibleBeforeMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, 0, 0);
+			visibleAfterMove = atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, deltaX, deltaY);
+			if (visibleAfterMove || (!visibleBeforeMove)) {
+				if (deltaY !== 0) { stage.attrs.y += deltaY; }
+				if (deltaX !== 0) { stage.attrs.x += deltaX; }
+				stage.draw();
+			}
+		},
+		resetStage = function () {
+			stage.transitionTo({
+				x: 0.5 * stage.getWidth(),
+				y: 0.5 * stage.getHeight(),
+				scale: {
+					x: 1,
+					y: 1
+				},
+				duration: 0.05,
+				easing: 'ease-in-out',
+				callback: function () {
+					stage.fire(':scaleChangeComplete');
+				}
+			});
+		},
+		ensureSelectedNodeVisible = function (node) {
+			var scale = stage.getScale().x || 1,
+				offset = 100,
+				move = { x: 0, y: 0 };
+			if (!node.getIsSelected()) {
+				return;
+			}
+			if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
+				move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
+			} else if (node.getAbsolutePosition().x < offset) {
+				move.x  = offset - node.getAbsolutePosition().x;
+			}
+			if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
+				move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
+			} else if (node.getAbsolutePosition().y < offset) {
+				move.y = offset - node.getAbsolutePosition().y;
+			}
+			stage.transitionTo({
+				x: stage.attrs.x + move.x,
+				y: stage.attrs.y + move.y,
+				duration: 0.4,
+				easing: 'ease-in-out'
+			});
+		},
+		isShiftPressed;
+	jQuery(document).bind('keyup keydown', function (e) {isShiftPressed = e.shiftKey; });
 	stage.add(layer);
+
+	mapModel.addEventListener('nodeEditRequested', function (nodeId, shouldSelectAll) {
+		var node = nodeByIdeaId[nodeId];
+		if (node) {
+			node.editNode(shouldSelectAll);
+		}
+	});
 	mapModel.addEventListener('nodeCreated', function (n) {
 		var node = new Kinetic.Idea({
 			level: n.level,
@@ -1294,16 +1865,18 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			y: n.y,
 			text: n.title,
 			mmStyle: n.style,
-			opacity: 0
+			opacity: 1
 		});
+
+		if (imageRendering) {
+			node = Kinetic.IdeaProxy(node, stage, layer);
+		}
 		/* in kinetic 4.3 cannot use click because click if fired on dragend */
 		node.on('click tap', mapModel.selectNode.bind(mapModel, n.id));
+		node.on('dblclick dbltap', mapModel.editNode.bind(mapModel, 'mouse', false));
 		node.on('dragstart', function () {
 			node.moveToTop();
-			node.attrs.shadow.offset = {
-				x: 8,
-				y: 8
-			};
+			node.setShadowOffset(8);
 		});
 		node.on('dragmove', function () {
 			mapModel.nodeDragMove(
@@ -1313,58 +1886,44 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			);
 		});
 		node.on('dragend', function () {
-			node.attrs.shadow.offset = {
-				x: 4,
-				y: 4
-			};
+			node.setShadowOffset(4);
 			mapModel.nodeDragEnd(
 				n.id,
 				node.attrs.x,
-				node.attrs.y
+				node.attrs.y,
+				isShiftPressed
 			);
+			if (n.level > 1) {
+				stage.setDraggable(true);
+			}
 		});
 		node.on(':textChanged', function (event) {
 			mapModel.updateTitle(n.id, event.text);
-			mapModel.dispatchEvent('inputEnabledChanged', true);
+			mapModel.setInputEnabled(true);
 		});
-		node.on(':editing', function(event){
-			mapModel.dispatchEvent('inputEnabledChanged', false);
+		node.on(':editing', function () {
+			mapModel.setInputEnabled(false);
 		});
-		node.on(':nodeEditRequested', mapModel.editNode.bind(mapModel, 'mouse', false));
 
-		mapModel.addEventListener('nodeEditRequested:' + n.id, node.editNode);
-		nodeByIdeaId[n.id] = node;
+
+		if (n.level > 1) {
+			node.on('mouseover touchstart', stage.setDraggable.bind(stage, false));
+			node.on('mouseout touchend', stage.setDraggable.bind(stage, true));
+
+		}
 		layer.add(node);
-		node.transitionToAndDontStopCurrentTransitions({
-			opacity: 1,
-			duration: 0.4
+		stage.on(':scaleChangeComplete', function () {
+			node.setupShadows();
 		});
+		nodeByIdeaId[n.id] = node;
 	});
 	mapModel.addEventListener('nodeSelectionChanged', function (ideaId, isSelected) {
-		var node = nodeByIdeaId[ideaId],
-			scale = stage.getScale().x || 1,
-			offset = 100,
-			move = { x: 0, y: 0 };
+		var node = nodeByIdeaId[ideaId];
 		node.setIsSelected(isSelected);
 		if (!isSelected) {
 			return;
 		}
-		if (node.getAbsolutePosition().x + node.getWidth() * scale + offset > stage.getWidth()) {
-			move.x = stage.getWidth() - (node.getAbsolutePosition().x + node.getWidth() * scale + offset);
-		} else if (node.getAbsolutePosition().x < offset) {
-			move.x  = offset - node.getAbsolutePosition().x;
-		}
-		if (node.getAbsolutePosition().y + node.getHeight() * scale + offset > stage.getHeight()) {
-			move.y = stage.getHeight() - (node.getAbsolutePosition().y + node.getHeight() * scale + offset);
-		} else if (node.getAbsolutePosition().y < offset) {
-			move.y = offset - node.getAbsolutePosition().y;
-		}
-		stage.transitionTo({
-			x: stage.attrs.x + move.x,
-			y: stage.attrs.y + move.y,
-			duration: 0.4,
-			easing: 'ease-in-out'
-		});
+		ensureSelectedNodeVisible(node);
 	});
 	mapModel.addEventListener('nodeStyleChanged', function (n) {
 		var node = nodeByIdeaId[n.id];
@@ -1382,8 +1941,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			duration: 0.4,
 			callback: node.remove.bind(node)
 		});
-		node.off('click dblclick tap dragstart dragmove dragend mouseover mouseout :textChanged :nodeEditRequested');
-		mapModel.removeEventListener('nodeEditRequested:' + n.id, node.editNode);
+		node.off('click dblclick tap dragstart dragmove dragend mouseover mouseout :textChanged');
 	});
 	mapModel.addEventListener('nodeMoved', function (n, reason) {
 		var node = nodeByIdeaId[n.id];
@@ -1391,7 +1949,8 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			x: n.x,
 			y: n.y,
 			duration: 0.4,
-			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out'
+			easing: reason === 'failed' ? 'bounce-ease-out' : 'ease-in-out',
+			callback: ensureSelectedNodeVisible.bind(undefined, node)
 		});
 	});
 	mapModel.addEventListener('nodeTitleChanged', function (n) {
@@ -1408,7 +1967,7 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 			opacity: 0
 		});
 		connector.opacity = 0;
-		connectorByFromIdeaId_ToIdeaId[connectorKey(n.from, n.to)] = connector;
+		connectorByFromIdeaIdToIdeaId[connectorKey(n.from, n.to)] = connector;
 		layer.add(connector);
 		connector.moveToBottom();
 		connector.transitionTo({
@@ -1418,70 +1977,58 @@ MAPJS.KineticMediator = function (mapModel, stage) {
 	});
 	mapModel.addEventListener('connectorRemoved', function (n) {
 		var key = connectorKey(n.from, n.to),
-			connector = connectorByFromIdeaId_ToIdeaId[key];
-		delete connectorByFromIdeaId_ToIdeaId[key];
+			connector = connectorByFromIdeaIdToIdeaId[key];
+		delete connectorByFromIdeaIdToIdeaId[key];
 		connector.transitionTo({
 			opacity: 0,
 			duration: 0.1,
 			callback: connector.remove.bind(connector)
 		});
 	});
-	mapModel.addEventListener('mapScaleChanged', function (isScaleUp) {
-		var scale = (stage.getScale().x || 1) * (isScaleUp ? 1.25 : 0.8);
+	mapModel.addEventListener('mapScaleChanged', function (scaleMultiplier, zoomPoint) {
+		var currentScale = stage.getScale().x || 1,
+			targetScale = Math.max(Math.min(currentScale * scaleMultiplier, 5), 0.2);
+		if (currentScale === targetScale) {
+			return;
+		}
+		zoomPoint = zoomPoint || {x:  0.5 * stage.getWidth(), y: 0.5 * stage.getHeight()};
 		stage.transitionTo({
 			scale: {
-				x: scale,
-				y: scale
+				x: targetScale,
+				y: targetScale
 			},
-			duration: 0.1
+			x: zoomPoint.x + (stage.attrs.x - zoomPoint.x) * targetScale / currentScale,
+			y: zoomPoint.y + (stage.attrs.y - zoomPoint.y) * targetScale / currentScale,
+			duration: 0.01,
+			easing: 'ease-in-out',
+			callback: function () {
+				stage.fire(':scaleChangeComplete');
+			}
 		});
 	});
+	mapModel.addEventListener('mapViewResetRequested', function () {
+		resetStage();
+	});
+	mapModel.addEventListener('mapMoveRequested', function (deltaX, deltaY) {
+		moveStage(deltaX, deltaY);
+	});
 	(function () {
-		var keyboardEventHandlers = {
-			13: mapModel.addSiblingIdea.bind(mapModel, 'keyboard'),
-			8: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-			9: mapModel.addSubIdea.bind(mapModel, 'keyboard'),
-			37: mapModel.selectNodeLeft.bind(mapModel, 'keyboard'),
-			38: mapModel.selectNodeUp.bind(mapModel, 'keyboard'),
-			39: mapModel.selectNodeRight.bind(mapModel, 'keyboard'),
-			40: mapModel.selectNodeDown.bind(mapModel, 'keyboard'),
-			46: mapModel.removeSubIdea.bind(mapModel, 'keyboard'),
-			32: mapModel.editNode.bind(mapModel, 'keyboard'),
-			191: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
-		}, shiftKeyboardEventHandlers = {
-			9: mapModel.insertIntermediate.bind(mapModel, 'keyboard'),
-			38: mapModel.toggleCollapse.bind(mapModel, 'keyboard')
-		},
-			onKeydown = function (evt) {
-				var eventHandler = (evt.shiftKey ? shiftKeyboardEventHandlers : keyboardEventHandlers)[evt.which];
-				if (eventHandler) {
-					eventHandler();
-					evt.preventDefault();
-				}
-			},
-			onScroll = function (event, delta, deltaX, deltaY) {
-				if (stage) {
-					if (deltaY !== 0) { stage.attrs.y += (deltaY < 0 ? -5 : 5); }
-					if (deltaX !== 0) { stage.attrs.x += (deltaX < 0 ? 5 : -5); }
-					stage.draw();
-				}
-				if (deltaX < 0) { /* stop the back button */
-					event.preventDefault();
-				}
-				if (deltaY < 0) { /*stop scrolling down */
-					event.preventDefault();
-				}
-			};
-		jQuery(document).keydown(onKeydown);
-		jQuery(window).mousewheel(onScroll);
-		mapModel.addEventListener('inputEnabledChanged', function (isInputEnabled) {
-			jQuery(document)[isInputEnabled ? 'bind' : 'unbind']('keydown', onKeydown);
-			jQuery(window)[isInputEnabled ? 'mousewheel' : 'unmousewheel'](onScroll);
+		var x, y;
+		stage.on('dragmove', function () {
+			var deltaX = x - stage.attrs.x,
+				deltaY = y - stage.attrs.y,
+				visibleAfterMove = atLeastOneVisible(nodeByIdeaId, 0, 0) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, 0, 0),
+				shouldMoveBack = !visibleAfterMove && !(atLeastOneVisible(nodeByIdeaId, deltaX, deltaY) || atLeastOneVisible(connectorByFromIdeaIdToIdeaId, deltaX, deltaY));
+			if (shouldMoveBack) {
+				moveStage(deltaX, deltaY);
+			} else {
+				x = stage.attrs.x;
+				y = stage.attrs.y;
+			}
 		});
-
 	}());
 };
-MAPJS.KineticMediator.dimensionProvider = function (title) {
+MAPJS.KineticMediator.dimensionProvider = _.memoize(function (title) {
 	'use strict';
 	var text = new Kinetic.Idea({
 		text: title
@@ -1490,7 +2037,7 @@ MAPJS.KineticMediator.dimensionProvider = function (title) {
 		width: text.getWidth(),
 		height: text.getHeight()
 	};
-};
+});
 MAPJS.KineticMediator.layoutCalculator = function (idea) {
 	'use strict';
 	return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
@@ -1499,7 +2046,8 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 /*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
-	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea'],
+	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo',
+			'copy', 'cut', 'paste', 'resetView'],
 		changeMethodNames = ['updateStyle'];
 	return this.each(function () {
 		var element = jQuery(this);
@@ -1586,4 +2134,109 @@ MAPJS.PNGExporter = function (mapRepository) {
 			}
 		});
 	};
+};
+/*global _, jQuery, Kinetic, MAPJS, window, document*/
+jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRendering) {
+	'use strict';
+	return this.each(function () {
+		var element = jQuery(this),
+			stage = new Kinetic.Stage({
+				container: 'container',
+				draggable: true
+			}),
+			mediator = new MAPJS.KineticMediator(mapModel, stage, imageRendering),
+			setStageDimensions = function () {
+				stage.setWidth(element.width());
+				stage.setHeight(element.height());
+				stage.draw();
+			},
+			simulateTouch = function (touchType, hammerEvent) {
+				var center;
+				if (!hammerEvent.gesture) {
+					return; // not a hammer event, instead simulated doubleclick
+				}
+				center = hammerEvent.gesture.center;
+				stage.simulate(touchType, {
+					offsetX: center.pageX - element.offset().left,
+					offsetY: center.pageY - element.offset().top
+				});
+			},
+			lastGesture,
+			discrete = function (gesture) {
+				var result = (lastGesture && lastGesture.type !== gesture.type && (gesture.timeStamp - lastGesture.timeStamp < 250));
+				lastGesture = gesture;
+				return !result;
+			},
+			keyboardEventHandlers = {
+				'return': 'addSiblingIdea',
+				'del backspace': 'removeSubIdea',
+				'tab': 'addSubIdea',
+				'left': 'selectNodeLeft',
+				'up': 'selectNodeUp',
+				'right': 'selectNodeRight',
+				'down': 'selectNodeDown',
+				'space': 'editNode',
+				'/ shift+up': 'toggleCollapse',
+				'c meta+x ctrl+x': 'cut',
+				'p meta+v ctrl+v': 'paste',
+				'y meta+c ctrl+c': 'copy',
+				'u meta+z ctrl+z': 'undo',
+				'shift+tab': 'insertIntermediate',
+				'meta+0 ctrl+0': 'resetView',
+				'r meta+shift+z ctrl+shift+z meta+y ctrl+y': 'redo',
+				'meta+plus ctrl+plus': 'scaleUp',
+				'meta+minus ctrl+minus': 'scaleDown',
+				'meta+up ctrl+up': 'moveUp',
+				'meta+down ctrl+down': 'moveDown',
+				'ctrl+shift+v meta+shift+v': 'pasteStyle'
+			},
+			onScroll = function (event, delta, deltaX, deltaY) {
+				if (event.target === jQuery(stage.getContainer()).find('canvas')[0]) {
+					mapModel.move('mousewheel', -1 * deltaX, deltaY);
+					if (event.preventDefault) { // stop the back button
+						event.preventDefault();
+					}
+				}
+			};
+		jQuery.hotkeys.specialKeys[187] = 'plus';
+		jQuery.hotkeys.specialKeys[189] = 'minus';
+		_.each(keyboardEventHandlers, function (mappedFunction, keysPressed) {
+			jQuery(document).keydown(keysPressed, function (event) {
+				event.preventDefault();
+				mapModel[mappedFunction]('keyboard');
+			});
+		});
+		mapModel.addEventListener('inputEnabledChanged', function (canInput) {
+			stage.setDraggable(!canInput);
+		});
+		activityLog.log('Creating canvas Size ' + element.width() + ' ' + element.height());
+		setStageDimensions();
+		stage.attrs.x = 0.5 * stage.getWidth();
+		stage.attrs.y = 0.5 * stage.getHeight();
+		jQuery(window).resize(setStageDimensions);
+		jQuery('.modal')
+			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
+			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));
+		if (!touchEnabled) {
+			jQuery(window).mousewheel(onScroll);
+		} else {
+			element.find('canvas').hammer().on("pinch", function (event) {
+				if (discrete(event)) {
+					mapModel.scale('touch', event.gesture.scale, {
+						x: event.gesture.center.pageX - element.offset().left,
+						y: event.gesture.center.pageY - element.offset().top
+					});
+				}
+			}).on("swipe", function (event) {
+				if (discrete(event)) {
+					mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
+				}
+			}).on("doubletap", function (event) {
+				mapModel.resetView();
+			}).on("touch", function (evt) {
+				jQuery('.topbar-color-picker:visible').hide();
+				jQuery('.ideaInput:visible').blur();
+			});
+		}
+	});
 };

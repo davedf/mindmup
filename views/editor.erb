@@ -1,11 +1,136 @@
-<div id="container"></div>
-<form style="visibility:hidden" id='s3form' action="https://<%=settings.s3_bucket_name%>.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
-  <input type="hidden" name="key" />
-  <input type="hidden" name="AWSAccessKeyId" />
-  <input type="hidden" name="acl" value="public-read" />
-  <input type="hidden" name="success_action_redirect" />
-  <input type="hidden" name="policy" />
-  <input type="hidden" name="signature" />
-  <input type="hidden" name="Content-Type" />
-  <input type="hidden" name="file" />
-</form>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>MindMup: Zero-Friction Free Online Mind Mapping</title>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="apple-touch-icon" href="//mindmup.s3.amazonaws.com/lib/img/apple-touch-icon.png" />
+    <meta name="keywords" content="mind mapping, mind map, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
+    <meta name="description" content="Zero-friction, free online mind mapping. Opensource mindmapping software. The most productive online mind map canvas on the Web. Supports Freemind mindmap import/export." />
+    <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-responsive-2.3.1.min.css" rel="stylesheet" />
+	<link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
+    <link href="//mindmup.s3.amazonaws.com/lib/colorPicker.css" rel="stylesheet" />
+    <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
+    <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
+  </head>
+  <body class="map-unchanged <%=browser.body_class %>">
+	  <%=erb :topbar %>
+	<div id="floating-toolbar" class="floating span2 well well-small hidden-phone hidden-touch hidden-collapsed-toolbar">
+      <button class="close pull-right" data-category="Toolbar Click" data-mm-key="ctrl+b meta+b" data-event-type="Expand/Collapse" data-mm-target="body" data-mm-class='collapsed-toolbar' data-mm-role="toggle-class" data-title="Convert to menu (Ctrl+b)" data-placement='left' rel='tooltip'><i class="toggle icon-resize-small"></i></button>
+      <div class="toolbar-inner">
+        <div data-mm-role="save" class="visible-map-changed pull-left btn-group">
+          <button class="btn btn-primary" data-mm-role="publish" data-category="Toolbar Click" data-event-type="Save Map">Save Map</button>
+          <button class="btn dropdown-toggle" data-toggle='dropdown'><span data-mm-role='currentrepo' class='repo-a'>&nbsp;</span><b class="caret"></b></button>
+          <ul class="dropdown-menu">
+            <li><a data-mm-repository='a' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to MindMup">MindMup</a></li>
+            <li><a data-mm-repository='g' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Google Drive">Google&nbsp;Drive</a></li>
+            <li><a data-mm-repository='o' rel="nofollow" href="#" data-category="Toolbar Click" data-event-type="Save to Browser Storage">Browser&nbsp;Storage</a></li>
+          </ul>
+        </div>
+        <div class="btn-toolbar" id="toolbarEdit">
+              <div class="btn-group">
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;in&nbsp;(Ctrl&nbsp;+)" data-category="Toolbar Click" data-event-type="Zoom in" class="btn  scaleUp"><i class="icon-zoom-in"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Zoom&nbsp;out&nbsp;(Ctrl&nbsp;-)" data-category="Toolbar Click" data-event-type="Zoom out" class="btn  scaleDown"><i class="icon-zoom-out"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Re-center view (Ctrl+0)" data-category="Toolbar Click" data-event-type="Zoom reset" class="btn  resetView"><i class="icon-circle-blank"></i></button>
+              </div>
+              <div class="btn-group">
+                <button id="menuAdd" rel="tooltip" data-placement="bottom" data-title="Add child (Tab)" data-category="Toolbar Click" data-event-type="Add idea" class="btn  addSubIdea"><i class="icon-signout" ></i></button>
+                <button id="menuInsertSibling" rel="tooltip" data-placement="bottom" data-title="Insert sibling (Enter)" data-category="Toolbar Click" data-event-type="Insert Sibling" class="btn  addSiblingIdea"><i class="icon-download-alt" ></i></button>
+                <button id="menuInsertIntermediate" rel="tooltip" data-placement="bottom" data-title="Insert parent (Shift+Tab)" data-category="Toolbar Click" data-event-type="Insert Intermediate" class="btn  insertIntermediate"><i class="icon-signin" ></i></button>
+              </div>
+              <div class="btn-group">
+                <button id="menuEdit" rel="tooltip" data-placement="bottom" data-title="Edit node (Spacebar)" data-category="Toolbar Click" data-event-type="Edit idea" class="btn  editNode"><i class="icon-pencil"></i></button>
+                <button id="menuCollapse" rel="tooltip" data-placement="bottom" data-title="Expand/collapse node (/ or Shift+Up)" data-category="Toolbar Click" data-event-type="Collapse idea" class="btn  toggleCollapse"><i class="icon-leaf"></i></button>
+                <button id="menuDelete" rel="tooltip" data-placement="bottom" data-title="Delete node (Backspace)" data-category="Toolbar Click" data-event-type="Delete idea" class="btn  removeSubIdea"><i class="icon-remove"></i></button>
+              </div>
+              <div class="btn-group">
+                <button rel="tooltip" data-placement="bottom" data-title="Copy (Ctrl+c)" data-category="Toolbar Click" data-event-type="Copy" class="btn  copy"><i class="icon-copy"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Paste (Ctrl+v)" data-category="Toolbar Click" data-event-type="Paste" class="btn paste"><i class="icon-paste"></i></button>
+                <button rel="tooltip" data-placement="bottom" data-title="Cut (Ctrl+x)" data-category="Toolbar Click" data-event-type="Cut" class="btn cut"><i class="icon-cut"></i></button>
+              </div>
+              <div class="btn-group">
+                <button class="btn " rel="tooltip" data-title="Node color (Shift+Spacebar)" data-category="Toolbar Click" data-event-type="Node Color">
+                  <input data-mm-target-property='background' class='updateStyle hide' type="hidden" value="" />&nbsp;
+                </button>
+              </div>
+          </div>
+			  <div class="btn-group">
+				  <button data-title="Export" class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-category="Map" data-event-type="Export Open">Export Map&nbsp;<span class="caret"></span></button>
+				  <ul class="dropdown-menu">
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mup" data-category="Map" data-event-type="Export MindMup">MindMup</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="mm" data-category="Map" data-event-type="Export FreeMind">FreeMind</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role='png-export' data-category="Map" data-event-type="Export Image">Image (PNG)</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="html" data-category="Map" data-event-type="Export Html">HTML Table</a> </li>
+					  <li><a rel="nofollow" href="#" data-mm-role="remote-export" data-mm-target="#formExport" data-mm-format="txt" data-category="Map" data-event-type="Export CSV">Text (tab separated)</a> </li>
+				  </ul>
+        </div>
+
+        <%= erb :share %>
+
+                <a class="pull-right small" data-title="Keyboard shortcuts" data-category="Toolbar Click" data-event-type="Keyboard shortcuts" target="_blank" href="http://blog.mindmup.com/p/keyboard-shortcuts.html">
+                  keyboard shortcuts
+                </a>
+
+      </div>
+    </div>
+    <%= erb :about %>
+    <%= erb :import %>
+    <%= erb :vote %>
+    <%= erb :display_download %>
+    <%= erb :feedback %>
+    <%= erb :terms_and_conditions %>
+    <%= erb :open_from_drive %>
+    <%= erb :open_from_local_storage %>
+    <div id="container"></div>
+	<form method="post" id="formExport" action="/echo" class="hide">
+		<input type="hidden" name="map" />
+		<input type="hidden" name="title" />
+	</form>
+    <div id="fb-root"></div>
+    <%= erb :scripts %>
+    <script id="main">
+      var _gaq = _gaq || [];
+      ScriptHelper.tryToNotifyGoogleAnalytics=function(){
+        _gaq.push(['_setAccount', '<%= settings.google_analytics_account %>']);
+        _gaq.push(['_trackEvent','Error','Script Load', ScriptHelper.failedScripts().join(';')]);
+        (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      }
+      ScriptHelper.showErrorMessage=function(){
+        var d=document.createElement("div");
+        var c=document.createElement('div');
+        d.appendChild(document.createTextNode("Unfortunately, there was an error while loading the JavaScript files required by this page."+
+          " This might be due to a temporary network issue or a firewall blocking access to required scripts. "+
+          " Please try again later. " +
+          " If the problem persists, we'd appreciate if you could contact us at contact@mindmup.com"));
+        d.style.position='absolute'; d.style.top='30%'; d.style.left='40%'; d.style.width='20%'; d.style.backgroundColor='#773333'; d.style.color='white'; d.style.fontWeight='bold'; d.style.padding='20px'; d.style.border='3px solid black';
+        c.style.position='absolute'; c.style.top=0; c.style.left=0; c.style.width='100%'; c.style.height='100%'; c.style.minHeight='100%'; c.style.backgroundColor='#999999';
+        c.appendChild(d);
+        document.getElementsByTagName("body")[0].appendChild(c);
+	  }
+	  showErrors=function(){
+        ScriptHelper.showErrorMessage();
+        ScriptHelper.tryToNotifyGoogleAnalytics();
+      }
+	  initMM=function() {
+		MM.main({
+          googleAnalyticsAccount: '<%= settings.google_analytics_account %>',
+          s3Url: 'http://<%= settings.s3_website %>/',
+          s3Folder: '<%= settings.s3_upload_folder %>/',
+          mapUrl: '<%= map_url(@mapid) %>',
+          mapId: '<%= @mapid %>',
+          googleClientId: '<%= ENV['GOOGLE_CLIENT_ID'] %>',
+		      googleShortenerApiKey: '<%= ENV['GOOGLE_SHORTENER_API_KEY'] %>',
+          scriptsToLoadAsynchronously: ['//www.google-analytics.com/ga.js', '//platform.twitter.com/widgets.js', '//connect.facebook.net/en_US/all.js#xfbml=1'],
+         networkTimeoutMillis: <%= settings.network_timeout_millis %>
+		});
+	  }
+	  ScriptHelper.afterLoad({success: initMM, fail:showErrors});
+    </script>
+  </body>
+</html>

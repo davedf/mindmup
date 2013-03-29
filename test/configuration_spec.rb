@@ -1,6 +1,9 @@
 require File.join(File.dirname(__FILE__),'spec_helper.rb')
 
 describe 'Configuration' do
+  before(:each) do
+    header "User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.152 Safari/537.22"
+  end
   def last_response_config
     n=Nokogiri::HTML last_response.body
     eval(n.xpath('//script[@id="main"]').text().match('MM.main\(([^)]*)\)')[1])

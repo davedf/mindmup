@@ -31,6 +31,14 @@ describe("Magic bookmark manager", function () {
 			expect(_.size(bookmark.list())).toBe(1);
 			expect(bookmark.list()[0]).toEqual(updated);
 		});
+		it("should update a bookmark if one with the same id already exists", function () {
+			var url = {mapId:  'xxx', title:  'old'},
+				updated = {mapId:  'xxx', title:  'new'};
+			bookmark.store(url);
+			bookmark.store(updated);
+			expect(_.size(bookmark.list())).toBe(1);
+			expect(bookmark.list()[0]).toEqual(updated);
+		});
 		it("fails if mapId or title are not provided", function () {
 			bookmark.store(url);
 			expect(function () {bookmark.store({title: 'zeka'}); }).toThrow(new Error("Invalid bookmark"));
@@ -82,7 +90,7 @@ describe("Magic bookmark manager", function () {
 			bookmark.store(mark);
 			bookmark.addEventListener('deleted', listener);
 			bookmark.remove('xx');
-			expect(listener).toHaveBeenCalledWith(mark);
+			expect(listener).toHaveBeenCalledWith(mark, false);
 		});
 	});
 	it("should return a read-only copy of the list", function () {
@@ -116,7 +124,70 @@ describe("Magic bookmark manager", function () {
 	it("converts a list of bookmarks to links by appending /map and cutting down long titles", function () {
 		var bookmark = new MM.Bookmark(observable({}));
 		bookmark.store({mapId: 'u1', title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down'});
-		expect(bookmark.links()).toEqual([{url: '/map/u1', title: 'this is a very very long title...', mapId: 'u1'}]);
+		expect(bookmark.links()).toEqual([{url: '/map/u1',
+			title: 'this is a very very long title indeed and should not be displayed in full, instead it should be cut down',
+			shortTitle: 'this is a very very long title...', mapId: 'u1'}]);
+	});
+	it("automatically bookmarks all saved maps", function () {
+		var	mapRepository  =  observable({}),
+			bookmark  =  new MM.Bookmark(mapRepository);
+		mapRepository.dispatchEvent('mapSaved', 'key', {title: 'title'});
+		expect(bookmark.list()).toEqual([{mapId: 'key', title: 'title'}]);
+	});
+	it("automatically bookmarks all saved maps", function () {
+		var	mapRepository  =  observable({}),
+			bookmark  =  new MM.Bookmark(mapRepository);
+		mapRepository.dispatchEvent('mapSaved', 'key', {title: 'title'});
+		expect(bookmark.list()).toEqual([{mapId: 'key', title: 'title'}]);
+	});
+
+	describe("pin", function () {
+		var mapRepository, bookmark;
+		beforeEach(function () {
+			mapRepository  =  observable({});
+			bookmark  =  new MM.Bookmark(mapRepository);
+		});
+		it("stores the currently loaded map if not already stored", function () {
+			mapRepository.dispatchEvent('mapLoaded', {title: 'title'}, 'mapKey');
+			bookmark.pin();
+			expect(bookmark.list()).toEqual([{mapId: 'mapKey', title: 'title'}]);
+		});
+		it("does nothing if a map is not loaded", function () {
+			bookmark.pin();
+			expect(bookmark.list()).toEqual([]);
+		});
+	});
+	describe("canPin", function () {
+		var mapRepository, bookmark;
+		beforeEach(function () {
+			mapRepository  =  observable({});
+			bookmark  =  new MM.Bookmark(mapRepository);
+		});
+		it("returns true if current map is not in bookmarks", function () {
+			mapRepository.dispatchEvent('mapLoaded', {title: 'title'}, 'mapKey');
+			expect(bookmark.canPin()).toBeTruthy();
+		});
+		it("returns false if current map is not in bookmarks", function () {
+			bookmark.store({mapId: 'mapKey', title: 'title'});
+			mapRepository.dispatchEvent('mapLoaded', {title: 'title'}, 'mapKey');
+			expect(bookmark.canPin()).toBeFalsy();
+		});
+		it("returns false if no map is loaded", function () {
+			expect(bookmark.canPin()).toBeFalsy();
+		});
+		it("fires pinChanged when a new map is loaded if it is pinnable", function () {
+			var spy = jasmine.createSpy('pinChanged');
+			bookmark.addEventListener('pinChanged', spy);
+			mapRepository.dispatchEvent('mapLoaded', {title: 'title'}, 'key');
+			expect(spy).toHaveBeenCalled();
+		});
+		it("does not fire pinChanged when a new map is loaded if it is not pinnable", function () {
+			var spy = jasmine.createSpy('pinChanged');
+			bookmark.store({mapId: 'mapKey', title: 'title'});
+			bookmark.addEventListener('pinChanged', spy);
+			mapRepository.dispatchEvent('mapLoaded', {title: 'title'}, 'mapKey');
+			expect(spy).not.toHaveBeenCalled();
+		});
 	});
 });
 
@@ -124,7 +195,7 @@ describe("JSONStorage", function () {
 	'use strict';
 	var json, storage;
 	beforeEach(function () {
-		storage = {getItem: function (item) {}, setItem:  function (key, value) {}};
+		storage = {getItem: function (item) {}, setItem:  function (key, value) {}, removeItem: function (key) {}};
 		json = MM.jsonStorage(storage);
 	});
 	it("stringifies items past into setItem before passing on", function () {
@@ -141,13 +212,19 @@ describe("JSONStorage", function () {
 		spyOn(storage, 'getItem').andReturn('{xxxxxx}');
 		expect(json.getItem('bla')).toBeUndefined();
 	});
+	it("removes item when remove method is invoked", function () {
+		spyOn(storage, 'removeItem');
+		json.remove('key');
+		expect(storage.removeItem).toHaveBeenCalledWith('key');
+	});
 });
 
 describe("Bookmark widget", function () {
 	'use strict';
-	var ulTemplate = '<ul><li>Old</li><li class="template" style="display: none"><a data-category="Top Bar" data-event-type="Bookmark click"><span data-mm-role="x"></span></a></li></ul>',
-		wrap = function (list) {
-			return new MM.Bookmark(observable({}), { getItem: function () { return list; }, setItem: function () { } }, 'key');
+	var ulTemplate = '<ul><li>Old</li><<li class="template" style="display: none"><a data-category="Top Bar" data-event-type="Bookmark click"><span data-mm-role="x"></span></a></li></ul>',
+		wrap = function (list, repo) {
+			repo = repo || observable({});
+			return new MM.Bookmark(repo, { getItem: function () { return list; }, setItem: function () { } }, 'key');
 		};
 	it("does not remove previous content if the bookmark list is empty", function () {
 		var list = jQuery(ulTemplate).bookmarkWidget(wrap([]));
@@ -158,6 +235,11 @@ describe("Bookmark widget", function () {
 		var list = jQuery(ulTemplate).bookmarkWidget(wrap([{mapId: 'x', title: 'y'}]));
 		expect(list.children('li').length).toBe(1);
 		expect(list.children('li').first().children().first()).toBe('a');
+	});
+	it("adds repository class to hyperlinks based on map ID", function () {
+		var list = jQuery(ulTemplate).bookmarkWidget(wrap([{mapId: 'xabc', title: 'y'}]));
+		expect(list.children('li').length).toBe(1);
+		expect(list.children('li').first().children().first().hasClass('repo-x')).toBeTruthy();
 	});
 	it("links are listed in reverse order as hyperlinks", function () {
 		var links = [{mapId: 'u1', title: 't1'},
@@ -214,5 +296,36 @@ describe("Bookmark widget", function () {
 		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li>");
 		list.bookmarkWidget(wrap([{mapId: 'x', title: 'y'}]));
 		expect(list.children('li').last().text()).toBe('Keep me');
+	});
+	it("preserves any elements with data-mm-role=bookmark-pin and appends after keep links if the bookmark is pinnable", function () {
+		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li><li data-mm-role='bookmark-pin'>Pin me</li>"),
+			bookmark = wrap([{mapId: 'x', title: 'y'}]);
+		spyOn(bookmark, 'canPin').andReturn(true);
+		list.bookmarkWidget(bookmark);
+		expect(list.children('li').last().text()).toBe('Pin me');
+	});
+	it("does not append elements with data-mm-role=bookmark-pin if map is not pinnable", function () {
+		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li><li data-mm-role='bookmark-pin'>Pin me</li>"),
+			bookmark = wrap([{mapId: 'x', title: 'y'}]);
+		spyOn(bookmark, 'canPin').andReturn(false);
+		list.bookmarkWidget(bookmark);
+		expect(list.children('li').last().text()).toBe('Keep me');
+	});
+	it("self-updates when the pinnable status changes", function () {
+		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li><li data-mm-role='bookmark-pin'>Pin me</li>"),
+			repo = observable({}),
+			bookmark = wrap([{mapId: 'x', title: 'y'}], repo);
+		list.bookmarkWidget(bookmark);
+		repo.dispatchEvent('mapLoaded', {title: 'z'}, 'y');
+		expect(list.children('li').last().text()).toBe('Pin me');
+	});
+	it("attaches a click event on any links inside data-mm-role=bookmark-pin that call bookmark.pin", function () {
+		var list = jQuery(ulTemplate).prepend("<li data-mm-role='bookmark-keep'>Keep me</li><li data-mm-role='bookmark-pin'><a href='#'>Pin Me</a></li>"),
+			bookmark = wrap([{mapId: 'x', title: 'y'}]);
+		spyOn(bookmark, 'canPin').andReturn(true);
+		list.bookmarkWidget(bookmark);
+		spyOn(bookmark, 'pin');
+		list.children('li').last().find('a').click();
+		expect(bookmark.pin).toHaveBeenCalled();
 	});
 });

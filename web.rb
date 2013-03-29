@@ -5,6 +5,7 @@ require 'aws-sdk'
 
 require File.dirname(__FILE__)+'/lib/s3_policy_signer.rb'
 require File.dirname(__FILE__)+'/lib/freemind_format.rb'
+require File.dirname(__FILE__)+'/lib/browser_detection.rb'
 
 configure do
   set :google_analytics_account, ENV["GOOGLE_ANALYTICS_ACCOUNT"]
@@ -33,16 +34,31 @@ end
 get '/' do
   if session['mapid'].nil?
     @mapid=settings.default_map
-    erb :editor
+    show_map
   else
     redirect "/map/#{session['mapid']}"
+  end
+end
+get '/gd' do
+
+  begin
+    state = JSON.parse(params[:state])
+    if state['action']=='create' then
+      mapid = "new#google-drive"
+    else
+      mapid = "g1" + state['ids'][0]
+    end
+    redirect "/map/"+mapid
+  rescue Exception=>e
+    puts e
+    halt 400, "Google drive state missing or invalid"
   end
 end
 get '/fb' do
 	redirect "http://facebook.com/mindmupapp"
 end
 get '/trouble' do
- erb :trouble, :layout => false
+ erb :trouble
 end
 get '/default' do
   @mapid=settings.default_map
@@ -56,41 +72,44 @@ get "/s3proxy/:mapid" do
   content_type 'application/json'
   settings.s3_bucket.objects[map_key(params[:mapid])].read
 end
-get "/export/mindmup/:mapid" do
+
+post "/echo" do
   content_type 'application/octet-stream'
-  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
-  json=JSON.parse(contents)
-  attachment (Rack::Utils.escape(json['title'])+'.mup')
-  contents
+  attachment Rack::Utils.escape(params[:title])
+  params[:map]
 end
-get "/export/freemind/:mapid" do
+
+post "/export" do
   content_type 'application/octet-stream'
-  contents=settings.s3_bucket.objects[map_key(params[:mapid])].read
+  contents=params[:map]
   json=JSON.parse(contents)
-  attachment (Rack::Utils.escape(json['title'])+'.mm')
-  FreemindFormat.new(json).to_freemind
+  attachment (Rack::Utils.escape(json['title'])+'.'+params[:format])
+  if (params[:format] == "mm")
+    FreemindFormat.new(json).to_freemind
+  else
+    contents
+  end
 end
+
 get "/map/:mapid" do
   @mapid = params[:mapid]
   session['mapid']=@mapid
-  erb :editor
+  show_map
 end
 
 get "/publishingConfig" do
   @s3_upload_identifier = settings.current_map_data_version +  settings.key_id_generator.generate(:compact)
   @s3_key=settings.s3_upload_folder+"/" + @s3_upload_identifier + ".json"
-  @s3_result_url= settings.base_url + "s3/" + @s3_upload_identifier
   @s3_content_type="text/plain"
   signer=S3PolicySigner.new
-  @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name,
-                               @s3_key, @s3_result_url, settings.s3_max_upload_size*1024, @s3_content_type, settings.s3_form_expiry
-  erb :s3UploadConfig, :layout => false
+  @policy=signer.signed_policy settings.s3_secret_key, settings.s3_key_id, settings.s3_bucket_name, @s3_key, settings.s3_max_upload_size*1024, @s3_content_type, settings.s3_form_expiry
+  erb :s3UploadConfig
 end
 
-get '/trouble' do
-  erb :trouble, :layout => false
+get '/browserok/:mapid' do
+  session['browserok']=true
+  redirect "/map/#{params[:mapid]}"
 end
-
 post '/import' do
   file = params['file']
   json_fail('No file uploaded') unless file 
@@ -100,13 +119,28 @@ post '/import' do
   allowed_types=[".mm", ".mup"]
   uploaded_type= File.extname file[:filename]
   json_fail "unsupported file type #{uploaded_type}" unless allowed_types.include? uploaded_type
-  result=File.readlines(file[:tempfile]).join '\n'
-  if uploaded_type=='.mm'
-    result=JSON.fast_generate(FreemindFormat.new().from_freemind(result))
-  end
+  result=File.readlines(file[:tempfile]).join  ' '
+  content_type 'text/plain'
+  result
 end
-
+get "/un" do
+  erb :unsupported
+end
+include Sinatra::UserAgentHelpers
 helpers do
+  def show_map
+    if (browser_supported? || user_accepted_browser?)
+      erb :editor
+    else
+      erb :unsupported
+    end
+  end
+  def user_accepted_browser?
+    !(session["browserok"].nil?)
+  end
+  def browser_supported? 
+    browser.chrome? || browser.gecko? || browser.safari?
+  end
   def json_fail message
     halt %Q!{"error":"#{message}"}!
   end
@@ -121,12 +155,20 @@ helpers do
     end
   end
   def join_scripts script_url_array
-    return script_url_array if development?
+    return script_url_array if (development? || test?)
     target_file="#{settings.public_folder}/#{settings.cache_prevention_key}.js" 
+
     if (!File.exists? target_file) then
+      script_url_array.each do |input_file|
+        infile = "#{settings.public_folder}/#{input_file}"
+        if !File.exists? infile then
+          halt 503, "Script file not found! #{input_file}"
+        end
+      end
       File.open(target_file,"w") do |output_file|
         script_url_array.each do |input_file|
-          content= File.readlines("#{settings.public_folder}/#{input_file}")
+          infile = "#{settings.public_folder}/#{input_file}"
+          content= File.readlines(infile)
           output_file.puts content
         end
       end

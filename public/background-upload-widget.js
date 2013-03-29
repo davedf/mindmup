@@ -1,39 +1,40 @@
 /*global $ */
-$.fn.json_upload = function (action, start, complete, fail) {
+$.fn.background_upload = function (action, start, complete, fail) {
     'use strict';
     var element = this,
-        sequence = $('iframe').length;
-
+        sequence = $('iframe').length,
+		active = false;
 	start = start || function (name) { console.log("Uploading", name); };
 	complete = complete || function (content) { console.log("Uploaded", content); };
 	fail = fail || function (error) { console.log("Upload error", error); };
 
     $('<iframe style="display:none" name="upload-' + sequence + '"></iframe>').appendTo('body').load(
 		function () {
-			var result;
+			var result, fileType = active;
+			if (!active) {
+				return;
+			}
+			active = false;
 			try {
-				result = this.contentWindow.document.body.innerHTML;
+				result = $(this.contentWindow.document.body).text();
 			} catch (err) {
 				fail("problem uploading the file to server", result);
 				return;
 			}
-			try {
-				result = JSON.parse(result);
-				if (result.error) {
-					fail(result.error);
-				} else {
-					complete(result);
-				}
-			} catch (err2) {
-				console.log(err2, err2.stack);
-				fail("invalid server response", result);
-			}
+			complete(result, fileType);
 		}
 	);
     element.wrap('<form enctype="multipart/form-data" method="post" action="' + action + '" target="upload-' + sequence + '">');
     element.parents('form').submit(
 		function () {
-			start((element.val() || '').replace(/.*[\\\/]/g, ''));
+			var name = (element.val() || '').replace(/.*[\\\/]/g, '');
+			active = name.split('.').pop();
+		    if (active !== 'mm' && active !== 'mup') {
+				fail("unsupported type " + active);
+				active = false;
+				return false;
+			}
+			start(name);
 		}
 	);
 	element.change(function () {

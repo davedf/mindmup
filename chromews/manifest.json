@@ -1,0 +1,31 @@
+{
+  "name": "MindMup",
+  "description": "Zero-friction, free online mind mapping. The most productive online mind map canvas on the Web. Supports Freemind import/export.",
+  "version": "0.0.0.5",
+  "manifest_version": 2,
+  "container" : "GOOGLE_DRIVE",
+  "api_console_project_id" : "399581875395",
+  "gdrive_mime_types": {
+    "http://drive.google.com/intents/opendrivedoc": [{ 
+        "type": ["application/json", "application/vnd.google.drive.ext-type.mup","application/x-freemind","application/vnd.google.drive.ext-type.mm"],
+        "href": "http://www.mindmup.com/",
+        "title" : "Open",
+        "disposition" : "window"
+      }
+    ]
+  },
+  "icons": {
+    "128": "icon_128.png"
+  },
+  "app": {
+    "urls": [
+      "http://www.mindmup.com/"
+    ],
+    "launch": {
+      "web_url": "http://www.mindmup.com/"
+    }
+  },
+  "permissions": [
+    "unlimitedStorage"
+  ]
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>MindMup: Zero-Friction Free Online Mind Mapping</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="mind mapping, mind map, mindmap, mindmapping, free online mindmapping, free online mind mapping, mindmup" />
+    <meta name="description" content="Zero-friction, free online mind mapping. Opensource mindmapping software. The most productive online mind map canvas on the Web. Supports Freemind mindmap import/export." />
+    <link rel="shortcut icon" href="//<%=settings.s3_website%>/lib/img/favicon.ico" >
+    <link href="//mindmup.s3.amazonaws.com/lib/bootstrap-combined.min.css" rel="stylesheet" />
+    <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', '<%= settings.google_analytics_account %>']);
+      _gaq.push(['_trackEvent','Error','Unsupported Browser Warning']);
+      (function() {
+       var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+       ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+       })();
+     </script>
+   </head>
+   <body>
+     <div class="container">
+       <div class="well">
+         <h2>Hello there esoteric browser user</h2>
+         <p>Your browser is used by less than 2% of our users. As a free service
+         running an opensource project, we unfortunately cannot guarantee that the
+         application will work well with your software. We won't judge you for using
+         an unusual browser, but please also don't judge us on the performance of the application in it. We test the application in recent versions of <a href="https://www.google.com/intl/en/chrome/browser/" target="_blank">Chrome</a>, 
+         <a href="http://www.getfirefox.com" target="_blank">Firefox</a> and Safari, and strongly recommend using one of those browsers if possible.
+         Of course, you're more than welcome to continue in your browser, if you'd like. We won't show this message again.</p>
+         <p style="text-align:center">
+         <a class="btn btn-large btn-primary" href="/browserok/<%=@mapid%>">I understand, now let me in</a></p>
+         <p>If you are using a recent version of Chrome, Firefox or Safari and you see this message, please let us know at contact@mindmup.com.
+         If you feel very strongly about having your browser supported, think about contributing code or testing to <a href="http://github.com/mindmup">MindMup on github</a>. 
+         </p>
+       </div>
+  <h1>MindMup - free online mind mapping</h1>
+  <p><small>
+    MindMup is a free online mind mapping application running opensource software. MindMup is zero friction, helping you focus on your work and removing all the distractions while mindmapping. It is highly productive, with powerful mindmap keyboard shortcuts and allowing advanced users to get the most out of their screen real-estate with configurable toolbars. MindMup is available everywhere: cloud storage ensures you have access to your data where ever you are, and the application works nicely with both desktop, tablet and mobile browsers. Freemind mind map import/export is available.
+    <br/>
+    Software copyright &copy; Gojko Adzic, Damjan Vujnovic, David de Florinier 2013.</small></p>
+   <center><p><a href="http://blog.mindmup.com/">Blog/News</a> | 
+     <a href="mailto:contact@mindmup.com">Email</a> | <a href="https://twitter.com/mindmup">Twitter</a> | <a href="http://www.facebook.com/mindmupapp">Facebook</a></p></center>
+     </div>
+   </body>
+ </html>
