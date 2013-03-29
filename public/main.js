@@ -35,7 +35,9 @@ MM.main = function (config) {
 				MAPJS.KineticMediator.layoutCalculator,
 				['I have a cunning plan...', 'We\'ll be famous...', 'Lancelot, Galahad, and I wait until nightfall, and then leap out of the rabbit, taking the French by surprise'],
 				['Luke, I AM your father!', 'Who\'s your daddy?', 'I\'m not a doctor, but I play one on TV', 'Press Space or double-click to edit']),
-			mapBookmarks = new MM.Bookmark(mapRepository, MM.jsonStorage(localStorage), 'created-maps');
+			mapBookmarks = new MM.Bookmark(mapRepository, MM.jsonStorage(localStorage), 'created-maps'),
+			windowHash = window && window.location && window.location.hash,
+			mapIdFromHash = windowHash && windowHash.length && windowHash.length > 1 && windowHash.substring && windowHash.substring(1);
 		MM.OfflineMapStorageBookmarks(offlineMapStorage, mapBookmarks);
 		jQuery.support.cors = true;
 		setupTracking(activityLog, jotForm, mapModel);
@@ -83,7 +85,7 @@ MM.main = function (config) {
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
-		mapRepository.loadMap(config.mapId);
+		mapRepository.loadMap(config.mapId || mapIdFromHash || 'default');
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };

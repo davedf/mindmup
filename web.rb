@@ -96,7 +96,9 @@ get "/map/:mapid" do
   session['mapid']=@mapid
   show_map
 end
-
+get "/m" do
+  show_map
+end
 get "/publishingConfig" do
   @s3_upload_identifier = settings.current_map_data_version +  settings.key_id_generator.generate(:compact)
   @s3_key=settings.s3_upload_folder+"/" + @s3_upload_identifier + ".json"
@@ -148,10 +150,14 @@ helpers do
     (mapid.include?("/") ?  "" : settings.s3_upload_folder + "/") + mapid + ".json"
   end
   def map_url mapid
-    if settings.online?
-      "http://%s/%s" %  [settings.s3_website, map_key(mapid)]
-    else
-      "/offline/default.json"
+    if !mapid
+      ""
+    else 
+      if settings.online?
+        "http://%s/%s" %  [settings.s3_website, map_key(mapid)]
+      else
+        "/offline/default.json"
+      end
     end
   end
   def join_scripts script_url_array
