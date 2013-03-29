@@ -3,7 +3,8 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 	// order of adapters is important, the first adapter is default
 	'use strict';
 	observable(this);
-	var dispatchEvent = this.dispatchEvent,
+	var jsonMimeType = 'application/json',
+		dispatchEvent = this.dispatchEvent,
 		mapInfo = {},
 		offlineFallback = new MM.OfflineFallback(MM.jsonStorage(localStorage)),
 		chooseAdapter = function (identifiers) {
@@ -27,7 +28,7 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 		},
 		mapLoaded = function (fileContent, mapId, mimeType, notSharable) {
 			var json, idea;
-			if (mimeType === 'application/json') {
+			if (mimeType === jsonMimeType) {
 				json = typeof fileContent === 'string' ? JSON.parse(fileContent) : fileContent;
 			} else if (mimeType === 'application/octet-stream') {
 				json = JSON.parse(fileContent);
@@ -81,19 +82,26 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			offlineFallbackMap,
 			loadFromAdapter = function () {
 				offlineFallback.remove(mapId);
-				MM.retry(
-					adapter.loadMap.bind(adapter, mapId),
-					shouldRetry(5),
-					MM.linearBackoff()
-				).then(
-					adapterLoadedMap,
-					mapLoadFailed
-				).progress(progressEvent);
+				var embeddedMap = MM && mapId && MM.Maps[mapId.toLowerCase()];
+				if (embeddedMap) {
+					console.log('embedded map', mapId);
+					mapLoaded(embeddedMap, mapId, jsonMimeType, true);
+				} else {
+					MM.retry(
+						adapter.loadMap.bind(adapter, mapId),
+						shouldRetry(5),
+						MM.linearBackoff()
+					).then(
+						adapterLoadedMap,
+						mapLoadFailed
+					).progress(progressEvent);
+				}
 			};
 		dispatchEvent('mapLoading', mapId);
 		offlineFallbackMap = offlineFallback.loadMap(mapId);
+
 		if (offlineFallbackMap) {
-			dispatchEvent('offlineFallbackExists', mapLoaded.bind(undefined, offlineFallbackMap, mapId, 'application/json', true), loadFromAdapter);
+			dispatchEvent('offlineFallbackExists', mapLoaded.bind(undefined, offlineFallbackMap, mapId, jsonMimeType, true), loadFromAdapter);
 		} else {
 			loadFromAdapter();
 		}
