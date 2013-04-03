@@ -1,4 +1,4 @@
-/*global $*/
+/*global $, wysihtml5*/
 /*jslint browser:true */
 $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
@@ -9,9 +9,9 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 				var size = (options && options.size) ? ' btn-' + options.size : '';
 				return "<li>" +
 					"<div class='btn-group'>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='bold' title='CTRL+B' tabindex='-1'><i class='icon-bold'></i></a>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='italic' title='CTRL+I' tabindex='-1'><i class='icon-italic'></i></a>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='underline' title='CTRL+U' tabindex='-1'><i class='icon-underline'></i></a>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='bold' title='Bold (CTRL+B)' tabindex='-1'><i class='icon-bold'></i></a>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='italic' title='Italic (CTRL+I)' tabindex='-1'><i class='icon-italic'></i></a>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='underline' title='Underline (CTRL+U)' tabindex='-1'><i class='icon-underline'></i></a>" +
 					"</div>" +
 					"</li>";
 			}
@@ -32,6 +32,12 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 				element.modal('show');
 			}
 		};
+	/*	speechBtn = $("<li>" +
+			"<div class='btn-group'>" +
+			"<a class='btn' data-wysihtml5-command='insertSpeech' title='Voice' tabindex='-1'><i class='icon-volume-up'></i></a>" +
+			"</div>" +
+			"</li>").appendTo(wysiEditor.toolbar);
+	*/
 	element.find('[data-mm-role=save]').click(save);
 	element.keydown('return', save);
 	element.on('shown', function () {
