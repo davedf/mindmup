@@ -105,7 +105,7 @@ describe('Map Repository', function () {
 
 			underTest.loadMap('foo');
 
-			expect(JSON.stringify(listener.mostRecentCall.args[0])).toBe('{"title":"hello","id":1}');
+			expect(JSON.stringify(listener.mostRecentCall.args[0])).toBe('{"title":"hello","formatVersion":2,"id":1}');
 			expect(listener.mostRecentCall.args[1]).toBe('foo');
 		});
 		it('should use retry', function () {
@@ -272,7 +272,7 @@ describe('Map Repository', function () {
 			underTest.publishMap();
 
 			clock.tick(1200001);
-			expect(localStorage.getItem('fallback-s123')).toBe('{"map":{"title":"Hello world!","id":1}}');
+			expect(localStorage.getItem('fallback-s123')).toBe('{"map":{"title":"Hello world!","formatVersion":2,"id":1}}');
 		});
 		it('should remove locally stored fallback map if saving to cloud succeeds', function () {
 			localStorage.setItem('fallback-s123', '{"map":{"title":"Hello world!","id":1}}');
