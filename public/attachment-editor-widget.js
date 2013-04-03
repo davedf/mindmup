@@ -4,7 +4,19 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
 	var element = this,
 		editorArea = element.find('[data-mm-role=editor]'),
-		wysiOptions = {image: false},
+		editorCustomTemplates = {
+			emphasis: function (locale, options) {
+				var size = (options && options.size) ? ' btn-' + options.size : '';
+				return "<li>" +
+					"<div class='btn-group'>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='bold' title='CTRL+B' tabindex='-1'><i class='icon-bold'></i></a>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='italic' title='CTRL+I' tabindex='-1'><i class='icon-italic'></i></a>" +
+					"<a class='btn" + size + "' data-wysihtml5-command='underline' title='CTRL+U' tabindex='-1'><i class='icon-underline'></i></a>" +
+					"</div>" +
+					"</li>";
+			}
+		},
+		wysiOptions = {image: false,  customTemplates: editorCustomTemplates},
 		wysiEditor = editorArea.wysihtml5(wysiOptions).data('wysihtml5'),
 		ideaId,
 		keysBound,
