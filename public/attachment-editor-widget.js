@@ -4,7 +4,8 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
 	var element = this,
 		editorArea = element.find('[data-mm-role=editor]'),
-		wysiEditor = editorArea.wysihtml5().data('wysihtml5'),
+		wysiOptions = {image: false},
+		wysiEditor = editorArea.wysihtml5(wysiOptions).data('wysihtml5'),
 		ideaId,
 		keysBound,
 		save = function () {
