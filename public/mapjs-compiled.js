@@ -981,6 +981,20 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			analytic('resetView', source);
 		}
 	};
+	this.openAttachment = function (source, nodeId) {
+		analytic('openAttachment', source);
+		nodeId = nodeId || currentlySelectedIdeaId;
+		var node = currentLayout.nodes[nodeId],
+			attachment = node && node.attr && node.attr.attachment;
+		if (node) {
+			self.dispatchEvent('attachmentOpened', nodeId, attachment);
+		}
+	};
+	this.setAttachment = function (source, nodeId, attachment) {
+		analytic('setAttachment', source);
+		var hasAttachment = !!(attachment && attachment.content);
+		idea.updateAttr(nodeId, 'attachment', hasAttachment && attachment);
+	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
 				return currentLayout.nodes[id].x >= currentLayout.nodes[idea.id].x;
@@ -1461,6 +1475,9 @@ Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 			align: 'center'
 		});
 		this.clip = createClip();
+		this.clip.on('click tap', function () {
+			self.fire(':openAttachmentRequested');
+		});
 		this.add(this.rectbg1);
 		this.add(this.rectbg2);
 		this.add(this.rect);
@@ -1638,7 +1655,7 @@ Kinetic.Idea.prototype.setStyle = function () {
 		isSelected = this.isSelected,
 		background = this.getBackground(),
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
-		isClipVisible = false,
+		isClipVisible = this.mmAttr && this.mmAttr.attachment || false,
 		padding = 8,
 		clipMargin = isClipVisible ? 5 : 0,
 		rectOffset = clipMargin,
@@ -1794,7 +1811,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 			return idea && idea[fname] && idea[fname].apply(idea, arguments);
 		};
 	});
-	_.each([':textChanged', ':editing'], function (fname) {
+	_.each([':textChanged', ':editing', ':openAttachmentRequested'], function (fname) {
 		idea.on(fname, function (event) {
 			container.fire(fname, event);
 			reRender();
@@ -1966,12 +1983,12 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		node.on(':editing', function () {
 			mapModel.setInputEnabled(false);
 		});
-
-
+		node.on(':openAttachmentRequested', function () {
+			mapModel.openAttachment('mouse', n.id);
+		});
 		if (n.level > 1) {
 			node.on('mouseover touchstart', stage.setDraggable.bind(stage, false));
 			node.on('mouseout touchend', stage.setDraggable.bind(stage, true));
-
 		}
 		layer.add(node);
 		stage.on(':scaleChangeComplete', function () {
@@ -2109,7 +2126,7 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo',
-			'copy', 'cut', 'paste', 'resetView'],
+			'copy', 'cut', 'paste', 'resetView', 'openAttachment'],
 		changeMethodNames = ['updateStyle'];
 	return this.each(function () {
 		var element = jQuery(this);
@@ -2230,6 +2247,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				return !result;
 			},
 			keyboardEventHandlers = {
+				'a': 'openAttachment',
 				'return': 'addSiblingIdea',
 				'del backspace': 'removeSubIdea',
 				'tab': 'addSubIdea',

@@ -246,3 +246,10 @@ body.ipad {
 body.offline-enabled .offline-disabled-hidden {
 	display: block;
 }
+#modalAttachmentEditor textarea.huge {
+	width:95%;
+	min-height:300px;
+	height:100%;
+	margin: 10px 10px 10px 10px;
+}
+#modalAttachmentEditor .btn-primary { margin-left:5px;} 

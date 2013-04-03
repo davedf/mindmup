@@ -83,6 +83,7 @@ MM.main = function (config) {
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
+		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
