@@ -3,11 +3,19 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
 	var element = this,
 		editorArea = element.find('[data-mm-role=editor]'),
-		cleditor = editorArea.cleditor({controls: 'font size ' +
-                    'style | bold italic underline strikethrough | color highlight | bullets numbering | alignleft center alignright justify | ' +
-                    'image link unlink', updateTextArea: function (html) {
-						return html.replace(/(<br>|\s|<div><br><\/div>|&nbsp;)*$/, '');
-                    }})[0],
+		cleditor = editorArea.cleditor({
+			controls: 'font size style | bold italic underline strikethrough | color highlight | bullets numbering | alignleft center alignright justify | image link unlink',
+            hotKeys: {
+				'ctrl+b meta+b': 'bold',
+				'ctrl+i meta+i': 'italic',
+				'ctrl+u meta+u': 'underline',
+				'ctrl+z meta+z': 'undo',
+				'ctrl+y meta+y meta+shift+z': 'redo'
+            },
+			updateTextArea: function (html) {
+				return html.replace(/(<br>|\s|<div><br><\/div>|&nbsp;)*$/, '');
+			}
+		})[0],
 		ideaId,
 		keysBound,
 		save = function () {
@@ -36,6 +44,10 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 			}).keydown('ctrl+s meta+s', function (e) {
 				save();
 				e.preventDefault();
+			}).keydown(function () {
+				if (document.activeElement !== cleditor.$frame[0]) {
+					cleditor.focus();
+				}
 			});
 			keysBound = true;
 		}
