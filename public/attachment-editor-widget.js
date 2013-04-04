@@ -1,48 +1,35 @@
-/*global $, wysihtml5*/
-/*jslint browser:true */
+/*global $*/
 $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
 	var element = this,
 		editorArea = element.find('[data-mm-role=editor]'),
-		editorCustomTemplates = {
-			emphasis: function (locale, options) {
-				var size = (options && options.size) ? ' btn-' + options.size : '';
-				return "<li>" +
-					"<div class='btn-group'>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='bold' title='Bold (CTRL+B)' tabindex='-1'><i class='icon-bold'></i></a>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='italic' title='Italic (CTRL+I)' tabindex='-1'><i class='icon-italic'></i></a>" +
-					"<a class='btn" + size + "' data-wysihtml5-command='underline' title='Underline (CTRL+U)' tabindex='-1'><i class='icon-underline'></i></a>" +
-					"</div>" +
-					"</li>";
-			}
-		},
-		wysiOptions = {image: false,  customTemplates: editorCustomTemplates},
-		wysiEditor = editorArea.wysihtml5(wysiOptions).data('wysihtml5'),
+		cleditor = editorArea.cleditor({controls: 'font size ' +
+                    'style | bold italic underline strikethrough | color highlight | bullets numbering | alignleft center alignright justify | ' +
+                    'image link unlink', updateTextArea: function (html) {
+						return html.replace(/(<br>|\s|<div><br><\/div>|&nbsp;)*$/, '');
+                    }})[0],
 		ideaId,
 		keysBound,
 		save = function () {
 			element.modal('hide');
-			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: wysiEditor.editor.getValue() });
+			cleditor.updateTextArea();
+			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.val() });
+			cleditor.clear();
 		},
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
 			ideaId = activeIdea;
 			if (!contentType || contentType === 'text/html') {
-				wysiEditor.editor.setValue(attachment && attachment.content);
+				editorArea.val(attachment && attachment.content);
+				cleditor.updateFrame();
 				element.modal('show');
 			}
 		};
-	/*	speechBtn = $("<li>" +
-			"<div class='btn-group'>" +
-			"<a class='btn' data-wysihtml5-command='insertSpeech' title='Voice' tabindex='-1'><i class='icon-volume-up'></i></a>" +
-			"</div>" +
-			"</li>").appendTo(wysiEditor.toolbar);
-	*/
 	element.find('[data-mm-role=save]').click(save);
 	element.keydown('return', save);
 	element.on('shown', function () {
-		var realEditor = $('.wysihtml5-editor', $('.wysihtml5-sandbox')[0].contentDocument);
-		realEditor.focus();
+		cleditor.focus();
+		var realEditor = $(cleditor.doc);
 		if (!keysBound) {
 			realEditor.keydown('esc', function () {
 				element.modal('hide');
@@ -53,7 +40,11 @@ $.fn.attachmentEditorWidget = function (mapModel) {
 			keysBound = true;
 		}
 	});
-
+	element.on('hidden', function () {
+		if (parent && parent.focus) {
+			parent.focus();
+		}
+	});
 	mapModel.addEventListener('attachmentOpened', open);
 	return element;
 };
