@@ -1,4 +1,4 @@
-/*global jasmine, beforeEach, afterEach, sinon, content, describe, expect, it, MM, spyOn, localStorage*/
+/*global jasmine, beforeEach, afterEach, sinon, describe, expect, it, MAPJS, MM, spyOn, localStorage*/
 describe('OfflineAdapter', function () {
 	'use strict';
 	var jsonStorage, underTest;
@@ -41,7 +41,7 @@ describe('OfflineAdapter', function () {
 		it('should save an existing map from another storage provider into local storage when saveMap method is invoked', function () {
 			underTest.saveMap({
 				mapId: 'g123',
-				idea: content({title: 'Hello World', id: 1})
+				idea: MAPJS.content({title: 'Hello World', id: 1})
 			});
 			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
 			expect(JSON.parse(localStorage.getItem('offline-maps')).nextMapId).toBe(2);
@@ -49,7 +49,7 @@ describe('OfflineAdapter', function () {
 		it('should save an existing offline map into local storage when saveMap method is invoked', function () {
 			underTest.saveMap({
 				mapId: 'offline-map-123',
-				idea: content({title: 'Hello World', id: 1})
+				idea: MAPJS.content({title: 'Hello World', id: 1})
 			});
 
 			expect(localStorage.getItem('offline-map-123')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
@@ -57,7 +57,7 @@ describe('OfflineAdapter', function () {
 		it('should save an existing map from another storage provider into local storage when saveMap method is invoked', function () {
 			underTest.saveMap({
 				mapId: 'new',
-				idea: content({title: 'Hello World', id: 1})
+				idea: MAPJS.content({title: 'Hello World', id: 1})
 			});
 
 			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
@@ -66,7 +66,7 @@ describe('OfflineAdapter', function () {
 			spyOn(jsonStorage, 'setItem').andThrow('Quota exceeded');
 			underTest.saveMap({
 				mapId: 'new',
-				idea: content({title: 'a very large map', id: 1})
+				idea: MAPJS.content({title: 'a very large map', id: 1})
 			}).then(
 				this.fail.bind(this, 'saveMap should not succeed'),
 				function (reason) {
@@ -83,7 +83,7 @@ describe('Offline Fallback', function () {
 		localStorage.clear();
 		jsonStorage = MM.jsonStorage(localStorage);
 		underTest = new MM.OfflineFallback(jsonStorage);
-		map = content({ title: 'Hello World!' });
+		map = MAPJS.content({ title: 'Hello World!' });
 	});
 	describe('Storing a map locally', function () {
 		it('should store map locally under fallback-mapId key', function () {
@@ -124,7 +124,7 @@ describe('OfflineMapStorage', function () {
 		clock = sinon.useFakeTimers();
 		localStorage.clear();
 		jsonStorage = MM.jsonStorage(localStorage);
-		map = content({ title: 'Hello World!' });
+		map = MAPJS.content({ title: 'Hello World!' });
 		underTest = new MM.OfflineMapStorage(jsonStorage, 'offline');
 	});
 	afterEach(function () {
