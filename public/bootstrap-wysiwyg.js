@@ -36,12 +36,16 @@ $.fn.wysiwyg = function (options) {
 		bindHotkeys = function (hotKeys) {
 			$.each(hotKeys, function (hotkey, command) {
 				editor.keydown(hotkey, function (e) {
-					e.preventDefault();
-					e.stopPropagation();
-					execCommand(command);
+					if (editor.attr('contenteditable') && editor.is(':visible')) {
+						e.preventDefault();
+						e.stopPropagation();
+						execCommand(command);
+					}
 				}).keyup(hotkey, function (e) {
-					e.preventDefault();
-					e.stopPropagation();
+					if (editor.attr('contenteditable') && editor.is(':visible')) {
+						e.preventDefault();
+						e.stopPropagation();
+					}
 				});
 			});
 		},
@@ -94,4 +98,4 @@ $.fn.wysiwyg = function (options) {
 		$(window).bind('touchend', saveSelectionRange);
 	});
 	return this;
-}
+};
