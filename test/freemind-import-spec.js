@@ -1,4 +1,4 @@
-/*global jasmine, MM, jQuery, describe, it, beforeEach, expect, content*/
+/*global jasmine, MAPJS, MM, describe, it, expect*/
 describe("Freemind Import", function () {
 	'use strict';
 	var complex_xml = '<map version="0.7.1"><node ID="1" TEXT="A">' +
@@ -66,16 +66,16 @@ describe("Freemind Import", function () {
 describe("Freemind Export", function () {
 	'use strict';
 	it('converts a single node map into a MAP/NODE XML element in freemind format', function () {
-		var idea = content({id: 1, title: 'Root'});
+		var idea = MAPJS.content({id: 1, title: 'Root'});
 		expect(MM.freemindExport(idea)).toBe('<map version="0.7.1"><node ID="1" TEXT="Root"></node></map>');
 	});
 	it('embeds subideas into child nodes', function () {
-		var idea = content({id: 1, title: 'A', ideas: {'-1': {id: 2, title: 'B'}, '2': {id: 3, title: 'C'}}});
+		var idea = MAPJS.content({id: 1, title: 'A', ideas: {'-1': {id: 2, title: 'B'}, '2': {id: 3, title: 'C'}}});
 		expect(MM.freemindExport(idea)).toBe('<map version="0.7.1"><node ID="1" TEXT="A">' + '<node ID="2" TEXT="B"></node>' + '<node ID="3" TEXT="C"></node>' + '</node></map>');
 	});
 	it('converts non ascii latin into xml entities', function () {
 
-		var idea = content({id: 1, title: 'fr' + String.fromCharCode('0xE9') + 'jap' + String.fromCharCode('0x65E5')});
+		var idea = MAPJS.content({id: 1, title: 'fr' + String.fromCharCode('0xE9') + 'jap' + String.fromCharCode('0x65E5')});
 		expect(MM.freemindExport(idea)).toBe('<map version="0.7.1"><node ID="1" TEXT="fr&#xE9;jap&#x65E5;"></node></map>');
 	});
 });

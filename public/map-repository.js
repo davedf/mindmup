@@ -1,4 +1,4 @@
-/*global _, content, jQuery, MM, observable, window, document, setTimeout*/
+/*global _, jQuery, MAPJS, MM, observable, window, document, setTimeout*/
 MM.MapRepository = function (activityLog, alert, adapters) {
 	// order of adapters is important, the first adapter is default
 	'use strict';
@@ -35,7 +35,7 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			} else if (mimeType === 'application/x-freemind') {
 				json = MM.freemindImport(fileContent);
 			}
-			idea = content(json);
+			idea = MAPJS.content(json);
 			setMap(idea, mapId, notSharable);
 		},
 		shouldRetry = function (retries) {

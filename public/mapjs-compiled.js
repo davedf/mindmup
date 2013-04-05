@@ -35,8 +35,8 @@ var observable = function (base) {
 	return base;
 };
 /*jslint eqeq: true, forin: true, nomen: true*/
-/*global _, observable*/
-var content = function (contentAggregate, progressCallback) {
+/*global _, MAPJS, observable*/
+MAPJS.content = function (contentAggregate, progressCallback) {
 	'use strict';
 	var init = function (contentIdea) {
 		if (contentIdea.ideas) {
@@ -84,19 +84,19 @@ var content = function (contentAggregate, progressCallback) {
 		}
 		return contentIdea;
 	},
-		maxKey = function (kv_map, sign) {
+		maxKey = function (kvMap, sign) {
 			sign = sign || 1;
-			if (_.size(kv_map) === 0) {
+			if (_.size(kvMap) === 0) {
 				return 0;
 			}
-			var current_keys = _.keys(kv_map);
-			current_keys.push(0); /* ensure at least 0 is there for negative ranks */
-			return _.max(_.map(current_keys, parseFloat), function (x) {
+			var currentKeys = _.keys(kvMap);
+			currentKeys.push(0); /* ensure at least 0 is there for negative ranks */
+			return _.max(_.map(currentKeys, parseFloat), function (x) {
 				return x * sign;
 			});
 		},
 		nextChildRank = function (parentIdea) {
-			var new_rank, counts, childRankSign = 1;
+			var newRank, counts, childRankSign = 1;
 			if (parentIdea.id == contentAggregate.id) {
 				counts = _.countBy(parentIdea.ideas, function (v, k) {
 					return k < 0;
@@ -105,8 +105,8 @@ var content = function (contentAggregate, progressCallback) {
 					childRankSign = -1;
 				}
 			}
-			new_rank = maxKey(parentIdea.ideas, childRankSign) + childRankSign;
-			return new_rank;
+			newRank = maxKey(parentIdea.ideas, childRankSign) + childRankSign;
+			return newRank;
 		},
 		appendSubIdea = function (parentIdea, subIdea) {
 			var rank;
@@ -249,15 +249,15 @@ var content = function (contentAggregate, progressCallback) {
 		return true;
 	};
 	contentAggregate.flip = function (ideaId) {
-		var new_rank, max_rank, current_rank = contentAggregate.findChildRankById(ideaId);
-		if (!current_rank) {
+		var newRank, maxRank, currentRank = contentAggregate.findChildRankById(ideaId);
+		if (!currentRank) {
 			return false;
 		}
-		max_rank = maxKey(contentAggregate.ideas, -1 * sign(current_rank));
-		new_rank = max_rank - 10 * sign(current_rank);
-		reorderChild(contentAggregate, new_rank, current_rank);
+		maxRank = maxKey(contentAggregate.ideas, -1 * sign(currentRank));
+		newRank = maxRank - 10 * sign(currentRank);
+		reorderChild(contentAggregate, newRank, currentRank);
 		notifyChange('flip', [ideaId], function () {
-			reorderChild(contentAggregate, current_rank, new_rank);
+			reorderChild(contentAggregate, currentRank, newRank);
 		});
 		return true;
 	};
@@ -366,7 +366,7 @@ var content = function (contentAggregate, progressCallback) {
 		}
 		oldAttr = _.extend({}, idea.attr);
 		idea.attr = _.extend({}, idea.attr);
-		if (!attrValue || attrValue === "false") {
+		if (!attrValue || attrValue === 'false') {
 			if (!idea.attr[attrName]) {
 				return false;
 			}
@@ -387,12 +387,12 @@ var content = function (contentAggregate, progressCallback) {
 	};
 	contentAggregate.moveRelative = function (ideaId, relativeMovement) {
 		var parentIdea = contentAggregate.findParent(ideaId),
-			current_rank = parentIdea && parentIdea.findChildRankById(ideaId),
-			sibling_ranks = current_rank && _.sortBy(sameSideSiblingRanks(parentIdea, current_rank), Math.abs),
-			currentIndex = sibling_ranks && sibling_ranks.indexOf(current_rank),
+			currentRank = parentIdea && parentIdea.findChildRankById(ideaId),
+			siblingRanks = currentRank && _.sortBy(sameSideSiblingRanks(parentIdea, currentRank), Math.abs),
+			currentIndex = siblingRanks && siblingRanks.indexOf(currentRank),
 			/* we call positionBefore, so movement down is actually 2 spaces, not 1 */
 			newIndex = currentIndex + (relativeMovement > 0 ? relativeMovement + 1 : relativeMovement),
-			beforeSibling = (newIndex >= 0) && parentIdea && sibling_ranks && parentIdea.ideas[sibling_ranks[newIndex]];
+			beforeSibling = (newIndex >= 0) && parentIdea && siblingRanks && parentIdea.ideas[siblingRanks[newIndex]];
 		if (newIndex < 0 || !parentIdea) {
 			return false;
 		}
@@ -400,9 +400,9 @@ var content = function (contentAggregate, progressCallback) {
 	};
 	contentAggregate.positionBefore = function (ideaId, positionBeforeIdeaId, parentIdea) {
 		parentIdea = parentIdea || contentAggregate;
-		var new_rank, after_rank, sibling_ranks, candidate_siblings, before_rank, max_rank, current_rank;
-		current_rank = parentIdea.findChildRankById(ideaId);
-		if (!current_rank) {
+		var newRank, afterRank, siblingRanks, candidateSiblings, beforeRank, maxRank, currentRank;
+		currentRank = parentIdea.findChildRankById(ideaId);
+		if (!currentRank) {
 			return _.reduce(
 				parentIdea.ideas,
 				function (result, idea) {
@@ -414,35 +414,35 @@ var content = function (contentAggregate, progressCallback) {
 		if (ideaId == positionBeforeIdeaId) {
 			return false;
 		}
-		new_rank = 0;
+		newRank = 0;
 		if (positionBeforeIdeaId) {
-			after_rank = parentIdea.findChildRankById(positionBeforeIdeaId);
-			if (!after_rank) {
+			afterRank = parentIdea.findChildRankById(positionBeforeIdeaId);
+			if (!afterRank) {
 				return false;
 			}
-			sibling_ranks = sameSideSiblingRanks(parentIdea, current_rank);
-			candidate_siblings = _.reject(_.sortBy(sibling_ranks, Math.abs), function (k) {
-				return Math.abs(k) >= Math.abs(after_rank);
+			siblingRanks = sameSideSiblingRanks(parentIdea, currentRank);
+			candidateSiblings = _.reject(_.sortBy(siblingRanks, Math.abs), function (k) {
+				return Math.abs(k) >= Math.abs(afterRank);
 			});
-			before_rank = candidate_siblings.length > 0 ? _.max(candidate_siblings, Math.abs) : 0;
-			if (before_rank == current_rank) {
+			beforeRank = candidateSiblings.length > 0 ? _.max(candidateSiblings, Math.abs) : 0;
+			if (beforeRank == currentRank) {
 				return false;
 			}
-			new_rank = before_rank + (after_rank - before_rank) / 2;
+			newRank = beforeRank + (afterRank - beforeRank) / 2;
 		} else {
-			max_rank = maxKey(parentIdea.ideas, current_rank < 0 ? -1 : 1);
-			if (max_rank == current_rank) {
+			maxRank = maxKey(parentIdea.ideas, currentRank < 0 ? -1 : 1);
+			if (maxRank == currentRank) {
 				return false;
 			}
-			new_rank = max_rank + 10 * (current_rank < 0 ? -1 : 1);
+			newRank = maxRank + 10 * (currentRank < 0 ? -1 : 1);
 		}
-		if (new_rank == current_rank) {
+		if (newRank == currentRank) {
 			return false;
 		}
-		reorderChild(parentIdea, new_rank, current_rank);
+		reorderChild(parentIdea, newRank, currentRank);
 
 		notifyChange('positionBefore', [ideaId, positionBeforeIdeaId], function () {
-			reorderChild(parentIdea, current_rank, new_rank);
+			reorderChild(parentIdea, currentRank, newRank);
 		});
 		return true;
 	};

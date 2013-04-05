@@ -1,5 +1,5 @@
 /*jslint nomen: true*/
-/*global content, _, jasmine, observable, beforeEach, afterEach, describe, expect, it, jasmine, jQuery, spyOn, MM, sinon*/
+/*global _, jasmine, observable, beforeEach, afterEach, describe, expect, it, jasmine, jQuery, spyOn, MAPJS, MM, sinon*/
 describe('Map Repository', function () {
 	'use strict';
 	var adapter1, adapter2, underTest, clock,
@@ -141,7 +141,7 @@ describe('Map Repository', function () {
 	});
 	describe('saveMap', function () {
 		beforeEach(function () {
-			underTest.setMap(content({}), 'loadedMapId');
+			underTest.setMap(MAPJS.content({}), 'loadedMapId');
 		});
 		it('should use first adapter to load as a fallback option', function () {
 			spyOn(adapter1, 'saveMap').andCallThrough();
@@ -267,7 +267,7 @@ describe('Map Repository', function () {
 			adapter1.saveMap = function () {
 				return jQuery.Deferred().reject('network-error').promise();
 			};
-			underTest.setMap(content({ title: 'Hello world!'}), 's123');
+			underTest.setMap(MAPJS.content({ title: 'Hello world!'}), 's123');
 
 			underTest.publishMap();
 
@@ -276,7 +276,7 @@ describe('Map Repository', function () {
 		});
 		it('should remove locally stored fallback map if saving to cloud succeeds', function () {
 			localStorage.setItem('fallback-s123', '{"map":{"title":"Hello world!","id":1}}');
-			underTest.setMap(content({ title: 'Hello world!'}), 's123');
+			underTest.setMap(MAPJS.content({ title: 'Hello world!'}), 's123');
 
 			underTest.publishMap();
 
@@ -306,7 +306,7 @@ describe('Map Repository', function () {
 			adapter1.saveMap = function () {
 				return jQuery.Deferred().reject('network-error').promise();
 			};
-			underTest.setMap(content({ title: longTitle }), 's123');
+			underTest.setMap(MAPJS.content({ title: longTitle }), 's123');
 
 			underTest.publishMap();
 
