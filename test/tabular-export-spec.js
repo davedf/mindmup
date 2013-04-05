@@ -92,7 +92,7 @@ describe("MM.htmlTableExporter", function () {
 		var htmlExporter = new MM.HtmlTableExporter(),
 			cell;
 		htmlExporter.begin();
-		htmlExporter.each({style: {background: '#FF0000'}}, 0);
+		htmlExporter.each({attr: {style: {background: '#FF0000'}}}, 0);
 		cell = $(htmlExporter.contents()).find('tr').first().children('td').first();
 		expect(Color(cell.css('background-color'))).toEqual(Color('#FF0000'));
 		expect(Color(cell.css('color'))).toEqual(Color(MAPJS.contrastForeground('#FF0000')));

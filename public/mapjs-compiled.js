@@ -72,9 +72,9 @@ var content = function (contentAggregate, progressCallback) {
 				return _.union(result, idea.find(predicate));
 			}, current);
 		};
-		contentIdea.getStyle = function (name) {
-			if (contentIdea.style && contentIdea.style[name]) {
-				return contentIdea.style[name];
+		contentIdea.getAttr = function (name) {
+			if (contentIdea.attr && contentIdea.attr[name]) {
+				return contentIdea.attr[name];
 			}
 			return false;
 		};
@@ -141,7 +141,22 @@ var content = function (contentAggregate, progressCallback) {
 			parentIdea.ideas[newRank] = parentIdea.ideas[oldRank];
 			delete parentIdea.ideas[oldRank];
 		},
-		cachedId;
+		cachedId,
+		upgrade = function (idea) {
+			if (idea.style) {
+				idea.attr = {};
+				var collapsed = idea.style.collapsed;
+				delete idea.style.collapsed;
+				idea.attr.style = idea.style;
+				if (collapsed) {
+					idea.attr.collapsed = collapsed;
+				}
+				delete idea.style;
+			}
+			if (idea.ideas) {
+				_.each(idea.ideas, upgrade);
+			}
+		};
 	contentAggregate.nextId = function nextId() {
 		if (!cachedId) {
 			cachedId =  contentAggregate.maxId();
@@ -208,7 +223,7 @@ var content = function (contentAggregate, progressCallback) {
 
 	/**** aggregate command processing methods ****/
 	contentAggregate.paste = function (parentIdeaId, jsonToPaste) {
-		var pasteParent = (parentIdeaId === contentAggregate.id) ?  contentAggregate : contentAggregate.findSubIdeaById(parentIdeaId),
+		var pasteParent = (parentIdeaId == contentAggregate.id) ?  contentAggregate : contentAggregate.findSubIdeaById(parentIdeaId),
 			cleanUp = function (json) {
 				var result =  _.omit(json, 'ideas', 'id'), index = 1, childKeys, sortedChildKeys;
 				if (json.ideas) {
@@ -343,45 +358,29 @@ var content = function (contentAggregate, progressCallback) {
 		});
 		return true;
 	};
-	contentAggregate.setStyleMap = function (ideaId, newStyle) {
-		var idea = findIdeaById(ideaId), oldStyle;
-		if (!idea || !_.isObject(newStyle)) {
-			return false;
-		}
-		if (_.isEqual(idea.style, newStyle)) {
-			return false;
-		}
-		oldStyle = _.clone(idea.style);
-		idea.style = _.clone(newStyle);
-		notifyChange('setStyleMap', [ideaId, newStyle], function () {
-			idea.style = oldStyle;
-		});
-		return true;
-	};
-	contentAggregate.updateStyle = function (ideaId, styleName, styleValue) {
-		var idea = findIdeaById(ideaId), oldStyle;
+	contentAggregate.updateAttr = function (ideaId, attrName, attrValue) {
+		var idea = findIdeaById(ideaId), oldAttr;
 		if (!idea) {
 			return false;
 		}
-		oldStyle = _.extend({}, idea.style);
-		idea.style = _.extend({}, idea.style);
-		if (!styleValue || styleValue === "false") {
-			if (!idea.style[styleName]) {
+		oldAttr = _.extend({}, idea.attr);
+		idea.attr = _.extend({}, idea.attr);
+		if (!attrValue || attrValue === "false") {
+			if (!idea.attr[attrName]) {
 				return false;
 			}
-			delete idea.style[styleName];
+			delete idea.attr[attrName];
 		} else {
-			/* leave ==, if it's a number and someone sends the equal string, it's still the same */
-			if (idea.style[styleName] == styleValue) {
+			if (_.isEqual(idea.attr[attrName], attrValue)) {
 				return false;
 			}
-			idea.style[styleName] = styleValue;
+			idea.attr[attrName] = JSON.parse(JSON.stringify(attrValue));
 		}
-		if (_.size(idea.style) === 0) {
-			delete idea.style;
+		if (_.size(idea.attr) === 0) {
+			delete idea.attr;
 		}
-		notifyChange('updateStyle', [ideaId, styleName, styleValue], function () {
-			idea.style = oldStyle;
+		notifyChange('updateAttr', [ideaId, attrName, attrValue], function () {
+			idea.attr = oldAttr;
 		});
 		return true;
 	};
@@ -469,6 +468,10 @@ var content = function (contentAggregate, progressCallback) {
 		}
 		return false;
 	};
+	if (contentAggregate.formatVersion != 2) {
+		upgrade(contentAggregate);
+		contentAggregate.formatVersion = 2;
+	}
 	init(contentAggregate);
 	return observable(contentAggregate);
 };
@@ -479,7 +482,7 @@ var MAPJS = MAPJS || {};
 	'use strict';
 	MAPJS.calculateDimensions = function calculateDimensions(idea, dimensionProvider, margin) {
 		var dimensions = dimensionProvider(idea.title),
-			result = _.extend(_.pick(idea, ['id', 'title', 'style']), {
+			result = _.extend(_.pick(idea, ['id', 'title', 'attr']), {
 				width: dimensions.width + 2 * margin,
 				height: dimensions.height + 2 * margin
 			}),
@@ -489,7 +492,7 @@ var MAPJS = MAPJS || {};
 			subIdeaRank,
 			subIdea,
 			subIdeaDimensions;
-		if (idea.ideas && !idea.getStyle('collapsed')) {
+		if (idea.ideas && !idea.getAttr('collapsed')) {
 			result.ideas = {};
 			for (subIdeaRank in idea.ideas) {
 				subIdea = idea.ideas[subIdeaRank];
@@ -565,13 +568,15 @@ var MAPJS = MAPJS || {};
 			root = MAPJS.calculatePositions(idea, dimensionProvider, margin, 0, 0),
 			calculateLayoutInner = function (positions, level) {
 				var subIdeaRank, from, to, isRoot = level === 1,
-					defaultStyle = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'];
-				result.nodes[positions.id] = _.extend(_.pick(positions, ['id', 'width', 'height', 'title']), {
-					x: positions.x - root.x - 0.5 * root.width + margin,
-					y: positions.y - root.y - 0.5 * root.height + margin,
-					level: level,
-					style: _.extend({}, defaultStyle, positions.style)
-				});
+					defaultStyle = MAPJS.defaultStyles[isRoot ? 'root' : 'nonRoot'],
+					node = _.extend(_.pick(positions, ['id', 'width', 'height', 'title', 'attr']), {
+						x: positions.x - root.x - 0.5 * root.width + margin,
+						y: positions.y - root.y - 0.5 * root.height + margin,
+						level: level
+					});
+				node.attr = node.attr || {};
+				node.attr.style = _.extend({}, defaultStyle, node.attr.style);
+				result.nodes[positions.id] = node;
 				if (positions.ideas) {
 					for (subIdeaRank in positions.ideas) {
 						calculateLayoutInner(positions.ideas[subIdeaRank], level + 1);
@@ -808,8 +813,8 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					if (newNode.title !== oldNode.title) {
 						self.dispatchEvent('nodeTitleChanged', newNode);
 					}
-					if (!_.isEqual(newNode.style || {}, oldNode.style || {})) {
-						self.dispatchEvent('nodeStyleChanged', newNode);
+					if (!_.isEqual(newNode.attr || {}, oldNode.attr || {})) {
+						self.dispatchEvent('nodeAttrChanged', newNode);
 					}
 				}
 			}
@@ -824,7 +829,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		},
 		onIdeaChanged = function (command, args) {
 			var newIdeaId, contextNodeId;
-			contextNodeId = command === 'updateStyle' ? args[0] : undefined;
+			contextNodeId = command === 'updateAttr' ? args[0] : undefined;
 			updateCurrentLayout(layoutCalculator(idea), contextNodeId);
 			if (command === 'addSubIdea') {
 				newIdeaId = args[2];
@@ -836,14 +841,18 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				self.selectNode(newIdeaId);
 				self.editNode(false, true);
 			}
+			if (command === 'paste') {
+				newIdeaId = args[2];
+				self.selectNode(newIdeaId);
+			}
 		},
 		currentlySelectedIdea = function () {
 			return (idea.findSubIdeaById(currentlySelectedIdeaId) || idea);
 		},
 		ensureNodeIsExpanded = function (source, nodeId) {
 			var node = idea.findSubIdeaById(nodeId) || idea;
-			if (node.getStyle('collapsed')) {
-				idea.updateStyle(nodeId, 'collapsed', false);
+			if (node.getAttr('collapsed')) {
+				idea.updateAttr(nodeId, 'collapsed', false);
 			}
 		};
 	observable(this);
@@ -876,10 +885,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	this.getSelectedStyle = function (prop) {
 		var node = currentLayout.nodes[currentlySelectedIdeaId];
-		return node && node.style && node.style[prop];
+		return node && node.attr && node.attr.style && node.attr.style[prop];
 	};
 	this.toggleCollapse = function (source) {
-		var isCollapsed = currentlySelectedIdea().getStyle('collapsed');
+		var isCollapsed = currentlySelectedIdea().getAttr('collapsed');
 		this.collapse(source, !isCollapsed);
 	};
 	this.collapse = function (source, doCollapse) {
@@ -887,7 +896,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		if (isInputEnabled) {
 			var node = currentlySelectedIdea();
 			if (node.ideas && _.size(node.ideas) > 0) {
-				idea.updateStyle(currentlySelectedIdeaId, 'collapsed', doCollapse);
+				idea.updateAttr(currentlySelectedIdeaId, 'collapsed', doCollapse);
 			}
 		}
 	};
@@ -895,7 +904,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		/*jslint eqeq:true */
 		if (isInputEnabled && this.getSelectedStyle(prop) != value) {
 			analytic('updateStyle:' + prop, source);
-			idea.updateStyle(currentlySelectedIdeaId, prop, value);
+			var merged = _.extend({}, currentlySelectedIdea().getAttr('style'));
+			merged[prop] = value;
+			idea.updateAttr(currentlySelectedIdeaId, 'style', merged);
 		}
 	};
 	this.addSubIdea = function (source) {
@@ -969,6 +980,20 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self.dispatchEvent('mapViewResetRequested');
 			analytic('resetView', source);
 		}
+	};
+	this.openAttachment = function (source, nodeId) {
+		analytic('openAttachment', source);
+		nodeId = nodeId || currentlySelectedIdeaId;
+		var node = currentLayout.nodes[nodeId],
+			attachment = node && node.attr && node.attr.attachment;
+		if (node) {
+			self.dispatchEvent('attachmentOpened', nodeId, attachment);
+		}
+	};
+	this.setAttachment = function (source, nodeId, attachment) {
+		analytic('setAttachment', source);
+		var hasAttachment = !!(attachment && attachment.content);
+		idea.updateAttr(nodeId, 'attachment', hasAttachment && attachment);
 	};
 	(function () {
 		var isRootOrRightHalf = function (id) {
@@ -1105,7 +1130,10 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			analytic('cut', source);
 			if (isInputEnabled) {
 				self.clipBoard = idea.clone(currentlySelectedIdeaId);
-				idea.removeSubIdea(currentlySelectedIdeaId);
+				var parent = idea.findParent(currentlySelectedIdeaId);
+				if (idea.removeSubIdea(currentlySelectedIdeaId)) {
+					self.selectNode(parent.id);
+				}
 			}
 		};
 		self.copy = function (source) {
@@ -1122,13 +1150,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		self.pasteStyle = function (source) {
 			analytic('pasteStyle', source);
-			if (isInputEnabled) {
-				var pastingStyle = _.omit(self.clipBoard.style, 'collapsed'),
-					collapsed = currentlySelectedIdea().getStyle('collapsed');
-				if (collapsed) {
-					pastingStyle.collapsed = collapsed;
-				}
-				idea.setStyleMap(currentlySelectedIdeaId, pastingStyle);
+			if (isInputEnabled && self.clipBoard) {
+				var pastingStyle = self.clipBoard.attr && self.clipBoard.attr.style;
+				idea.updateAttr(currentlySelectedIdeaId, 'style', pastingStyle);
 			}
 		};
 		self.moveUp = function (source) { self.moveRelative(source, -1); };
@@ -1312,6 +1336,30 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 	};
 	Kinetic.Global.extend(Kinetic.Connector, Kinetic.Shape);
 }());
+/*global Kinetic*/
+Kinetic.Clip = function (config) {
+	'use strict';
+	this.createAttrs();
+	Kinetic.Shape.call(this, config);
+	this.shapeType = 'Clip';
+	this._setDrawFuncs();
+};
+Kinetic.Clip.prototype.drawFunc = function (canvas) {
+	'use strict';
+	var context = canvas.getContext(),
+		xClip = this.getWidth() * 2 - this.getRadius() * 2;
+	context.beginPath();
+	context.moveTo(0, this.getClipTo());
+	context.arcTo(0, 0, this.getWidth() * 2, 0,  this.getWidth());
+	context.arcTo(this.getWidth() * 2, 0, this.getWidth() * 2, this.getHeight(),  this.getWidth());
+	context.arcTo(this.getWidth() * 2, this.getHeight(), 0, this.getHeight(), this.getRadius());
+	context.arcTo(xClip, this.getHeight(), xClip, 0, this.getRadius());
+	context.lineTo(xClip, this.getClipTo());
+	canvas.fillStroke(this);
+};
+Kinetic.Node.addGetterSetter(Kinetic.Clip, 'clipTo', 0);
+Kinetic.Node.addGetterSetter(Kinetic.Clip, 'radius', 0);
+Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 /*global MAPJS, Color, _, jQuery, Kinetic*/
 /*jslint nomen: true, newcap: true, browser: true*/
 (function () {
@@ -1361,6 +1409,21 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		return link;
 	}
+	function createClip() {
+		var group, clip;
+		group = new Kinetic.Group();
+		clip = new Kinetic.Clip({strokeWidth:2, stroke: 'black', clipTo: 5, width: 5, height: 25, radius: 3, rotation: 0.1 });
+		group.add(clip);
+		group.on('mouseover', function () {
+			clip.attrs.stroke = 'blue';
+			group.getLayer().draw();
+		});
+		group.on('mouseout', function () {
+			clip.attrs.stroke = 'black';
+			group.getLayer().draw();
+		});
+		return group;
+	}
 	Kinetic.Idea = function (config) {
 		var ENTER_KEY_CODE = 13,
 			ESC_KEY_CODE = 27,
@@ -1376,7 +1439,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				});
 			};
 		this.level = config.level;
-		this.mmStyle = config.mmStyle;
+		this.mmAttr = config.mmAttr;
 		this.isSelected = false;
 		config.draggable = config.level > 1;
 		config.name = 'Idea';
@@ -1411,11 +1474,17 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			fontStyle: 'bold',
 			align: 'center'
 		});
+		this.clip = createClip();
+		this.clip.on('click tap', function () {
+			self.fire(':openAttachmentRequested');
+		});
 		this.add(this.rectbg1);
 		this.add(this.rectbg2);
 		this.add(this.rect);
 		this.add(this.text);
 		this.add(this.link);
+		this.add(this.clip);
+		this.activeWidgets = [this.link, this.clip];
 		this.setText = function (text) {
 			var replacement = breakWords(text.replace(urlPattern, '')) || (text.substring(0, COLUMN_WORD_WRAP_LIMIT) + '...');
 			unformattedText = text;
@@ -1460,7 +1529,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
-			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
+			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput" x-webkit-speech></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
@@ -1543,7 +1612,7 @@ Kinetic.Idea.prototype.setupShadows = function () {
 	'use strict';
 	var scale = this.getMMScale().x,
 		isSelected = this.isSelected,
-		offset =  (this.mmStyle && this.mmStyle.collapsed) ? 3 * scale : 4 * scale,
+		offset = this.isCollapsed() ? 3 * scale : 4 * scale,
 		normalShadow = {
 			color: 'black',
 			blur: 10 * scale,
@@ -1576,7 +1645,7 @@ Kinetic.Idea.prototype.getBackground = function () {
 			var parsed = Color(color).hexString();
 			return color.toUpperCase() === parsed.toUpperCase() ? color : defaultColor;
 		};
-	return validColor(this.mmStyle && this.mmStyle.background, defaultBg);
+	return validColor(this.mmAttr && this.mmAttr.style && this.mmAttr.style.background, defaultBg);
 };
 Kinetic.Idea.prototype.setStyle = function () {
 	'use strict';
@@ -1586,16 +1655,23 @@ Kinetic.Idea.prototype.setStyle = function () {
 		isSelected = this.isSelected,
 		background = this.getBackground(),
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
-		padding = 8;
+		isClipVisible = this.mmAttr && this.mmAttr.attachment || false,
+		padding = 8,
+		clipMargin = isClipVisible ? 5 : 0,
+		rectOffset = clipMargin,
+		rectIncrement = 4;
+	this.clip.setVisible(isClipVisible);
 	this.attrs.width = this.text.getWidth() + 2 * padding;
-	this.attrs.height = this.text.getHeight() + 2 * padding;
+	this.attrs.height = this.text.getHeight() + 2 * padding + clipMargin;
 	this.text.attrs.x = padding;
-	this.text.attrs.y = padding;
+	this.text.attrs.y = padding + clipMargin;
 	this.link.attrs.x = this.text.getWidth() + 10;
-	this.link.attrs.y = this.text.getHeight() + 5;
-	_.each([this.rect, this.rectbg1, this.rectbg2], function (r) {
+	this.link.attrs.y = this.text.getHeight() + 5 + clipMargin;
+	_.each([this.rect, this.rectbg2, this.rectbg1], function (r) {
 		r.attrs.width = self.text.getWidth() + 2 * padding;
 		r.attrs.height = self.text.getHeight() + 2 * padding;
+		r.attrs.y = rectOffset;
+		rectOffset += rectIncrement;
 		if (isDroppable) {
 			r.attrs.stroke = '#9F4F4F';
 			r.attrs.fillLinearGradientStartPoint = {x: 0, y: 0};
@@ -1611,20 +1687,25 @@ Kinetic.Idea.prototype.setStyle = function () {
 			r.attrs.fillLinearGradientColorStops = [0, tintedBackground, 1, background];
 		}
 	});
-	this.rectbg1.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
-	this.rectbg2.setVisible((this.mmStyle && this.mmStyle.collapsed) || false);
+	this.rectbg1.setVisible(this.isCollapsed());
+	this.rectbg2.setVisible(this.isCollapsed());
+	this.clip.attrs.x = this.text.getWidth() + padding;
 	this.setupShadows();
 	this.text.attrs.fill = MAPJS.contrastForeground(tintedBackground);
 };
-Kinetic.Idea.prototype.setMMStyle = function (newMMStyle) {
+Kinetic.Idea.prototype.setMMAttr = function (newMMAttr) {
 	'use strict';
-	this.mmStyle = newMMStyle;
+	this.mmAttr = newMMAttr;
 	this.setStyle();
 	this.getLayer().draw();
 };
 Kinetic.Idea.prototype.getIsSelected = function () {
 	'use strict';
 	return this.isSelected;
+};
+Kinetic.Idea.prototype.isCollapsed = function () {
+	'use strict';
+	return this.mmAttr && this.mmAttr.collapsed || false;
 };
 
 Kinetic.Idea.prototype.setIsSelected = function (isSelected) {
@@ -1692,7 +1773,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	container.attrs.y = idea.attrs.y;
 	idea.attrs.x = 0;
 	idea.attrs.y = 0;
-	idea.link.remove();
+	_.each(idea.activeWidgets, function (widget){ widget.remove() });
 	nodeimage = new Kinetic.Image({
 		x: -1,
 		y: -1,
@@ -1706,7 +1787,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	});
 
 	container.add(nodeimage);
-	container.add(idea.link);
+	_.each(idea.activeWidgets, function (widget){ container.add(widget); });
 	container.getNodeAttrs = function () {
 		return idea.attrs;
 	};
@@ -1716,8 +1797,6 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	idea.isVisible = function (offset) {
 		return stage && stage.isRectVisible(new MAPJS.Rectangle(container.attrs.x, container.attrs.y, container.getWidth(), container.getHeight()), offset);
 	};
-
-
 	idea.getLayer = function () {
 		return layer;
 	};
@@ -1732,13 +1811,13 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 			return idea && idea[fname] && idea[fname].apply(idea, arguments);
 		};
 	});
-	_.each([':textChanged', ':editing'], function (fname) {
+	_.each([':textChanged', ':editing', ':openAttachmentRequested'], function (fname) {
 		idea.on(fname, function (event) {
 			container.fire(fname, event);
 			reRender();
 		});
 	});
-	_.each(['setMMStyle', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows', 'setShadowOffset'], function (fname) {
+	_.each(['setMMAttr', 'setIsSelected', 'setText', 'setIsDroppable', 'editNode', 'setupShadows', 'setShadowOffset'], function (fname) {
 		container[fname] = function () {
 			var result = idea && idea[fname] && idea[fname].apply(idea, arguments);
 			reRender();
@@ -1864,7 +1943,7 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 			x: n.x,
 			y: n.y,
 			text: n.title,
-			mmStyle: n.style,
+			mmAttr: n.attr,
 			opacity: 1
 		});
 
@@ -1904,12 +1983,12 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		node.on(':editing', function () {
 			mapModel.setInputEnabled(false);
 		});
-
-
+		node.on(':openAttachmentRequested', function () {
+			mapModel.openAttachment('mouse', n.id);
+		});
 		if (n.level > 1) {
 			node.on('mouseover touchstart', stage.setDraggable.bind(stage, false));
 			node.on('mouseout touchend', stage.setDraggable.bind(stage, true));
-
 		}
 		layer.add(node);
 		stage.on(':scaleChangeComplete', function () {
@@ -1925,9 +2004,9 @@ MAPJS.KineticMediator = function (mapModel, stage, imageRendering) {
 		}
 		ensureSelectedNodeVisible(node);
 	});
-	mapModel.addEventListener('nodeStyleChanged', function (n) {
+	mapModel.addEventListener('nodeAttrChanged', function (n) {
 		var node = nodeByIdeaId[n.id];
-		node.setMMStyle(n.style);
+		node.setMMAttr(n.attr);
 	});
 	mapModel.addEventListener('nodeDroppableChanged', function (ideaId, isDroppable) {
 		var node = nodeByIdeaId[ideaId];
@@ -2047,7 +2126,7 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo',
-			'copy', 'cut', 'paste', 'resetView'],
+			'copy', 'cut', 'paste', 'resetView', 'openAttachment'],
 		changeMethodNames = ['updateStyle'];
 	return this.each(function () {
 		var element = jQuery(this);
@@ -2168,6 +2247,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				return !result;
 			},
 			keyboardEventHandlers = {
+				'a': 'openAttachment',
 				'return': 'addSiblingIdea',
 				'del backspace': 'removeSubIdea',
 				'tab': 'addSubIdea',
@@ -2202,8 +2282,10 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 		jQuery.hotkeys.specialKeys[189] = 'minus';
 		_.each(keyboardEventHandlers, function (mappedFunction, keysPressed) {
 			jQuery(document).keydown(keysPressed, function (event) {
-				event.preventDefault();
-				mapModel[mappedFunction]('keyboard');
+				if (jQuery.find('.modal:visible').length === 0) {
+					event.preventDefault();
+					mapModel[mappedFunction]('keyboard');
+				}
 			});
 		});
 		mapModel.addEventListener('inputEnabledChanged', function (canInput) {

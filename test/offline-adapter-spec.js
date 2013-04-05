@@ -43,7 +43,7 @@ describe('OfflineAdapter', function () {
 				mapId: 'g123',
 				idea: content({title: 'Hello World', id: 1})
 			});
-			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1}}');
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
 			expect(JSON.parse(localStorage.getItem('offline-maps')).nextMapId).toBe(2);
 		});
 		it('should save an existing offline map into local storage when saveMap method is invoked', function () {
@@ -52,7 +52,7 @@ describe('OfflineAdapter', function () {
 				idea: content({title: 'Hello World', id: 1})
 			});
 
-			expect(localStorage.getItem('offline-map-123')).toBe('{"map":{"title":"Hello World","id":1}}');
+			expect(localStorage.getItem('offline-map-123')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
 		});
 		it('should save an existing map from another storage provider into local storage when saveMap method is invoked', function () {
 			underTest.saveMap({
@@ -60,7 +60,7 @@ describe('OfflineAdapter', function () {
 				idea: content({title: 'Hello World', id: 1})
 			});
 
-			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1}}');
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World","id":1,"formatVersion":2}}');
 		});
 		it('should fail with failed-offline when local storage throws an error (like quota exceeded)', function () {
 			spyOn(jsonStorage, 'setItem').andThrow('Quota exceeded');
@@ -89,7 +89,7 @@ describe('Offline Fallback', function () {
 		it('should store map locally under fallback-mapId key', function () {
 			underTest.saveMap('g123', map);
 
-			expect(localStorage.getItem('fallback-g123')).toBe('{"map":{"title":"Hello World!","id":1}}');
+			expect(localStorage.getItem('fallback-g123')).toBe('{"map":{"title":"Hello World!","formatVersion":2,"id":1}}');
 		});
 	});
 	describe('Loading a map from fallback offline storage', function () {
@@ -100,16 +100,16 @@ describe('Offline Fallback', function () {
 		});
 		it('should return a map if there is a matching one', function () {
 			var result;
-			localStorage.setItem('fallback-g123', '{"map":{"title":"Hello World!","id":1}}');
+			localStorage.setItem('fallback-g123', '{"map":{"title":"Hello World!","id":1,"formatVersion":2}}');
 
 			result = underTest.loadMap('g123');
 
-			expect(result).toEqual({ title: 'Hello World!', id: 1 });
+			expect(result).toEqual({ title: 'Hello World!', id: 1, formatVersion: 2 });
 		});
 	});
 	describe('Removing a map from fallback offline storage', function () {
 		it('', function () {
-			localStorage.setItem('fallback-g123', '{"map":{"title":"Hello World!","id":1}}');
+			localStorage.setItem('fallback-g123', '{"map":{"title":"Hello World!","formatVersion":2,"id":1}}');
 
 			underTest.remove('g123');
 
@@ -142,7 +142,7 @@ describe('OfflineMapStorage', function () {
 		});
 		it('should store file content', function () {
 			underTest.saveNew(map);
-			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World!","id":1}}');
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"Hello World!","formatVersion":2,"id":1}}');
 		});
 	});
 	describe('overwriting file information', function () {
@@ -153,7 +153,7 @@ describe('OfflineMapStorage', function () {
 		});
 		it('should overwrite file content', function () {
 			underTest.save(mapId, map);
-			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a new description","id":1}}');
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a new description","formatVersion":2,"id":1}}');
 		});
 		it('should update title and timestamp', function () {
 			clock.tick(2000);
@@ -170,7 +170,7 @@ describe('OfflineMapStorage', function () {
 		});
 		it('should restore map', function () {
 			underTest.restore(mapId, map, fileInfo);
-			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a restored description","id":1}}');
+			expect(localStorage.getItem('offline-map-1')).toBe('{"map":{"title":"a restored description","formatVersion":2,"id":1}}');
 		});
 		it('should restore title and timestamp', function () {
 			clock.tick(22000);
@@ -226,7 +226,7 @@ describe('OfflineMapStorage', function () {
 		});
 		it('should return file content', function () {
 			var result = underTest.load(mapId1);
-			expect(result).toEqual({ title: 'Hello World!', id: 1 });
+			expect(result).toEqual({ title: 'Hello World!', id: 1, formatVersion: 2 });
 		});
 	});
 });

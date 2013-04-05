@@ -12,7 +12,7 @@
 	<link href="//mindmup.s3.amazonaws.com/lib/bootstrap-responsive-2.3.1.min.css" rel="stylesheet" />
 	<link href="//mindmup.s3.amazonaws.com/lib/fortawesome/font-awesome.min.css" rel="stylesheet" />
     <link href="//mindmup.s3.amazonaws.com/lib/colorPicker.css" rel="stylesheet" />
-    <link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
+	<link href="/mindmap.css?version=<%=settings.cache_prevention_key%>" rel="stylesheet" />
     <link href="http://blog.mindmup.com/feeds/posts/default" rel="alternate" type="application/rss+xml" title="RSS" />
   </head>
   <body class="map-unchanged <%=browser.body_class %>">
@@ -54,6 +54,7 @@
                 <button class="btn " rel="tooltip" data-title="Node color (Shift+Spacebar)" data-category="Toolbar Click" data-event-type="Node Color">
                   <input data-mm-target-property='background' class='updateStyle hide' type="hidden" value="" />&nbsp;
                 </button>
+				<button rel="tooltip" data-placement="bottom" data-title="Attachment (A)" data-category="Toolbar Click" data-event-type="Open Attachment" class="btn openAttachment"><i class="icon-paper-clip"></i></button>
               </div>
           </div>
 			  <div class="btn-group">
@@ -83,6 +84,7 @@
     <%= erb :terms_and_conditions %>
     <%= erb :open_from_drive %>
     <%= erb :open_from_local_storage %>
+    <%= erb :attachment_editor %>
     <div id="container"></div>
 	<form method="post" id="formExport" action="/echo" class="hide">
 		<input type="hidden" name="map" />

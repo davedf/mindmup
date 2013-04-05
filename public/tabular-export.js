@@ -44,9 +44,9 @@ MM.HtmlTableExporter = function () {
 	this.each = function (idea, level) {
 		var row = $("<tr>").appendTo(result),
 			cell = $("<td>").appendTo(row).text(idea.title);
-		if (idea.style && idea.style.background) {
-			cell.css('background-color', idea.style.background);
-			cell.css('color', MAPJS.contrastForeground(idea.style.background));
+		if (idea.attr && idea.attr.style && idea.attr.style.background) {
+			cell.css('background-color', idea.attr.style.background);
+			cell.css('color', MAPJS.contrastForeground(idea.attr.style.background));
 		}
 		if (level > 0) {
 			$("<td>").prependTo(row).html("&nbsp;").attr('colspan', level);
