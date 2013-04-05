@@ -32,15 +32,21 @@ body {
 	padding: 0px; /* cancel default bootstrap padding on mobile screens, we use full screen */
 }
 }
+
 @media (max-width: 768px) {
-  .hidden-tablet-portait {
+  .hidden-tablet-portrait {
+    display: none !important;
+  }
+}
+@media (max-width: 320px) {
+  .hidden-phone-portrait {
     display: none !important;
   }
 }
 @media (max-height: 320px) {
-.hidden-phone-landscape {
-  display: none;
-}
+	.hidden-phone-landscape {
+	  display: none;
+	}
 }
 @media (max-width: 400px) {
 	.map-changed .changed-phone-hidden {
@@ -259,9 +265,10 @@ body.offline-enabled .offline-disabled-hidden {
 	border-bottom-left-radius: 3px; border-top-left-radius: 3px;
 	background-color:white;
 	display: block;
+	clear:both;
 }
 #modalAttachmentEditor .btn-toolbar {
-	margin: 20px;
+	margin: 10px;
 	display: block;
 	background-color:white;
 }

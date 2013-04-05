@@ -49,11 +49,14 @@ $.fn.wysiwyg = function (options) {
 				});
 			});
 		},
-		saveSelectionRange = function () {
+		getCurrentRange = function () {
 			var sel = window.getSelection();
 			if (sel.getRangeAt && sel.rangeCount) {
-				selectedRange = sel.getRangeAt(0);
+				return sel.getRangeAt(0);
 			}
+		},
+		saveSelectionRange = function () {
+			selectedRange = getCurrentRange();
 		},
 		restoreSelectionRange = function () {
 			var selection = window.getSelection();
@@ -66,7 +69,7 @@ $.fn.wysiwyg = function (options) {
 			toolbar.find('a[data-' + options.commandRole + ']').click(function () {
 				restoreSelectionRange();
 				execCommand($(this).data(options.commandRole));
-				saveSelectionRange();
+				saveSelectionRange('after cmd');
 			});
 			toolbar.find('input[data-' + options.commandRole + ']').change(function () {
 				var newValue = this.value; /* ugly but prevents fake double-calls due to selection restoration */
@@ -75,7 +78,7 @@ $.fn.wysiwyg = function (options) {
 				if (newValue) {
 					execCommand($(this).data(options.commandRole), newValue);
 				}
-				saveSelectionRange();
+				saveSelectionRange('after cmd');
 			});
 		};
 	options = $.extend({}, defaultOptions, options);
@@ -95,7 +98,14 @@ $.fn.wysiwyg = function (options) {
 					element.trigger('change');
 				}
 			});
-		$(window).bind('touchend', saveSelectionRange);
+		$(window).bind('touchend', function (e) {
+			var isInside = (e.target === element[0] || $(element).children().index($(e.target)) !== -1 || $(element).has(e.target).length > 0),
+				currentRange = getCurrentRange(),
+				clear = currentRange && (currentRange.startContainer === currentRange.endContainer && currentRange.startOffset === currentRange.endOffset);
+			if (!clear || isInside) {
+				saveSelectionRange();
+			}
+		});
 	});
 	return this;
 };
