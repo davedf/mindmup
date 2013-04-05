@@ -2,60 +2,30 @@
 $.fn.attachmentEditorWidget = function (mapModel) {
 	'use strict';
 	var element = this,
-		editorArea = element.find('[data-mm-role=editor]'),
-		cleditor = editorArea.cleditor({
-			controls: 'font size style | bold italic underline strikethrough | color highlight | bullets numbering | alignleft center alignright justify | image link unlink',
-            hotKeys: {
-				'ctrl+b meta+b': 'bold',
-				'ctrl+i meta+i': 'italic',
-				'ctrl+u meta+u': 'underline',
-				'ctrl+z meta+z': 'undo',
-				'ctrl+y meta+y meta+shift+z': 'redo'
-            },
-			updateTextArea: function (html) {
-				return html.replace(/(<br>|\s|<div><br><\/div>|&nbsp;)*$/, '');
-			}
-		})[0],
+		editorArea = element.find('[data-mm-role=editor]').wysiwyg(),
 		ideaId,
-		keysBound,
 		save = function () {
 			element.modal('hide');
-			cleditor.updateTextArea();
-			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.val() });
-			cleditor.clear();
+			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.cleanHtml() });
+			editorArea.html('');
 		},
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
 			ideaId = activeIdea;
 			if (!contentType || contentType === 'text/html') {
-				editorArea.val(attachment && attachment.content);
-				cleditor.updateFrame();
+				editorArea.html(attachment && attachment.content);
 				element.modal('show');
 			}
 		};
 	element.find('[data-mm-role=save]').click(save);
-	element.keydown('return', save);
 	element.on('shown', function () {
-		cleditor.focus();
-		var realEditor = $(cleditor.doc);
-		if (!keysBound) {
-			realEditor.keydown('esc', function () {
-				element.modal('hide');
-			}).keydown('ctrl+s meta+s', function (e) {
-				save();
-				e.preventDefault();
-			}).keydown(function () {
-				if (document.activeElement !== cleditor.$frame[0]) {
-					cleditor.focus();
-				}
-			});
-			keysBound = true;
-		}
+		editorArea.focus();
 	});
-	element.on('hidden', function () {
-		if (parent && parent.focus) {
-			parent.focus();
-		}
+	editorArea.keydown('esc', function () {
+		element.modal('hide');
+	}).keydown('ctrl+return meta+return ctrl+s meta+s', function (e) {
+		save();
+		e.preventDefault();
 	});
 	mapModel.addEventListener('attachmentOpened', open);
 	return element;

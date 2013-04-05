@@ -1354,7 +1354,7 @@ Kinetic.Clip.prototype.drawFunc = function (canvas) {
 	context.arcTo(this.getWidth() * 2, 0, this.getWidth() * 2, this.getHeight(),  this.getWidth());
 	context.arcTo(this.getWidth() * 2, this.getHeight(), 0, this.getHeight(), this.getRadius());
 	context.arcTo(xClip, this.getHeight(), xClip, 0, this.getRadius());
-	context.lineTo(xClip, this.getClipTo() * 0.5);
+	context.lineTo(xClip, this.getClipTo());
 	canvas.fillStroke(this);
 };
 Kinetic.Node.addGetterSetter(Kinetic.Clip, 'clipTo', 0);
@@ -1410,23 +1410,18 @@ Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 		return link;
 	}
 	function createClip() {
-		var group, clip, props = {width: 5, height: 25, radius: 3, rotation: 0.1, strokeWidth: 2, clipTo: 10};
+		var group, clip;
 		group = new Kinetic.Group();
-		group.getClipMargin = function () {
-			return props.clipTo;
-		};
-		group.add(new Kinetic.Clip(_.extend({stroke: 'darkslategrey', x: 1, y: 1}, props)));
-		clip = new Kinetic.Clip(_.extend({stroke: 'skyblue'}, props));
+		clip = new Kinetic.Clip({strokeWidth:2, stroke: 'black', clipTo: 5, width: 5, height: 25, radius: 3, rotation: 0.1 });
 		group.add(clip);
 		group.on('mouseover', function () {
-			clip.attrs.stroke = 'black';
+			clip.attrs.stroke = 'blue';
 			group.getLayer().draw();
 		});
 		group.on('mouseout', function () {
-			clip.attrs.stroke = 'skyblue';
+			clip.attrs.stroke = 'black';
 			group.getLayer().draw();
 		});
-
 		return group;
 	}
 	Kinetic.Idea = function (config) {
@@ -1534,7 +1529,7 @@ Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
-			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
+			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput" x-webkit-speech></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
@@ -1662,7 +1657,7 @@ Kinetic.Idea.prototype.setStyle = function () {
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
 		isClipVisible = this.mmAttr && this.mmAttr.attachment || false,
 		padding = 8,
-		clipMargin = isClipVisible ? this.clip.getClipMargin() : 0,
+		clipMargin = isClipVisible ? 5 : 0,
 		rectOffset = clipMargin,
 		rectIncrement = 4;
 	this.clip.setVisible(isClipVisible);
@@ -2287,8 +2282,10 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 		jQuery.hotkeys.specialKeys[189] = 'minus';
 		_.each(keyboardEventHandlers, function (mappedFunction, keysPressed) {
 			jQuery(document).keydown(keysPressed, function (event) {
-				event.preventDefault();
-				mapModel[mappedFunction]('keyboard');
+				if (jQuery.find('.modal:visible').length === 0) {
+					event.preventDefault();
+					mapModel[mappedFunction]('keyboard');
+				}
 			});
 		});
 		mapModel.addEventListener('inputEnabledChanged', function (canInput) {

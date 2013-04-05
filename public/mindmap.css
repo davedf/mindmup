@@ -246,10 +246,18 @@ body.ipad {
 body.offline-enabled .offline-disabled-hidden {
 	display: block;
 }
-#modalAttachmentEditor textarea.huge {
+#attachEditArea {
 	width:95%;
 	min-height:300px;
 	height:100%;
 	margin: 10px 10px 10px 10px;
+	overflow: scroll;
+	border: 1px solid rgb(204, 204, 204); 
+	padding: 4px; 
+	box-sizing: content-box; 
+	-webkit-box-shadow: rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px inset; 
+	box-shadow: rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px inset;
+	border-top-right-radius: 3px; border-bottom-right-radius: 3px;
+	border-bottom-left-radius: 3px; border-top-left-radius: 3px;
 }
 #modalAttachmentEditor .btn-primary { margin-left:5px;} 
