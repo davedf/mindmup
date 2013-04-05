@@ -446,6 +446,82 @@ MAPJS.content = function (contentAggregate, progressCallback) {
 		});
 		return true;
 	};
+	observable(contentAggregate);
+	(function () {
+		var isLinkValid = function (ideaIdFrom, ideaIdTo) {
+			var isParentChild, ideaFrom, ideaTo;
+			if (ideaIdFrom === ideaIdTo) {
+				return false;
+			}
+			ideaFrom = findIdeaById(ideaIdFrom);
+			if (!ideaFrom) {
+				return false;
+			}
+			ideaTo = findIdeaById(ideaIdTo);
+			if (!ideaTo) {
+				return false;
+			}
+			isParentChild = _.find(
+				ideaFrom.ideas,
+				function (node) {
+					return node.id === ideaIdTo;
+				}
+			) || _.find(
+				ideaTo.ideas,
+				function (node) {
+					return node.id === ideaIdFrom;
+				}
+			);
+			if (isParentChild) {
+				return false;
+			}
+			return true;
+		};
+		contentAggregate.addLink = function (ideaIdFrom, ideaIdTo) {
+			var alreadyExists;
+			if (!isLinkValid(ideaIdFrom, ideaIdTo)) {
+				return false;
+			}
+			alreadyExists = _.find(
+				contentAggregate.links,
+				function (link) {
+					return link.ideaIdFrom === ideaIdFrom && link.ideaIdTo === ideaIdTo;
+				}
+			);
+			if (alreadyExists) {
+				return false;
+			}
+			contentAggregate.links = contentAggregate.links || [];
+			contentAggregate.links.push({
+				ideaIdFrom: ideaIdFrom,
+				ideaIdTo: ideaIdTo
+			});
+			contentAggregate.dispatchEvent('changed', 'addLink', ideaIdFrom, ideaIdTo);
+			return true;
+		};
+		contentAggregate.removeLink = function (ideaIdOne, ideaIdTwo) {
+			var i = 0, link;
+			while (contentAggregate.links && i < contentAggregate.links.length) {
+				link = contentAggregate.links[i];
+				if (link.ideaIdFrom === ideaIdOne && link.ideaIdTo === ideaIdTwo) {
+					contentAggregate.links.splice(i, 1);
+					contentAggregate.dispatchEvent('changed', 'removeLink', link.ideaIdFrom, link.ideaIdTo);
+					return true;
+				}
+				i++;
+			}
+			return false;
+		};
+		contentAggregate.addEventListener('changed', function () {
+			if (contentAggregate.links) {
+				contentAggregate.links.forEach(function (link) {
+					if (!isLinkValid(link.ideaIdFrom, link.ideaIdTo)) {
+						contentAggregate.removeLink(link.ideaIdFrom, link.ideaIdTo);
+					}
+				});
+			}
+		});
+	}());
 	/* undo/redo */
 	contentAggregate.undo = function () {
 		var topEvent;
@@ -474,7 +550,7 @@ MAPJS.content = function (contentAggregate, progressCallback) {
 		contentAggregate.formatVersion = 2;
 	}
 	init(contentAggregate);
-	return observable(contentAggregate);
+	return contentAggregate;
 };
 /*jslint nomen: true*/
 /*global _, Color, MAPJS*/
@@ -2284,7 +2360,7 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 		setStageDimensions();
 		stage.attrs.x = 0.5 * stage.getWidth();
 		stage.attrs.y = 0.5 * stage.getHeight();
-		jQuery(window).resize(setStageDimensions);
+		jQuery(window).bind('orientationchange resize', setStageDimensions);
 		jQuery('.modal')
 			.on('show', mapModel.setInputEnabled.bind(mapModel, false))
 			.on('hidden', mapModel.setInputEnabled.bind(mapModel, true));

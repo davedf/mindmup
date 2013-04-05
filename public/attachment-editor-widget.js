@@ -1,4 +1,5 @@
 /*global $*/
+/*jslint browser:true*/
 $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	'use strict';
 	var element = this,
@@ -15,15 +16,18 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.cleanHtml() });
 			close();
 		},
+		sizeEditor = function () {
+			var margin = editorArea.outerHeight(true) - editorArea.innerHeight();
+			editorArea.innerHeight(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
+		},
 		open = function (activeIdea, attachment) {
-			var contentType = attachment && attachment.contentType, margin;
+			var contentType = attachment && attachment.contentType;
 			shader.show();
 			ideaId = activeIdea;
 			if (!contentType || contentType === 'text/html') {
 				editorArea.html(attachment && attachment.content);
 				element.show();
-				margin = editorArea.outerHeight(true) - editorArea.innerHeight();
-				editorArea.innerHeight(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
+				sizeEditor();
 				editorArea.focus();
 				mapModel.setInputEnabled(false);
 			}
@@ -39,6 +43,7 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 		e.preventDefault();
 		save();
 	});
+	$(window).bind('orientationchange resize', sizeEditor);
 	mapModel.addEventListener('attachmentOpened', open);
 	$('[data-role=editor-toolbar] .dropdown-menu input')
 		.click(function () {return false; })
