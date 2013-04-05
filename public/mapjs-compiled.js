@@ -1,3 +1,4 @@
+var MAPJS = {};
 var observable = function (base) {
 	'use strict';
 	var eventListenersByType = {};
@@ -476,8 +477,7 @@ var content = function (contentAggregate, progressCallback) {
 	return observable(contentAggregate);
 };
 /*jslint nomen: true*/
-/*global _, Color*/
-var MAPJS = MAPJS || {};
+/*global _, Color, MAPJS*/
 (function () {
 	'use strict';
 	MAPJS.calculateDimensions = function calculateDimensions(idea, dimensionProvider, margin) {
@@ -749,8 +749,7 @@ MAPJS.LayoutCompressor.compress = function compress(positions) {
 	return positions;
 };
 /*jslint forin: true, nomen: true*/
-/*global _, observable*/
-var MAPJS = MAPJS || {};
+/*global _, MAPJS, observable*/
 MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChooseFrom, intermediaryTitlesToRandomlyChooseFrom) {
 	'use strict';
 	titlesToRandomlyChooseFrom = titlesToRandomlyChooseFrom || ['double click to edit'];
@@ -764,7 +763,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		idea,
 		isInputEnabled = true,
 		currentlySelectedIdeaId,
-		markedIdeaId,
 		getRandomTitle = function (titles) {
 			return titles[Math.floor(titles.length * Math.random())];
 		},
@@ -1012,8 +1010,7 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			var node,
 				rank,
 				isRoot = currentlySelectedIdeaId === idea.id,
-				targetRank = isRoot ? -Infinity : Infinity,
-				targetNode;
+				targetRank = isRoot ? -Infinity : Infinity;
 			if (!isInputEnabled) {
 				return;
 			}
@@ -1106,7 +1103,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				});
 				self.selectNode(closestNode.id);
 			}
-
 		};
 		self.undo = function (source) {
 			analytic('undo', source);
@@ -1157,7 +1153,6 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 		};
 		self.moveUp = function (source) { self.moveRelative(source, -1); };
 		self.moveDown = function (source) { self.moveRelative(source, 1); };
-
 	}());
 	//Todo - clean up this shit below
 	(function () {
@@ -1174,11 +1169,11 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 				}
 			},
 			canDropOnNode = function (id, x, y, node) {
-				return id !== node.id
-					&& x >= node.x
-					&& y >= node.y
-					&& x <= node.x + node.width - 2 * 10
-					&& y <= node.y + node.height - 2 * 10;
+				return id !== node.id &&
+					x >= node.x &&
+					y >= node.y &&
+					x <= node.x + node.width - 2 * 10 &&
+					y <= node.y + node.height - 2 * 10;
 			},
 			tryFlip = function (rootNode, nodeBeingDragged, nodeDragEndX) {
 				var flipRightToLeft = rootNode.x < nodeBeingDragged.x && nodeDragEndX < rootNode.x,
@@ -1354,7 +1349,7 @@ Kinetic.Clip.prototype.drawFunc = function (canvas) {
 	context.arcTo(this.getWidth() * 2, 0, this.getWidth() * 2, this.getHeight(),  this.getWidth());
 	context.arcTo(this.getWidth() * 2, this.getHeight(), 0, this.getHeight(), this.getRadius());
 	context.arcTo(xClip, this.getHeight(), xClip, 0, this.getRadius());
-	context.lineTo(xClip, this.getClipTo());
+	context.lineTo(xClip, this.getClipTo() * 0.5);
 	canvas.fillStroke(this);
 };
 Kinetic.Node.addGetterSetter(Kinetic.Clip, 'clipTo', 0);
@@ -1410,18 +1405,23 @@ Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 		return link;
 	}
 	function createClip() {
-		var group, clip;
+		var group, clip, props = {width: 5, height: 25, radius: 3, rotation: 0.1, strokeWidth: 2, clipTo: 10};
 		group = new Kinetic.Group();
-		clip = new Kinetic.Clip({strokeWidth:2, stroke: 'black', clipTo: 5, width: 5, height: 25, radius: 3, rotation: 0.1 });
+		group.getClipMargin = function () {
+			return props.clipTo;
+		};
+		group.add(new Kinetic.Clip(_.extend({stroke: 'darkslategrey', x: 1, y: 1}, props)));
+		clip = new Kinetic.Clip(_.extend({stroke: 'skyblue'}, props));
 		group.add(clip);
 		group.on('mouseover', function () {
-			clip.attrs.stroke = 'blue';
-			group.getLayer().draw();
-		});
-		group.on('mouseout', function () {
 			clip.attrs.stroke = 'black';
 			group.getLayer().draw();
 		});
+		group.on('mouseout', function () {
+			clip.attrs.stroke = 'skyblue';
+			group.getLayer().draw();
+		});
+
 		return group;
 	}
 	Kinetic.Idea = function (config) {
@@ -1529,7 +1529,7 @@ Kinetic.Global.extend(Kinetic.Clip, Kinetic.Shape);
 					updateText(unformattedText);
 				},
 				scale = self.getStage().getScale().x || 1;
-			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput" x-webkit-speech></textarea>')
+			ideaInput = jQuery('<textarea type="text" wrap="soft" class="ideaInput"></textarea>')
 				.css({
 					top: canvasPosition.top + self.getAbsolutePosition().y,
 					left: canvasPosition.left + self.getAbsolutePosition().x,
@@ -1657,7 +1657,7 @@ Kinetic.Idea.prototype.setStyle = function () {
 		tintedBackground = Color(background).mix(Color('#EEEEEE')).hexString(),
 		isClipVisible = this.mmAttr && this.mmAttr.attachment || false,
 		padding = 8,
-		clipMargin = isClipVisible ? 5 : 0,
+		clipMargin = isClipVisible ? this.clip.getClipMargin() : 0,
 		rectOffset = clipMargin,
 		rectIncrement = 4;
 	this.clip.setVisible(isClipVisible);
@@ -1755,7 +1755,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 				x: x,
 				y: y,
 				width: width,
-				height: height ,
+				height: height,
 				callback: function (img) {
 					nodeimage.setImage(img);
 					nodeimage.attrs.width = unscaledWidth;
@@ -1773,7 +1773,7 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 	container.attrs.y = idea.attrs.y;
 	idea.attrs.x = 0;
 	idea.attrs.y = 0;
-	_.each(idea.activeWidgets, function (widget){ widget.remove() });
+	_.each(idea.activeWidgets, function (widget) { widget.remove(); });
 	nodeimage = new Kinetic.Image({
 		x: -1,
 		y: -1,
@@ -1785,9 +1785,8 @@ Kinetic.IdeaProxy = function (idea, stage, layer) {
 		cacheImage();
 		nodeImageDrawFunc(canvas);
 	});
-
 	container.add(nodeimage);
-	_.each(idea.activeWidgets, function (widget){ container.add(widget); });
+	_.each(idea.activeWidgets, function (widget) { container.add(widget); });
 	container.getNodeAttrs = function () {
 		return idea.attrs;
 	};
@@ -2122,7 +2121,6 @@ MAPJS.KineticMediator.layoutCalculator = function (idea) {
 	return MAPJS.calculateLayout(idea, MAPJS.KineticMediator.dimensionProvider);
 };
 /*global jQuery*/
-/*jslint es5: true*/
 jQuery.fn.mapToolbarWidget = function (mapModel) {
 	'use strict';
 	var clickMethodNames = ['insertIntermediate', 'scaleUp', 'scaleDown', 'addSubIdea', 'editNode', 'removeSubIdea', 'toggleCollapse', 'addSiblingIdea', 'undo', 'redo',
@@ -2229,17 +2227,6 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 				stage.setHeight(element.height());
 				stage.draw();
 			},
-			simulateTouch = function (touchType, hammerEvent) {
-				var center;
-				if (!hammerEvent.gesture) {
-					return; // not a hammer event, instead simulated doubleclick
-				}
-				center = hammerEvent.gesture.center;
-				stage.simulate(touchType, {
-					offsetX: center.pageX - element.offset().left,
-					offsetY: center.pageY - element.offset().top
-				});
-			},
 			lastGesture,
 			discrete = function (gesture) {
 				var result = (lastGesture && lastGesture.type !== gesture.type && (gesture.timeStamp - lastGesture.timeStamp < 250));
@@ -2302,20 +2289,20 @@ jQuery.fn.mapWidget = function (activityLog, mapModel, touchEnabled, imageRender
 		if (!touchEnabled) {
 			jQuery(window).mousewheel(onScroll);
 		} else {
-			element.find('canvas').hammer().on("pinch", function (event) {
+			element.find('canvas').hammer().on('pinch', function (event) {
 				if (discrete(event)) {
 					mapModel.scale('touch', event.gesture.scale, {
 						x: event.gesture.center.pageX - element.offset().left,
 						y: event.gesture.center.pageY - element.offset().top
 					});
 				}
-			}).on("swipe", function (event) {
+			}).on('swipe', function (event) {
 				if (discrete(event)) {
 					mapModel.move('touch', event.gesture.deltaX, event.gesture.deltaY);
 				}
-			}).on("doubletap", function (event) {
+			}).on('doubletap', function () {
 				mapModel.resetView();
-			}).on("touch", function (evt) {
+			}).on('touch', function () {
 				jQuery('.topbar-color-picker:visible').hide();
 				jQuery('.ideaInput:visible').blur();
 			});

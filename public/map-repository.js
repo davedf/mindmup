@@ -84,7 +84,6 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 				offlineFallback.remove(mapId);
 				var embeddedMap = MM && MM.Maps && mapId && MM.Maps[mapId.toLowerCase()];
 				if (embeddedMap) {
-					console.log('embedded map', mapId);
 					mapLoaded(embeddedMap, mapId, jsonMimeType, true);
 				} else {
 					MM.retry(
