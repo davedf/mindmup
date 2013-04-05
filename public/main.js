@@ -86,7 +86,7 @@ MM.main = function (config) {
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
 		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel);
-		mapRepository.loadMap(config.mapId || mapIdFromHash || 'default');
+		mapRepository.loadMap(mapIdFromHash || config.mapId || 'default');
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
