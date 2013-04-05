@@ -2,6 +2,7 @@
 /*global _gaq, document, jQuery, MM, MAPJS, window, localStorage*/
 MM.main = function (config) {
 	'use strict';
+	window.content = MAPJS.content;
 	var setupTracking = function (activityLog, jotForm, mapModel) {
 		activityLog.addEventListener('log', function () { _gaq.push(['_trackEvent'].concat(Array.prototype.slice.call(arguments, 0, 3))); });
 		activityLog.addEventListener('error', function (message) {
@@ -83,7 +84,7 @@ MM.main = function (config) {
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
-		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel);
+		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel, isTouch());
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

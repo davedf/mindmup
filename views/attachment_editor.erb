@@ -1,9 +1,4 @@
-<div id="modalAttachmentEditor" class="modal hide fade">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	<h3>Edit attachment</h3>
-  </div>
-  <div class="modal-body">
+<div id="modalAttachmentEditor" class="hide">
     <div class="btn-toolbar" data-role="editor-toolbar" data-target="#editor">
       <div class="btn-group">
         <a class="btn  dropdown-toggle" data-toggle="dropdown" title="Font"><i class="icon-font"></i><b class="caret"></b></a>
@@ -42,12 +37,11 @@
       <div class="btn-group">
         <a class="btn " data-edit="undo" title="Undo (Ctrl/Cmd+Z)"><i class="icon-undo"></i></a>
         <a class="btn " data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i class="icon-repeat"></i></a>
-      </div>
-    </div>
-	<div id='attachEditArea' data-mm-role='editor'></div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary pull-right" data-mm-role='save'>Save</button>
-    <button class="btn" data-dismiss="modal">Cancel</button>
-  </div>
+	  </div>
+	  <div class="pull-right non-group">
+	  	<button class="btn" data-mm-role='close'>Cancel</button>
+		<button class="btn btn-primary" data-mm-role='save'>Save</button>
+	  </div>
+	</div>
+	  <div id='attachEditArea' data-mm-role='editor'></div>
 </div>
