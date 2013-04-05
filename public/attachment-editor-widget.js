@@ -40,5 +40,9 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 		save();
 	});
 	mapModel.addEventListener('attachmentOpened', open);
+	$('[data-role=editor-toolbar] .dropdown-menu input')
+		.click(function () {return false; })
+		.change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle'); })
+		.keydown('esc', function () { this.value = ''; $(this).change(); });
 	return element;
 };

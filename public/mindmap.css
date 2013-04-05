@@ -267,10 +267,15 @@ body.offline-enabled .offline-disabled-hidden {
 	display: block;
 	clear:both;
 }
-#modalAttachmentEditor .btn-toolbar {
-	margin: 10px;
-	display: block;
+#modalAttachmentEditor > .btn-toolbar {
+	width:100%;
+	margin-left:-20px;
+	padding-left:40px;
+	display: inline-block;
 	background-color:white;
+}
+#modalAttachmentEditor > .btn-toolbar .pull-right {
+	margin-right:60px;
 }
 #modalAttachmentEditor { 
 	position: absolute;
@@ -281,6 +286,14 @@ body.offline-enabled .offline-disabled-hidden {
 	left: 0;
 	z-index:9999;
 	background-color:white;
+}
+#modalAttachmentEditor .dropdown-menu .btn-toolbar  {
+	display: block;
+}
+#modalAttachmentEditor .dropdown-menu .btn-toolbar .btn-group {
+	margin-top: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 .ios #modalAttachmentEditor .btn-toolbar, .android #modalAttachmentEditor .btn-toolbar {
 	margin-top: 5px;
