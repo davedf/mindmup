@@ -12,21 +12,6 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			element.hide();
 			editorArea.html('');
 		},
-		save = function () {
-			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.cleanHtml() });
-			switchToViewMode();
-		},
-		sizeEditor = function () {
-			var margin = editorArea.outerHeight(true) - editorArea.innerHeight() + 30;
-			editorArea.height(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
-			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
-				var overlay = $(this), target = $(overlay.data('target'));
-				overlay.css('opacity', 0).css('position', 'absolute').
-					offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
-			});
-			shader.width('100%').height('100%');
-		},
-		currentAttachment,
 		isEditing,
 		switchToEditMode = function () {
 			editorArea.attr('contenteditable', true);
@@ -40,6 +25,30 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			isEditing = false;
 			editorArea.focus();
 		},
+		save = function () {
+			var newContent = editorArea.cleanHtml();
+			if (newContent) {
+				mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: newContent });
+				switchToViewMode();
+			} else {
+				mapModel.setAttachment('attachmentEditorWidget', ideaId, false);
+				close();
+			}
+		},
+		clear = function () {
+			editorArea.html('');
+		},
+		sizeEditor = function () {
+			var margin = editorArea.outerHeight(true) - editorArea.innerHeight() + 30;
+			editorArea.height(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
+			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
+				var overlay = $(this), target = $(overlay.data('target'));
+				overlay.css('opacity', 0).css('position', 'absolute').
+					offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
+			});
+			shader.width('100%').height('100%');
+		},
+
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
 			shader.show();
@@ -47,7 +56,6 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			element.show();
 			sizeEditor();
 			mapModel.setInputEnabled(false);
-			currentAttachment = attachment;
 			if (!attachment) {
 				switchToEditMode();
 			} else if (contentType === 'text/html') {
@@ -76,6 +84,7 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	element.addClass('mm-editable');
 	element.find('[data-mm-role=save]').click(save);
 	element.find('[data-mm-role=close]').click(close);
+	element.find('[data-mm-role=clear]').click(clear);
 	element.find('[data-mm-role=edit]').click(switchToEditMode);
 	$(document).keydown('esc', function () {
 		if (element.is(":visible")) {

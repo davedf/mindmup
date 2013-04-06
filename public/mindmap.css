@@ -303,7 +303,7 @@ body.offline-enabled .offline-disabled-hidden {
 	border-radius: 6px;
 	margin: 0;
 }
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
 	#modalAttachmentEditor { 
 		width: 90%;
 		left: 5%;
