@@ -17,8 +17,8 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			close();
 		},
 		sizeEditor = function () {
-			var margin = editorArea.outerHeight(true) - editorArea.innerHeight();
-			editorArea.innerHeight(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
+			var margin = editorArea.outerHeight(true) - editorArea.innerHeight()+30;
+			editorArea.height(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
 			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
 				var overlay = $(this), target = $(overlay.data('target'));
 				overlay.css('opacity', 0).css('position', 'absolute').
