@@ -39,8 +39,11 @@
         <a class="btn btn-small" rel='tooltip' data-placement='bottom' data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i class="icon-repeat"></i></a>
       </span>
       <span class="btn-group">
+        <a class="btn btn-small" rel="tooltip" data-placement="bottom" title="Insert picture (or just drag & drop)" id="pictureBtn"><i class="icon-picture"></i></a>
+        <input type="file" data-role="magic-overlay" data-target="#pictureBtn" data-edit="insertImage" />
 		    <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" rel='tooltip' data-placement='bottom' title="Hyperlink"><i class="icon-link"></i></a>
 		      <span class="dropdown-menu input-append">
+
 			      <input class="span2" placeholder="URL" type="text" data-edit="createLink"/>
 			      <button class="btn" type="button">Add</button>
           </span>

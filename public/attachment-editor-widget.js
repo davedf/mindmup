@@ -19,6 +19,11 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 		sizeEditor = function () {
 			var margin = editorArea.outerHeight(true) - editorArea.innerHeight();
 			editorArea.innerHeight(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
+			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
+				var overlay = $(this), target = $(overlay.data('target'));
+				overlay.css('opacity', 0).css('position', 'absolute').
+					offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
+			});
 		},
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
