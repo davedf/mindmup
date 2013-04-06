@@ -67,10 +67,6 @@ MM.main = function (config) {
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
 		jQuery('#listBookmarks').bookmarkWidget(mapBookmarks, alert, !isTouch());
 		jQuery('#modalDownload').downloadWidget(pngExporter);
-		if (!isTouch()) {
-			jQuery('[rel=tooltip]').tooltip();
-		}
-
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('[data-mm-role=share]').shareWidget();
 		jQuery('#modalShareEmail').shareEmailWidget();
@@ -85,6 +81,9 @@ MM.main = function (config) {
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
 		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel, isTouch());
 		jQuery('[data-category]').trackingWidget(activityLog);
+		if (!isTouch()) {
+			jQuery('[rel=tooltip]').tooltip();
+		}
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
