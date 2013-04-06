@@ -4,7 +4,7 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	'use strict';
 	var element = this,
 		shader = $('<div>').addClass('modal-backdrop fade in hide').appendTo('body'),
-		editorArea = element.find('[data-mm-role=editor]').wysiwyg(),
+		editorArea = element.find('[data-mm-role=editor]'),
 		ideaId,
 		close = function () {
 			shader.hide();
@@ -36,10 +36,25 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 				editorArea.focus();
 				mapModel.setInputEnabled(false);
 			}
+		},
+		initToolbar = function () {
+			var fonts = ['Serif', 'Sans', 'Arial', 'Arial Black', 'Courier',
+				'Courier New', 'Comic Sans MS', 'Helvetica', 'Impact', 'Lucida Grande', 'Lucida Sans', 'Tahoma', 'Times',
+				'Times New Roman', 'Verdana'],
+				fontTarget = $('[data-role=editor-toolbar] [data-mm-role=font]');
+			$.each(fonts, function (idx, fontName) {
+				fontTarget.append($('<li><a data-edit="fontName ' + fontName + '" style="font-family:' + fontName + '">' + fontName + '</a></li>'));
+			});
+			$('[data-role=editor-toolbar] .dropdown-menu input')
+				.click(function () {return false; })
+				.change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle'); })
+				.keydown('esc', function () { this.value = ''; $(this).change(); });
 		};
 	if (isTouch) {
 		editorArea.detach().prependTo(element);
 	}
+	initToolbar();
+	editorArea.wysiwyg();
 	element.find('[data-mm-role=save]').click(save);
 	element.find('[data-mm-role=close]').click(close);
 	editorArea.keydown('esc', function () {
@@ -50,9 +65,5 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	});
 	$(window).bind('orientationchange resize', sizeEditor);
 	mapModel.addEventListener('attachmentOpened', open);
-	$('[data-role=editor-toolbar] .dropdown-menu input')
-		.click(function () {return false; })
-		.change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle'); })
-		.keydown('esc', function () { this.value = ''; $(this).change(); });
 	return element;
 };
