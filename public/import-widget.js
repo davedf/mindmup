@@ -1,4 +1,4 @@
-/*global $, content, MM, window*/
+/*global $, MAPJS, MM, window*/
 $.fn.importWidget = function (activityLog, mapRepository) {
 	'use strict';
 	var element = this,
@@ -7,31 +7,31 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 		fileInput = element.find('input[type=file]'),
 		selectButton = element.find('[data-mm-role=select-file]'),
 		spinner = function (text) {
-			statusDiv.html("<i class='icon-spinner icon-spin'/> " + text);
+			statusDiv.html('<i class="icon-spinner icon-spin"/> ' + text);
 		},
 		start = function (filename) {
 			activityLog.log('Map', 'import:start ' + uploadType, filename);
-			spinner("Uploading " + filename);
+			spinner('Uploading ' + filename);
 		},
-		parseFile = function (file_content, type) {
+		parseFile = function (fileContent, type) {
 			var counter = 0,
 				expected;
 			if (type === 'mm') {
-				return MM.freemindImport(file_content,
+				return MM.freemindImport(fileContent,
 					function (total) {  expected = total; },
 					function () {
-						var pct = (100 * counter / expected).toFixed(2) + "%";
+						var pct = (100 * counter / expected).toFixed(2) + '%';
 						if (counter % 1000 === 0) {
-							spinner("Converted " + pct);
+							spinner('Converted ' + pct);
 						}
 						counter++;
 					});
 			}
 			if (type === 'mup') {
-				return JSON.parse(file_content);
+				return JSON.parse(fileContent);
 			}
 		},
-		fail = function (error, detail) {
+		fail = function (error) {
 			activityLog.log('Map', 'import:fail', error);
 			statusDiv.html(
 				'<div class="alert fade in alert-error">' +
@@ -40,27 +40,27 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 					'</div>'
 			);
 		},
-		success = function (file_content, type) {
-			var idea, json_content, counter;
-			spinner("Processing file");
+		success = function (fileContent, type) {
+			var idea, jsonContent, counter;
+			spinner('Processing file');
 			if (type !== 'mup' && type !== 'mm') {
 				fail('unsupported format ' + type);
 			}
 			try {
-				json_content = parseFile(file_content, type);
+				jsonContent = parseFile(fileContent, type);
 			} catch (e) {
 				fail('invalid file content', e);
 				return;
 			}
-			spinner("Initialising map");
+			spinner('Initialising map');
 			counter = 0;
-			idea = content(json_content, function () {
+			idea = MAPJS.content(jsonContent, function () {
 				if (counter % 1000 === 0) {
-					spinner("Initialised " + counter + " nodes");
+					spinner('Initialised ' + counter + 'nodes');
 				}
 				counter++;
 			});
-			spinner("Done");
+			spinner('Done');
 			activityLog.log('Map', 'import:complete');
 			statusDiv.empty();
 			element.modal('hide');
@@ -81,4 +81,4 @@ $.fn.importWidget = function (activityLog, mapRepository) {
 			.height(selectButton.outerHeight());
 	});
 	return element;
-}
+};

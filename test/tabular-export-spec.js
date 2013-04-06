@@ -1,8 +1,8 @@
-/*global Color, $, describe, it, expect, MM, MAPJS, content, jasmine*/
+/*global Color, $, describe, it, expect, MM, MAPJS, jasmine*/
 describe("MM.exportIdeas", function () {
 	'use strict';
 	it("executes a begin callback, then each callback for for each idea, then end callback and then passes toString results to the callback", function () {
-		var aggregate = content({id: 1}),
+		var aggregate = MAPJS.content({id: 1}),
 			calls = [],
 			begin = function () { calls.push('begin'); },
 			each = function () { calls.push('each'); },
@@ -13,7 +13,7 @@ describe("MM.exportIdeas", function () {
 		expect(calls).toEqual(['begin', 'each', 'end', 'contents']);
 	});
 	it("executes a callback for each idea, reverse depth-order, from parent to children", function () {
-		var aggregate = content({id: 1, ideas: {1: {id: 2, ideas: {7: {id: 3}}}}}),
+		var aggregate = MAPJS.content({id: 1, ideas: {1: {id: 2, ideas: {7: {id: 3}}}}}),
 			calls = [],
 			each = function (idea) { calls.push(idea); };
 		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
@@ -22,7 +22,7 @@ describe("MM.exportIdeas", function () {
 		expect(calls[2].id).toBe(3);
 	});
 	it("passes a level with each callback", function () {
-		var aggregate = content({id: 1, ideas: {1: {id: 2, ideas: {1: {id: 3}}}}}),
+		var aggregate = MAPJS.content({id: 1, ideas: {1: {id: 2, ideas: {1: {id: 3}}}}}),
 			each = jasmine.createSpy();
 		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
 		expect(each).toHaveBeenCalledWith(aggregate, 0);
@@ -30,7 +30,7 @@ describe("MM.exportIdeas", function () {
 		expect(each).toHaveBeenCalledWith(aggregate.ideas[1].ideas[1], 2);
 	});
 	it("sorts children by key, positive first then negative, by absolute value", function () {
-		var aggregate = content({id: 1, title: 'root', ideas: {'-100': {title: '-100'}, '-1': {title: '-1'}, '1': {title: '1'}, '100': {title: '100'}}}),
+		var aggregate = MAPJS.content({id: 1, title: 'root', ideas: {'-100': {title: '-100'}, '-1': {title: '-1'}, '1': {title: '1'}, '100': {title: '100'}}}),
 			calls = [],
 			each = function (idea) { calls.push(idea.title); };
 		MM.exportIdeas(aggregate, {'each': each, 'contents': function () {} });
