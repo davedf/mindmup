@@ -14,10 +14,10 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 		},
 		save = function () {
 			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.cleanHtml() });
-			close();
+			switchToViewMode();
 		},
 		sizeEditor = function () {
-			var margin = editorArea.outerHeight(true) - editorArea.innerHeight()+30;
+			var margin = editorArea.outerHeight(true) - editorArea.innerHeight() + 30;
 			editorArea.height(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
 			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
 				var overlay = $(this), target = $(overlay.data('target'));
@@ -26,16 +26,33 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			});
 			shader.width('100%').height('100%');
 		},
+		currentAttachment,
+		isEditing,
+		switchToEditMode = function () {
+			editorArea.attr('contenteditable', true);
+			element.addClass('mm-editable');
+			editorArea.focus();
+			isEditing = true;
+		},
+		switchToViewMode = function () {
+			element.removeClass('mm-editable');
+			editorArea.attr('contenteditable', false);
+			isEditing = false;
+			editorArea.focus();
+		},
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
 			shader.show();
 			ideaId = activeIdea;
-			if (!contentType || contentType === 'text/html') {
+			element.show();
+			sizeEditor();
+			mapModel.setInputEnabled(false);
+			currentAttachment = attachment;
+			if (!attachment) {
+				switchToEditMode();
+			} else if (contentType === 'text/html') {
 				editorArea.html(attachment && attachment.content);
-				element.show();
-				sizeEditor();
-				editorArea.focus();
-				mapModel.setInputEnabled(false);
+				switchToViewMode();
 			}
 		},
 		initToolbar = function () {
@@ -56,13 +73,28 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	}
 	initToolbar();
 	editorArea.wysiwyg();
+	element.addClass('mm-editable');
 	element.find('[data-mm-role=save]').click(save);
 	element.find('[data-mm-role=close]').click(close);
-	editorArea.keydown('esc', function () {
-		close();
-	}).keydown('ctrl+return meta+return ctrl+s meta+s', function (e) {
-		e.preventDefault();
-		save();
+	element.find('[data-mm-role=edit]').click(switchToEditMode);
+	$(document).keydown('esc', function () {
+		if (element.is(":visible")) {
+			close();
+		}
+	}).keydown('ctrl+s meta+s', function (e) {
+		if (element.is(":visible")) {
+			e.preventDefault();
+			save();
+			close();
+		}
+	}).keydown('ctrl+return meta+return', function (e) {
+		if (element.is(":visible")) {
+			if (isEditing) {
+				save();
+			} else {
+				switchToEditMode();
+			}
+		}
 	});
 	$(window).bind('orientationchange resize', sizeEditor);
 	mapModel.addEventListener('attachmentOpened', open);
