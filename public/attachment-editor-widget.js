@@ -24,6 +24,7 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 				overlay.css('opacity', 0).css('position', 'absolute').
 					offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
 			});
+			shader.width('100%').height('100%');
 		},
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
