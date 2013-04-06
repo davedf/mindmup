@@ -40,6 +40,7 @@ describe('MM.navigation', function () {
 				underTest = new MM.navigation({mapId: 'mapIdInConfig'});
 				spyOn(underTest, 'changeMapId');
 				underTest.wireLinkForMapId('newMapId', link);
+				console.log(link);
 				link.click();
 				expect(underTest.changeMapId).toHaveBeenCalledWith('newMapId');
 			});
@@ -64,6 +65,7 @@ describe('MM.navigation', function () {
 			var listener;
 			beforeEach(function () {
 				window.location.hash = 'mapIdInHash';
+				underTest = new MM.navigation({mapId: 'mapIdInConfig'});
 				listener = jasmine.createSpy();
 				underTest.addEventListener('mapIdChanged', listener);
 			});
@@ -76,7 +78,7 @@ describe('MM.navigation', function () {
 			});
 			it('should notify listeners of newMapId', function () {
 				underTest.changeMapId('newMapId');
-				expect(listener).toHaveBeenCalledWith('newMapId');
+				expect(listener).toHaveBeenCalledWith('newMapId', 'mapIdInHash');
 			});
 			it('should return false when mapId is the same', function () {
 				expect(underTest.changeMapId('mapIdInHash')).toBe(false);
@@ -87,6 +89,7 @@ describe('MM.navigation', function () {
 		describe('when there is no window address hash', function () {
 			beforeEach(function () {
 				window.location.hash = '';
+				underTest = new MM.navigation({mapId: 'mapIdInConfig'});
 			});
 			it('should return false when mapId is the same', function () {
 				expect(underTest.changeMapId('mapIdInConfig')).toBe(false);

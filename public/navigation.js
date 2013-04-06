@@ -32,7 +32,7 @@ MM.navigation = function (config) {
 		if (newMapId && currentMapId && newMapId === currentMapId) {
 			return false;
 		}
-		var previousMapId = currentMapId;
+		var previousMapId = currentMapId || calcCurrentMapId();
 		currentMapId = newMapId;
 		if (getMapIdFromHash()) {
 			window.location.hash = newMapId;
