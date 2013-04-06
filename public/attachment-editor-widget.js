@@ -12,12 +12,34 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			element.hide();
 			editorArea.html('');
 		},
+		isEditing,
+		switchToEditMode = function () {
+			editorArea.attr('contenteditable', true);
+			element.addClass('mm-editable');
+			editorArea.focus();
+			isEditing = true;
+		},
+		switchToViewMode = function () {
+			element.removeClass('mm-editable');
+			editorArea.attr('contenteditable', false);
+			isEditing = false;
+			editorArea.focus();
+		},
 		save = function () {
-			mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: editorArea.cleanHtml() });
-			close();
+			var newContent = editorArea.cleanHtml();
+			if (newContent) {
+				mapModel.setAttachment('attachmentEditorWidget', ideaId, {contentType: 'text/html', content: newContent });
+				switchToViewMode();
+			} else {
+				mapModel.setAttachment('attachmentEditorWidget', ideaId, false);
+				close();
+			}
+		},
+		clear = function () {
+			editorArea.html('');
 		},
 		sizeEditor = function () {
-			var margin = editorArea.outerHeight(true) - editorArea.innerHeight()+30;
+			var margin = editorArea.outerHeight(true) - editorArea.innerHeight() + 30;
 			editorArea.height(element.innerHeight() - editorArea.siblings().outerHeight(true) - margin);
 			$('[data-role=editor-toolbar] [data-role=magic-overlay]').each(function () {
 				var overlay = $(this), target = $(overlay.data('target'));
@@ -26,16 +48,19 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 			});
 			shader.width('100%').height('100%');
 		},
+
 		open = function (activeIdea, attachment) {
 			var contentType = attachment && attachment.contentType;
 			shader.show();
 			ideaId = activeIdea;
-			if (!contentType || contentType === 'text/html') {
+			element.show();
+			sizeEditor();
+			mapModel.setInputEnabled(false);
+			if (!attachment) {
+				switchToEditMode();
+			} else if (contentType === 'text/html') {
 				editorArea.html(attachment && attachment.content);
-				element.show();
-				sizeEditor();
-				editorArea.focus();
-				mapModel.setInputEnabled(false);
+				switchToViewMode();
 			}
 		},
 		initToolbar = function () {
@@ -50,21 +75,43 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 				.click(function () {return false; })
 				.change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle'); })
 				.keydown('esc', function () { this.value = ''; $(this).change(); });
+			$('[data-role=editor-toolbar] a')
+				.attr('data-category', 'Attachment editor toolbar')
+				.attr('data-event-type', function () {
+					return $(this).attr('data-edit') || $(this).attr('title') || $(this).text() || 'unknown';
+				});
 		};
 	if (isTouch) {
 		editorArea.detach().prependTo(element);
 	}
 	initToolbar();
 	editorArea.wysiwyg();
+	element.addClass('mm-editable');
 	element.find('[data-mm-role=save]').click(save);
 	element.find('[data-mm-role=close]').click(close);
-	editorArea.keydown('esc', function () {
-		close();
-	}).keydown('ctrl+return meta+return ctrl+s meta+s', function (e) {
-		e.preventDefault();
-		save();
+	element.find('[data-mm-role=clear]').click(clear);
+	element.find('[data-mm-role=edit]').click(switchToEditMode);
+	$(document).keydown('esc', function () {
+		if (element.is(":visible")) {
+			close();
+		}
+	}).keydown('ctrl+s meta+s', function (e) {
+		if (element.is(":visible")) {
+			e.preventDefault();
+			save();
+			close();
+		}
+	}).keydown('ctrl+return meta+return', function (e) {
+		if (element.is(":visible")) {
+			if (isEditing) {
+				save();
+			} else {
+				switchToEditMode();
+			}
+		}
 	});
 	$(window).bind('orientationchange resize', sizeEditor);
 	mapModel.addEventListener('attachmentOpened', open);
+
 	return element;
 };

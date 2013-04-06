@@ -4,6 +4,9 @@ $.fn.commandLineWidget = function (keyBinding, mapModel) {
 	'use strict';
 	var element = this;
 	element.keyup(keyBinding, function () {
+		if (!mapModel.getInputEnabled()) {
+			return;
+		}
 		var input,
 			validColor = function (value) {
 				/*jslint newcap:true*/

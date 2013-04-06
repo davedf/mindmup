@@ -948,6 +948,9 @@ MAPJS.MapModel = function (mapRepository, layoutCalculator, titlesToRandomlyChoo
 			self.dispatchEvent('inputEnabledChanged', value);
 		}
 	};
+	this.getInputEnabled = function () {
+		return isInputEnabled;
+	};
 	this.selectNode = function (id) {
 		if (isInputEnabled && id !== currentlySelectedIdeaId) {
 			if (currentlySelectedIdeaId) {

@@ -267,9 +267,22 @@ body.offline-enabled .offline-disabled-hidden {
 	clear:both;
 }
 #modalAttachmentEditor .editor-topbar {
-	display: block;
 	padding-right: 10px;
 	padding-left: 10px;
+	display: none;
+}
+#modalAttachmentEditor.mm-editable .editor-topbar {
+	display: block;
+}
+#modalAttachmentEditor .viewer-topbar {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-right: 10px;
+	padding-left: 10px;
+	height:30px;
+}
+#modalAttachmentEditor.mm-editable .viewer-topbar {
+	display: none;
 }
 #modalAttachmentEditor .editor-topbar > .btn-toolbar {
 	display: inline-block;
@@ -290,7 +303,7 @@ body.offline-enabled .offline-disabled-hidden {
 	border-radius: 6px;
 	margin: 0;
 }
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
 	#modalAttachmentEditor { 
 		width: 90%;
 		left: 5%;
