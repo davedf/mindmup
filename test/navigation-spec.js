@@ -20,13 +20,16 @@ describe('MM.navigation', function () {
 		beforeEach(function () {
 			link = $('<a>');
 		});
+		it('should return link', function () {
+			underTest.wireLinkForMapId('newMapId', link);
+		});
 		describe('when mapId is from window address hash', function () {
 			beforeEach(function () {
 				window.location.hash = 'mapIdInHash';
 			});
 			it('should set # as href', function () {
 				underTest.wireLinkForMapId('newMapId', link);
-				expect(link.attr('href')).toBe('#');
+				expect(link.attr('href')).toBe('#newMapId');
 			});
 			it('should set click event', function () {
 				spyOn(link, 'click').andCallThrough();
