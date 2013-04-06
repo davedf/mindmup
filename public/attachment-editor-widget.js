@@ -75,6 +75,11 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 				.click(function () {return false; })
 				.change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle'); })
 				.keydown('esc', function () { this.value = ''; $(this).change(); });
+			$('[data-role=editor-toolbar] a')
+				.attr('data-category', 'Attachment editor toolbar')
+				.attr('data-event-type', function () {
+					return $(this).attr('data-edit') || $(this).attr('title') || $(this).text() || 'unknown';
+				});
 		};
 	if (isTouch) {
 		editorArea.detach().prependTo(element);
@@ -107,5 +112,6 @@ $.fn.attachmentEditorWidget = function (mapModel, isTouch) {
 	});
 	$(window).bind('orientationchange resize', sizeEditor);
 	mapModel.addEventListener('attachmentOpened', open);
+
 	return element;
 };

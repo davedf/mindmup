@@ -70,7 +70,7 @@ MM.main = function (config) {
 		if (!isTouch()) {
 			jQuery('[rel=tooltip]').tooltip();
 		}
-		jQuery('[data-category]').trackingWidget(activityLog);
+
 		jQuery(document).titleUpdateWidget(mapRepository);
 		jQuery('[data-mm-role=share]').shareWidget();
 		jQuery('#modalShareEmail').shareEmailWidget();
@@ -84,6 +84,7 @@ MM.main = function (config) {
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
 		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
 		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel, isTouch());
+		jQuery('[data-category]').trackingWidget(activityLog);
 		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
