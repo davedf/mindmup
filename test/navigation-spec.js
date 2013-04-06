@@ -37,6 +37,7 @@ describe('MM.navigation', function () {
 				expect(link.click).toHaveBeenCalledWith(jasmine.any(Function));
 			});
 			it('should set the link to call changeMapId when it is clicked', function () {
+				underTest = new MM.navigation({mapId: 'mapIdInConfig'});
 				spyOn(underTest, 'changeMapId');
 				underTest.wireLinkForMapId('newMapId', link);
 				link.click();

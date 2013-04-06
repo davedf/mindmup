@@ -89,7 +89,6 @@ MM.main = function (config) {
 		}
 		MM.MapRepository.mapLocationChange(mapRepository, navigation);
 		mapRepository.loadMap(navigation.currentMapId());
-		mapRepository.loadMap(config.mapId);
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);
 };
