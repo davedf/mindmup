@@ -98,7 +98,7 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		}));
 	};
 };
-jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
+jQuery.fn.bookmarkWidget = function (bookmarks, alert, navigation) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -107,6 +107,12 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 		    originalContent = element.children().clone(),
 			keep = element.children().filter('[data-mm-role=bookmark-keep]').clone(),
 			pin = element.children().filter('[data-mm-role=bookmark-pin]').clone(),
+			wireLinks = function (element) {
+				if (navigation) {
+					return element.navigationWidget(navigation);
+				}
+				return element;
+			},
 			updateLinks = function () {
 				var list = bookmarks.links(),
 					link,
@@ -118,7 +124,10 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 						addition = template.clone().show().appendTo(element);
 						link = addition.find('a');
 						children = link.children().detach();
-						link.attr('href',  '/map/' + bookmark.mapId).text(bookmark.shortTitle).addClass('repo-' + bookmark.mapId[0]);
+						if (navigation) {
+							navigation.wireLinkForMapId(bookmark.mapId, link);
+						}
+						link.text(bookmark.shortTitle).addClass('repo-' + bookmark.mapId[0]);
 						children.appendTo(link);
 						addition.find('[data-mm-role=bookmark-delete]').click(function () {
 							bookmarks.remove(bookmark.mapId);
@@ -126,7 +135,8 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 							return false;
 						});
 					});
-					keep.clone().appendTo(element);
+
+					wireLinks(keep.clone()).appendTo(element);
 					if (bookmarks.canPin()) {
 						pin.clone().appendTo(element).find('a').click(function () {
 							bookmarks.pin();

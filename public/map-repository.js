@@ -1,4 +1,4 @@
-/*global _, jQuery, MAPJS, MM, observable, window, document, setTimeout*/
+/*global _, jQuery, MAPJS, MM, observable, window, setTimeout*/
 MM.MapRepository = function (activityLog, alert, adapters) {
 	// order of adapters is important, the first adapter is default
 	'use strict';
@@ -45,13 +45,14 @@ MM.MapRepository = function (activityLog, alert, adapters) {
 			};
 		};
 
-	MM.MapRepository.mapLocationChange(this);
 	MM.MapRepository.activityTracking(this, activityLog);
 	MM.MapRepository.alerts(this, alert);
 	MM.MapRepository.toolbarAndUnsavedChangesDialogue(this, activityLog);
 
 	this.setMap = setMap;
-
+	this.currentMapId = function () {
+		return mapInfo && mapInfo.mapId;
+	};
 	this.loadMap = function (mapId) {
 		var adapter = chooseAdapter([mapId]),
 			progressEvent = function (evt) {
@@ -323,12 +324,13 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 				}
 			});
 			mapLoaded = true;
-		} else {
-			toggleChange();
 		}
-		if (!mapId || mapId.length < 3) { /* imported, no repository ID */
-			toggleChange();
-		}
+		// } else {
+		// 	toggleChange();
+		// }
+		// if (!mapId || mapId.length < 3) { /* imported, no repository ID */
+		// 	toggleChange();
+		// }
 		idea.addEventListener('changed', function (command, args) {
 			toggleChange();
 			activityLog.log(['Map', command].concat(args));
@@ -343,11 +345,17 @@ MM.MapRepository.toolbarAndUnsavedChangesDialogue = function (mapRepository, act
 		jQuery('body').removeClass('map-changed').addClass('map-unchanged');
 	});
 };
-MM.MapRepository.mapLocationChange = function (mapRepository) {
+MM.MapRepository.mapLocationChange = function (mapRepository, navigation) {
 	'use strict';
 	mapRepository.addEventListener('mapSaved', function (newMapId, idea, idHasChanged) {
 		if (idHasChanged) {
-			document.location = '/map/' + newMapId;
+			navigation.changeMapId(newMapId);
+		}
+	});
+	navigation.addEventListener('mapIdChanged', function (newMapId) {
+		var mapId = mapRepository.currentMapId();
+		if (mapId && mapId !== newMapId) {
+			mapRepository.loadMap(newMapId);
 		}
 	});
 };

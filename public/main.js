@@ -66,7 +66,7 @@ MM.main = function (config) {
 		jQuery('#toolbarEdit .colorPicker-picker').parent('button').click(function (e) { if (e.target === this) {jQuery(this).find('.colorPicker-picker').click(); } });
 		jQuery('#toolbarEdit').mapToolbarWidget(mapModel);
 		jQuery('#floating-toolbar').floatingToolbarWidget(mapRepository, pngExporter);
-		jQuery('#listBookmarks').bookmarkWidget(mapBookmarks, alert);
+		jQuery('#listBookmarks').bookmarkWidget(mapBookmarks, alert, navigation);
 		jQuery('#modalDownload').downloadWidget(pngExporter);
 		if (!isTouch()) {
 			jQuery('[rel=tooltip]').tooltip();
@@ -83,8 +83,11 @@ MM.main = function (config) {
 		jQuery('[data-mm-role="remote-export"]').remoteExportWidget(mapRepository);
 		jQuery('#modalGoogleOpen').googleDriveOpenWidget(googleDriveAdapter);
 		jQuery('#modalLocalStorageOpen').localStorageOpenWidget(offlineMapStorage);
-		jQuery('body').commandLineWidget('Shift+Space Ctrl+Space', mapModel);
+		jQuery('body')
+			.commandLineWidget('Shift+Space Ctrl+Space', mapModel)
+			.navigationWidget(navigation);
 		jQuery('#modalAttachmentEditor').attachmentEditorWidget(mapModel, isTouch());
+		MM.MapRepository.mapLocationChange(mapRepository, navigation);
 		mapRepository.loadMap(navigation.currentMapId());
 	});
 	loadScriptsAsynchronously(document, 'script', config.scriptsToLoadAsynchronously);

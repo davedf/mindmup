@@ -1,4 +1,4 @@
-/*global MM, observable*/
+/*global MM, observable, $, _*/
 MM.navigation = function (config) {
 	'use strict';
 	observable(this);
@@ -13,7 +13,7 @@ MM.navigation = function (config) {
 	};
 	self.wireLinkForMapId = function (newMapId, link) {
 		if (getMapIdFromHash()) {
-			link.attr('href', '#');
+			link.attr('href', '#' + newMapId);
 			link.click(function () {self.changeMapId(newMapId); });
 		} else {
 			link.attr('href', '/map/' + newMapId);
@@ -31,5 +31,20 @@ MM.navigation = function (config) {
 			document.location = '/map/' + newMapId;
 		}
 	};
+	return self;
+};
+
+$.fn.navigationWidget = function (navigation) {
+	'use strict';
+	var self = this,
+		mapIdRegEx = /\/[Mm]ap\/([^\/]*)/;
+	_.each(self.find('a'), function (link) {
+		var $link = $(link),
+			href = $link.attr('href'),
+			result = mapIdRegEx.exec(href);
+		if (result && result[1]) {
+			navigation.wireLinkForMapId(result[1], $link);
+		}
+	});
 	return self;
 };
