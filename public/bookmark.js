@@ -1,4 +1,4 @@
-/*global _, jQuery, beforeEach, MM, observable*/
+/*global _, jQuery, MM, observable*/
 MM.jsonStorage = function (storage) {
 	'use strict';
 	var self = {};
@@ -48,7 +48,7 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 	});
 	self.store = function (bookmark) {
 		if (!(bookmark.mapId && bookmark.title)) {
-			throw new Error("Invalid bookmark");
+			throw new Error('Invalid bookmark');
 		}
 		var existing = _.find(list, function (b) {
 			return (b.title === bookmark.title) || (b.mapId === bookmark.mapId);
@@ -81,9 +81,8 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		titleLimit = titleLimit || 30;
 		return _.map(self.list(), function (element) {
 			return {
-				url: "/map/" + element.mapId,
 				title: element.title,
-				shortTitle: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + "..." : element.title,
+				shortTitle: element.title.length > titleLimit ? element.title.substr(0, titleLimit) + '...' : element.title,
 				mapId: element.mapId
 			};
 		});
@@ -99,7 +98,7 @@ MM.Bookmark = function (mapRepository, storage, storageKey) {
 		}));
 	};
 };
-jQuery.fn.bookmarkWidget = function (bookmarks, alert, addTooltips) {
+jQuery.fn.bookmarkWidget = function (bookmarks, alert) {
 	'use strict';
 	return this.each(function () {
 		var element = jQuery(this),
@@ -119,7 +118,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert, addTooltips) {
 						addition = template.clone().show().appendTo(element);
 						link = addition.find('a');
 						children = link.children().detach();
-						link.attr('href', bookmark.url).text(bookmark.shortTitle).addClass('repo-' + bookmark.mapId[0]);
+						link.attr('href',  '/map/' + bookmark.mapId).text(bookmark.shortTitle).addClass('repo-' + bookmark.mapId[0]);
 						children.appendTo(link);
 						addition.find('[data-mm-role=bookmark-delete]').click(function () {
 							bookmarks.remove(bookmark.mapId);
@@ -147,7 +146,7 @@ jQuery.fn.bookmarkWidget = function (bookmarks, alert, addTooltips) {
 				if (alertId) {
 					alert.hide(alertId);
 				}
-				alertId = alert.show("Bookmark Removed.", mark.title + " was removed from the list of your maps. <a href='#'> Undo </a> ", "success");
+				alertId = alert.show('Bookmark Removed.', mark.title + ' was removed from the list of your maps. <a href="#"> Undo </a> ', 'success');
 				jQuery('.alert-no-' + alertId).find('a').click(function () {
 					bookmarks.store(mark);
 					alert.hide(alertId);
